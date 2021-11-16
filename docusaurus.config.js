@@ -8,7 +8,7 @@ const darkCodeTheme = require('prism-react-renderer/themes/dracula')
 const config = {
   // 控制首页和 title
   title: 'UP!Doooc',
-  tagline: 'Documented and caching thoughts!',
+  tagline: 'Nice to doc, nice to code!',
   url: 'https://your-docusaurus-test-site.com',
   baseUrl: '/',
   onBrokenLinks: 'throw',

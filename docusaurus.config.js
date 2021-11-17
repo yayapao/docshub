@@ -4,6 +4,43 @@
 const lightCodeTheme = require('prism-react-renderer/themes/github')
 const darkCodeTheme = require('prism-react-renderer/themes/dracula')
 
+const themeConfig = {
+  navbar: {
+    title: 'UPDoc',
+    logo: {
+      alt: 'My Site Logo',
+      src: 'img/logo.svg',
+    },
+    items: [
+      { to: '/blog', label: 'Blog', position: 'left' },
+      {
+        label: 'Server',
+        position: 'left',
+        to: '/docs/cloudServer/'
+      },
+      // {
+      //   type: 'doc',
+      //   docId: 'intro',
+      //   position: 'left',
+      //   label: 'Tutorial',
+      // },
+      {
+        href: 'https://github.com/Y-lonelY',
+        label: 'GitHub',
+        position: 'right',
+      },
+    ],
+  },
+  footer: {
+    style: 'dark',
+    copyright: `Copyright © ${new Date().getFullYear()} 粤ICP备20070108号`,
+  },
+  prism: {
+    theme: lightCodeTheme,
+    darkTheme: darkCodeTheme,
+  },
+}
+
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   // 控制首页和 title
@@ -39,40 +76,7 @@ const config = {
       }),
     ],
   ],
-
-  themeConfig:
-    /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
-    ({
-      navbar: {
-        title: 'UPDoc',
-        logo: {
-          alt: 'My Site Logo',
-          src: 'img/logo.svg',
-        },
-        items: [
-          { to: '/blog', label: 'Blog', position: 'left' },
-          {
-            type: 'doc',
-            docId: 'intro',
-            position: 'left',
-            label: 'Tutorial',
-          },
-          {
-            href: 'https://github.com/Y-lonelY',
-            label: 'GitHub',
-            position: 'right',
-          },
-        ],
-      },
-      footer: {
-        style: 'dark',
-        copyright: `Copyright © ${new Date().getFullYear()} 粤ICP备20070108号`,
-      },
-      prism: {
-        theme: lightCodeTheme,
-        darkTheme: darkCodeTheme,
-      },
-    }),
+  themeConfig
 }
 
-module.exports = config
+module.exports = {...config}

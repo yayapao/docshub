@@ -18,7 +18,7 @@ const sidebars = {
 
   serverSiderbar: [{
     type: 'category',
-    label: 'Cloud Server',
+    label: 'Site Reliability',
     collapsed: true,
     items: [
       'server/cloudServer'

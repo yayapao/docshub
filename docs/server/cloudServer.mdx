@@ -5,6 +5,8 @@ sidebar_label: Cloud Server
 slug: /cloudServer/
 ---
 
+import { HighlightWithText } from '../../src/components/Highlights'
+
 ## 通用技能
 
 ### 服务状态
@@ -28,7 +30,7 @@ slug: /cloudServer/
 
 #### 解决端口占用
 
-**查看端口占用情况**
+查看端口占用情况
 
 `ps` 查看系统内进程，可以看到 pid 信息
 
@@ -47,9 +49,8 @@ slug: /cloudServer/
 - `l` 列出在 Listen 的服务状态
 - `p` 显示相关链接的程序名
 
-上述命令结合 `grep` 来查找指定信息
+上述命令结合 `grep` 来查找指定信息，之后执行 `kill -9 [pid]` 来关闭指定 pid 的进程
 
-执行 `kill -9 [pid]` 来关闭指定 pid 的进程
 
 ### 文件操作
 
@@ -62,14 +63,15 @@ slug: /cloudServer/
 7. `cp [filename] [path]` 复制指定文件到指定目录
 8. `mv filename newfilename` 重命名文件或者文件目录
 
-**压缩 / 解压文件**
 
-1. `zip -r xxx.zip xxx` 压缩指定文件夹为 .zip 文件
-2. `unzip xxx.zip` 直接解压指定文件，输出到当前目录
-3. `zip xxx.zip 1.txt 2.txt` 将 1.txt 和 2.txt 压缩为 xxx.zip
-4. `unzip xxx.zip -d /home` 将 xxx.zip 解压到 /home 目录下
+<HighlightWithText>通过 zip 解/压文件</HighlightWithText>
 
-<b>通过 tar 命令</b>
+- `zip -r xxx.zip xxx` 压缩指定文件夹为 .zip 文件
+- `unzip xxx.zip` 直接解压指定文件，输出到当前目录
+- `zip xxx.zip 1.txt 2.txt` 将 1.txt 和 2.txt 压缩为 xxx.zip
+- `unzip xxx.zip -d /home` 将 xxx.zip 解压到 /home 目录下
+
+<HighlightWithText>通过 tar 解/压文件</HighlightWithText>
 
 - `tar -zcvf target.tar.gz [package files]` 进行压缩
 - `tar -zxvf target.tar.gz` 解压文件
@@ -91,9 +93,10 @@ slug: /cloudServer/
 
 #### 目录信息
 
-1. `cd ～` 进入当前用户目录，`cd /` 进行系统根目录
-2. `ls -al` 查看目录下文件的详细信息
-3. `du -sh *` 查看每个目录的大小
+`ls -al` 查看目录下文件的详细信息
+
+`du -sh *` 查看每个目录的大小
+
 
 ## 常用工具
 
@@ -113,24 +116,20 @@ slug: /cloudServer/
 
 命令模式:
 
-[删除]
-
+删除
 - `dd` 快速删除当前行
 - `ndd` 比如 `3dd` 开始删除当前三行内容
 
-[复制]
-
+复制
 - `yy` 快速复制当前行
 - `nyy` 快速复制当前 n 行内容
 - `p` 粘贴内容
 - `ggdG` 删除所有内容，`gg` 光标置于首行，`d` 删除，`G` 光标置于文件末尾行
 
-[回退]
-
+回退
 - `u` 回退内容
 
-[搜索]
-
+搜索
 - 通过 `/` 进入搜索模式，通过 `n/N` 来跳转到下一个/上一个
 
 ### wget

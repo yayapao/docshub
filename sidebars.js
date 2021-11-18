@@ -21,7 +21,7 @@ const sidebars = {
     label: 'Site Reliability',
     collapsed: true,
     items: [
-      'server/cloudServer'
+      'server/cloudServer', 'server/docker'
     ]
   }]
 };

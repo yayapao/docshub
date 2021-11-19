@@ -4,6 +4,7 @@
 const lightCodeTheme = require('prism-react-renderer/themes/github')
 const darkCodeTheme = require('prism-react-renderer/themes/dracula')
 
+/** @type {import('@docusaurus/types').ThemeConfig} */
 const themeConfig = {
   navbar: {
     title: 'UPDoc',
@@ -14,9 +15,18 @@ const themeConfig = {
     items: [
       { to: '/blog', label: 'Blog', position: 'left' },
       {
-        label: 'Server',
+        label: 'Runtime',
         position: 'left',
-        to: '/docs/cloudServer/'
+        items: [
+          {
+            label: 'Server',
+            to: '/docs/cloudServer/',
+          },
+          {
+            label: 'Browser',
+            to: '/docs/cloudServer/',
+          },
+        ],
       },
       // {
       //   type: 'doc',
@@ -76,7 +86,7 @@ const config = {
       }),
     ],
   ],
-  themeConfig
+  themeConfig,
 }
 
-module.exports = {...config}
+module.exports = { ...config }

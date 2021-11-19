@@ -13,22 +13,22 @@
 
 /** @type {import('@docusaurus/plugin-content-docs').SidebarsConfig} */
 const sidebars = {
-  serverSiderbar: [{
-    type: 'category',
-    label: 'Site Reliability',
-    collapsed: true,
-    items: [
-      'server/cloudServer', 'server/docker'
-    ]
-  }],
-  browserSiderbar: [{
-    type: 'category',
-    label: 'WPM',
-    collapsed: true,
-    items: [
-      'browser/wpm'
-    ]
-  }]
-};
+  serverSiderbar: [
+    {
+      type: "category",
+      label: "Site Reliability",
+      collapsed: true,
+      items: ["server/cloudServer", "server/docker"],
+    },
+  ],
+  browserSiderbar: [
+    {
+      type: "category",
+      label: "WPM",
+      collapsed: true,
+      items: ["browser/corevitals", "browser/chromeperf"],
+    },
+  ],
+}
 
-module.exports = sidebars;
+module.exports = sidebars

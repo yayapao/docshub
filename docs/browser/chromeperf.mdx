@@ -1,0 +1,41 @@
+---
+id: chromeperf
+title: Performance Monitor In Chrome
+sidebar_label: Performance Monitor In Chrome
+slug: chromeperf
+---
+
+## Chrome Performance Visualization
+
+我们先从 Chrome 控制台提供的能力开始！
+
+
+### Performance Monitor
+
+在控制台通过 `cmd + shift + p`，输入 `performance monitor` 进行调用，展示当前页面的实时指标情况
+
+![performanceMonitor](/img/browser/wpm/performanceMonitor.png)
+
+- **CPU usage:** 当前站点所用的 CPU 百分比
+- **JS heap size:** 应用所占用的内存大小
+- **DOM Nodes:** 内存中的 DOM 节点数
+- **JS event listeners:** JavaScript 内事件监听器数量
+- **Documents:** (意义不大)number of live document resources like stylesheets and scripts
+- **Documents Frames:** (意义不大)the number of live frames on the page (iframes and workers)
+- **Layouts / sec:** 布局重绘速率
+- **Style recalcs / sec:** 样式重绘速率
+
+
+
+### Waterfall
+
+接着我们看看经典的 waterfall
+
+![waterfall](/img/browser/wpm/waterfall.png)
+
+- **Queueing:** 浏览器将资源放入队列的时间
+- **Stalled:** 因放入队列而发生停滞的时间
+- **DNS Lookup:** DNS 解析时间
+- **Initial connection:** 建立 HTTP 请求的耗时
+- **TTFB:** 等待服务器返回资源的耗时
+- **Content Download:** 浏览器下载资源的时间

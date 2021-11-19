@@ -24,7 +24,7 @@ const themeConfig = {
           },
           {
             label: 'Browser',
-            to: '/docs/cloudServer/',
+            to: '/docs/browser/corevitals',
           },
         ],
       },

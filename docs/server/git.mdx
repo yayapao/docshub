@@ -1,0 +1,215 @@
+---
+id: git
+title: Git
+sidebar_label: Git
+slug: git
+---
+
+## 通过 husky 来规范 git 的提交流程
+
+试想一下，当你接手一个项目，看到提交信息都是 “添加了一些小功能”、“优化了很多内容” 或者每次都是重复的提交信息时。除了心里骂一声 “sxxxxxx” 外，我们能够做些什么来改善这种情况呢？
+
+答案显而易见：[githooks](https://git-scm.com/docs/githooks)，通过 githooks 我们能够介入到从 pull 到 push 的各个阶段内，这里我们以规范 commit message 为例来说明如何结合 husky 进行开发
+
+参考 [husky](https://typicode.github.io/husky/#/?) 在项目内引入，这里以 yarn 为例介绍简要步骤：
+
+```shell
+# 1. 引入 husky
+yarn add husky --dev
+
+# 2. 启用 git hooks
+yarn husky install
+
+# 3. 更新 package.json，添加脚本
+{
+	"postinstall": "husky install"
+}
+```
+
+之后执行 `npx husky add .husky/commit-msg 'npx --no-install commitlint --edit "$1"'` 来添加 commit-message 的脚本文件到 `.husky/commit-msg.sh`，编辑文件，添加相应脚本
+
+<b>获取 commit message?</b>
+
+在 commit-msg.sh 内，通过读取 `$1` 传参可以获取提交信息的保存路径，之后通过读取该路径的文件信息，获取提交信息，通常保存在 `./.git/COMMIT_EDITMSG` 
+
+<b>如何编写验证脚本？</b>
+
+我们需要：
+
+1. 获取提交信息；
+2. 开发正则验证；
+3. 验证不通过时，输出提示信息；
+
+这里我们给一个例子：
+
+```javascript
+// Invoked on the commit-msg git hook by yorkie.
+
+const chalk = require('chalk')
+// to get commit message from file
+const msgPath = require('path').resolve('./.git/COMMIT_EDITMSG')
+const msg = require('fs')
+  .readFileSync(msgPath, 'utf-8')
+  .trim()
+
+const commitRE = /^(revert: )?(feat|improve|fix|docs|style|refactor|perf|test|workflow|build|ci|chore|types|wip|release|dep)(\(.+\))?: .{1,50}/
+
+if (!commitRE.test(msg)) {
+  console.log()
+  console.error(
+    '  ' +
+      chalk.bgRed.white(' ERROR ') +
+      ' ' +
+      chalk.red('invalid commit message format.') +
+      '\n\n' +
+      chalk.red(
+        'Proper commit message format is required for automated changelog generation. Examples:\n\n',
+      ) +
+      '    \n    ' +
+      chalk.green("\uD83D\uDCA5 feat(compiler): add 'comments' option") +
+      '\n    ' +
+      chalk.green("\ud83c\udf0a improve(compiler): make some improvements") +
+      '\n    ' +
+      chalk.green('\uD83D\uDC1B fix(compiler): fix some bug') +
+      '\n    ' +
+      chalk.green('\uD83D\uDCDD docs(compiler): add some docs') +
+      '\n    ' +
+      chalk.green('\uD83C\uDF37 UI(compiler): better styles') +
+      '\n    ' +
+      chalk.green('\uD83C\uDFF0 chore(compiler): Made some changes to the scaffolding') +
+      '\n    ' +
+      chalk.green(
+        '\uD83C\uDF10 locale(compiler): Made a small contribution to internationalization',
+      ) +
+      '\n\n' +
+      chalk.red('Normalized is required and having fun in coding~\n'),
+  )
+  process.exit(1)
+}
+
+```
+
+
+
+当验证不通过时，会展示如下效果：
+
+![husky](/img/server/husky.png)
+
+一个规范的 commit 不仅能够帮助我们方便地生成 changelog，同时能够在 review 或者排查问题时提供便利，如果你还在忍受一些杂乱不堪的 commit message，不妨试试从技术手段上对其进行“打击”！
+
+
+
+## Commit Rules
+
+通过 commitizen 来提交commit
+
+- 执行 `npm install commitizen --save `
+- 在 **package.json** 内进行如下配置
+
+```json
+{
+  "scripts": {
+    "commit": "git-cz",
+  },
+  "config": {
+    "commitizen": {
+      "path": "node_modules/cz-conventional-changelog"
+    }
+  },
+}
+```
+
+项目内添加CHANGELOG
+
+- 执行`npm install conventional-changelog-cli --save`
+- 通过 `npx conventional-changelog --help` 查看相关命令
+- 一般在 package.json 内配置 `"changelog": "conventional-changelog -p angular -i CHANGELOG.md -s -r 0"`，来指定使用 angular 规范，且重新生成CHANGELOG.md文件
+- 通过 `npm run changelog`来执行
+
+
+
+## 添加 SSH keys
+
+rsa(非对称加密)
+
+执行 `ssh-keygen -t ras -C "your_email@example.com"`
+
+- `-t` 表示制定加密类型
+- `-C` 表示注释内容
+
+之后到指定目录内复制 `pub` 内容到 github 即可
+
+<b>如果不希望内次提交都输入密码，在生成 keys 时直接 enter</b>
+
+### 切换当前项目 http to ssh
+
+一般而言，当你配置好 SSH 验证方式之后，将之前 https 的连接方式切换成 ssh 是更优的选择
+
+- `git remote -v` 查看当前协议
+- `git remote set-url origin git@gitlab.xxxxxxx` 切换当前的连接方式
+- `git pull origin master` 验证是否成功
+
+
+
+
+
+## rebase
+
+### 合并多个 commit
+
+1. 通过 `git log` 查看提交历史，找到需要合并的 commit 段
+	- `git rebase -i HEAD~3` 表示合并最新的三个 commit
+	- `git rebase -i xxxxxx` 通过版本号控制合并，注意标识版本号（即 xxxxxx）的 commit 不参与合并
+2. 接着，再次确认需要合并的分支，将 `pick` 变更为 `squash`，注意第一行提交信息必须为 `pick`，保存后退出
+	- `git rebase --continue` 在当前修改上继续操作
+	- `git rebase --abort` 撤销当前的 rebase 操作
+3. 再次编辑提交信息后提交
+
+
+
+## log
+
+```powershell
+# 展示 commit 历史以及每次 commit 发生变更的文件
+git log --stat
+
+# 展示所有提交过的作者以及提交次数
+git shortlog -sn
+```
+
+
+
+
+
+## tag
+
+ [git-tags](https://git-scm.com/book/en/v2/Git-Basics-Tagging) 常用命令，主要用于记录里程碑事件，可以看成是一次特殊的 commit
+
+```shell
+# 在本地添加一个带有 message 的 tag 标签
+git tag -a v0.1 -m "add a tag named v0.1"
+
+# 将本地 tag 推送到远程分支上
+git push origin v0.1 || --tgas
+
+# 查看所有 tag
+git tag
+
+# 删除本地 tag
+git tag -d v0.1
+
+# 删除远程 tag
+git push origin -d v0.1 v0.2
+
+# 切换到指定 tag
+git checkout v0.1
+```
+
+
+
+## push
+
+如果你在本地 `reset head` 到一个历史 commit，同时在此基础上进行开发，然后不希望再使用 `remote/master` 上的一些提交，跳过他们直接覆盖本地提交，则可以使用 `git push --force` 将本地 commit 强行推送至服务端
+
+这种操作带来的风险点：如果另一个人在该分支上也提交了内容，那么会将他的提交内容也覆盖（清空）
+

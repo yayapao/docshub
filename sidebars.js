@@ -18,7 +18,7 @@ const sidebars = {
       type: "category",
       label: "Site Reliability",
       collapsed: true,
-      items: ["server/cloudServer", "server/docker"],
+      items: ["server/cloudServer", "server/git", "server/docker"],
     },
   ],
   browserSiderbar: [

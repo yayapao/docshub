@@ -26,6 +26,10 @@ const themeConfig = {
             label: 'Browser',
             to: '/docs/browser/corevitals',
           },
+          {
+            label: 'Package',
+            to: '/docs/package/nodejs',
+          },
         ],
       },
       {

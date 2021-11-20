@@ -22,9 +22,15 @@ const sidebars = {
     },
     {
       type: 'category',
-      label: 'Managed Controls',
+      label: 'Manager',
       collapsed: true,
       items: ['server/git', 'server/npm'],
+    },
+    {
+      type: 'category',
+      label: 'Package',
+      collapsed: true,
+      items: ['package/nodejs'],
     },
   ],
   browserSiderbar: [
@@ -40,7 +46,7 @@ const sidebars = {
       type: 'category',
       label: 'JavaScript',
       collapsed: true,
-      items: ['langs/javascript/concept', 'langs/javascript/grammar']
+      items: ['langs/javascript/concept', 'langs/javascript/grammar', 'langs/javascript/project']
     }
   ]
 }

@@ -40,14 +40,12 @@ const themeConfig = {
             label: 'JavaScript',
             to: '/docs/langs/javascript/concept',
           },
+          {
+            label: 'TypeScript',
+            to: '/docs/langs/typescript/concept',
+          },
         ],
       },
-      // {
-      //   type: 'doc',
-      //   docId: 'intro',
-      //   position: 'left',
-      //   label: 'Tutorial',
-      // },
       {
         href: 'https://github.com/Y-lonelY',
         label: 'GitHub',

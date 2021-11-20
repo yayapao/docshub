@@ -46,9 +46,19 @@ const sidebars = {
       type: 'category',
       label: 'JavaScript',
       collapsed: true,
-      items: ['langs/javascript/concept', 'langs/javascript/grammar', 'langs/javascript/project']
-    }
-  ]
+      items: [
+        'langs/javascript/concept',
+        'langs/javascript/grammar',
+        'langs/javascript/project',
+      ],
+    },
+    {
+      type: 'category',
+      label: 'TypeScript',
+      collapsed: true,
+      items: ['langs/typescript/concept', 'langs/typescript/project'],
+    },
+  ],
 }
 
 module.exports = sidebars

@@ -58,6 +58,12 @@ const sidebars = {
       collapsed: true,
       items: ['langs/typescript/concept', 'langs/typescript/project'],
     },
+    {
+      type: 'category',
+      label: 'Node.js',
+      collapsed: true,
+      items: ['langs/nodejs/concept', 'langs/nodejs/project'],
+    },
   ],
 }
 

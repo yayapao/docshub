@@ -44,6 +44,10 @@ const themeConfig = {
             label: 'TypeScript',
             to: '/docs/langs/typescript/concept',
           },
+          {
+            label: 'Node.js',
+            to: '/docs/langs/nodejs/concept',
+          },
         ],
       },
       {

@@ -15,18 +15,24 @@
 const sidebars = {
   serverSiderbar: [
     {
-      type: "category",
-      label: "Site Reliability",
+      type: 'category',
+      label: 'Site Reliability',
       collapsed: true,
-      items: ["server/cloudServer", "server/git", "server/nginx", "server/npm", "server/docker"],
+      items: ['server/cloudServer', 'server/nginx', 'server/docker'],
+    },
+    {
+      type: 'category',
+      label: 'Managed Controls',
+      collapsed: true,
+      items: ['server/git', 'server/npm'],
     },
   ],
   browserSiderbar: [
     {
-      type: "category",
-      label: "WPM",
+      type: 'category',
+      label: 'WPM',
       collapsed: true,
-      items: ["browser/corevitals", "browser/chromeperf"],
+      items: ['browser/corevitals', 'browser/chromeperf'],
     },
   ],
 }

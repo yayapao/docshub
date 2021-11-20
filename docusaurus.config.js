@@ -49,6 +49,10 @@ const themeConfig = {
             to: '/docs/langs/nodejs/concept',
           },
           {
+            label: 'Python3',
+            to: '/docs/langs/python/concept',
+          },
+          {
             label: 'HTML5',
             to: '/docs/langs/html5/concept',
           },

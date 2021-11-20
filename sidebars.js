@@ -30,7 +30,7 @@ const sidebars = {
       type: 'category',
       label: 'Package',
       collapsed: true,
-      items: ['package/nodejs'],
+      items: ['package/nodejs', 'package/python'],
     },
   ],
   browserSiderbar: [
@@ -73,6 +73,12 @@ const sidebars = {
         'langs/html5/project',
         'langs/html5/element',
       ],
+    },
+    {
+      type: 'category',
+      label: 'Python3',
+      collapsed: true,
+      items: ['langs/python/concept', 'langs/python/grammar'],
     },
     {
       type: 'category',

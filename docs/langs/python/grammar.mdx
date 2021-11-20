@@ -1,0 +1,187 @@
+---
+id: grammar
+title: Grammar
+sidebar_label: grammar
+slug: grammar
+---
+
+## 字符串
+
+字符串格式化，通常有两种方式：
+
+- 用 `%` 实现格式化
+  - %d 代表整数
+  - %s 代表字符串
+  - %f 代表浮点数
+  - %x 代表 16 进制整数
+  - %% 代表对 % 的转义
+- 通过 `format()` 实现
+
+````python
+# 用 `%` 实现格式化
+str = 'hello, %s%d%.2f' %('yango', 777, 3.6666)
+
+# format 会通过位置映射和关键字映射来找寻元素，通过 {} 来包裹关键字
+str = "{server}:{}:{}".format('abc', '123', server='port') # port:abc:123
+```## 字符串
+
+字符串格式化，通常有两种方式：
+
+- 用 `%` 实现格式化
+  - %d 代表整数
+  - %s 代表字符串
+  - %f 代表浮点数
+  - %x 代表 16 进制整数
+  - %% 代表对 % 的转义
+- 通过 `format()` 实现
+
+```python
+# 用 `%` 实现格式化
+str = 'hello, %s%d%.2f' %('yango', 777, 3.6666)
+
+# format 会通过位置映射和关键字映射来找寻元素，通过 {} 来包裹关键字
+str = "{server}:{}:{}".format('abc', '123', server='port') # port:abc:123
+````
+
+## list && tuple
+
+### list
+
+> list 和 tuple 是 python 内置的有序集合，前者可变，后者不可变（可类比 let && const）
+
+list 是一种有序的集合，可以随时添加或者删除元素，可类比 Array，主要方法：
+
+```python
+list = [1, 2, 3]
+
+# 删除最后一个元素或者指定位置元素
+list.pop(index)
+
+# 向 list 中追加元素到末尾
+list.append(element)
+
+# 向 list 指定位置插入元素
+list.insert(index, element)
+
+# 返回 list 的长度
+len(list)
+
+# 字符串数组转字符串
+# 对于非字符串数组，则通过遍历来进行转换
+str_list = ['a', 'b', 'c']
+str = ''.join(str_list)
+
+# 通过 + 合并两个数组
+new_list = list + str_list
+```
+
+### tuple
+
+> tuple 可以看作是 list 的进化版，它拥有更强的“控制欲”，一旦 tuple 初始化就不能更改
+
+需要注意的是：
+
+- list 用 `[]`，而 tuple 用 `()`
+- tuple 引用的元素不能变更，但是存在一个“陷阱”，即当其元素仍存在一个新的引用时(即嵌套引用)，可以改变二维的引用值，而不会报错
+- 当 tuple 初始化时，如果只有一个值，此时 python 会以小括号来进行解释，所以此时需要添加一个逗号，来消除歧义
+
+### 切片
+
+切换用于取 list 或者 tuple 部分元素
+
+切片操作符（slice）可以用于 str(str 也可以看成一个 list), list, tuple
+
+截取出来的元素类型由原元素决定，这里需要注意例如 “params[-1:] 和 params[-1]” 的区别在于返回值类型不同
+
+可以通过 `[:]` 直接复制原 list
+
+`[n:m:i]` 这样的写法表示从原 list 的 n-m 范围内，每隔 i 取一次值
+
+## 迭代
+
+python 中只要是可迭代的对象都可以通过 `for...in...` 来遍历，比如字符串，list，dict
+
+通过引入 collections 模块的 Iterable 类型判断对象是否可以迭代
+
+通过内置方法 `enumerate(list)` 可以把 list 转换成键值对的形式
+
+## 列表生成式
+
+通过列表生成式，可以直接创建一个列表，但是由于内存限制，列表容量有限，对于仅用访问部分元素却要创建一个大数据量元素的列表，很容易会造成资源浪费
+
+关键表达式：`[表达式 for i in item 判断条件]` 可以读作：for i in item，根据判断条件对 i 进行筛选，然后将 i 代入表达式得到计算结果，return 出最终结果，其中 for 循环可以存在多个(相当于嵌套循环)
+
+列表生成式，所以其关键字为 `[...]`
+
+## generator
+
+生成器针对列表生成器的缺点，提出了一种更好的解决方案：generator 不必创建完整的 list，它的机制是一边循环一边计算，通过算法推算出下一个元素
+
+生成器的关键字为 `(...)` 或者 `yield`
+
+通过 `next(generator)` 可以计算出生成器下一个元素值，直到计算到最后一个元素，抛出 `StopInteration` 错误，不过 `next()` 几乎不会用到
+
+generator 是一个迭代器，所有通过可以通过迭代方法来遍历，而不需要关心 `StopInteration` 错误
+
+`yield` 关键字用在函数方法中，表示该函数是一个生成器
+
+包含 `yield` 的 generator 与函数最大的区别在于执行机制
+
+- 函数会按照顺序依次执行，直到 return 或者执行到最后一行语句返回，直接返回结果
+- generator 遇到 `yield` 返回，遇到 `next()` 语句继续执行，且从上次返回的 `yield` 语句出开始，返回一个 generator
+
+## 迭代器
+
+可迭代对象（Interable）和迭代器（Interator）:
+
+- 可以直接迭代（for 循环遍历）的对象就是可迭代对象
+- 不但可以迭代，还可以被 `next()` 函数调用的就是迭代器
+- Interator 一定是 Interable，反之却不一定成立
+
+生成器就是一个迭代器，迭代器的计算是惰性的，只有在需要时才会计算下一个数值，因此它可以用来表示一个无限大的数据流，只是不知道其长度
+
+通过 `list()` 来强制计算 Interator 并返回一个 list
+
+通过 `iter()` 来将 Interable 转换成一个 Interator
+
+python3 的 for 循环本质上是通过 `iter()` 函数结合 `next()` 来实现的
+
+## 枚举
+
+枚举类是用来管理同类型不同值的常量的定义
+
+Python 提供 `Enum` 关键字来实现枚举类，通过枚举类型来定义一个 class 类型，这个 class 不可改变，每个常量都是这个 class 的唯一实例，实现方法很简单：
+
+```Python
+from enum import Enum
+
+Month = Enum('Month', {'Jan', 'Feb', 'Mar'})
+
+# 获取枚举值
+for name, menber in Month.__members__.items():
+	# statements
+```
+
+枚举类的 `value` 默认从 1 开始赋值给各个变量，如果想要自定义枚举类型的值，可以通过从 `Enum` 派生出自定义类：
+
+```Python
+from enum import Enum, unique
+
+# @unique 用来帮助检查是否有重复值
+@unique
+class Week(Enum):
+	Sun = 0
+	Mon = 1
+```
+
+通过 `Week.Sun` 和 `Week.Sun.value` 来访问枚举常量和值
+
+### 枚举类
+
+枚举类的作用就是将一组相关常量定义在一个 class 中
+
+枚举类的声明方法有两种：
+
+1. 通过 `Enum(classname, tuple)` 方法直接生成，相当于调用 `Enum` 类的 `__call__()` 定制方法，其 `value` 从 1 开始累加
+
+2. 通过继承 `Enum` 类来实现枚举类，此时可以利用装饰器 `unique` 来保证没有重复值

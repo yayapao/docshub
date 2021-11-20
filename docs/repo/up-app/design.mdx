@@ -1,0 +1,63 @@
+---
+id: design
+title: design
+sidebar_label: design
+slug: design
+---
+
+::: note
+记录在开发 up-app 前端时的组件封装、使用方法，便于快速查询，以及项目实施过程的一些注意点
+:::
+
+## mui snackbar
+
+基于 [mui Snackbar](https://mui.com/zh/components/snackbars/) 封装的全局消息条组件，在 mui 官方介绍中，scnackbar 组件只能在当前组件内引入、使用，为了能够像 antd 内直接通过函数式调用，需要封装一个全局的 snackbar 组件，并在根节点将其引入，通过全局状态控制来控制其行为，更具体的描述如下：
+
+1. 通过全局状态管理，比如 mobx，设计一系列的状态变量，并将其暴露，比如：
+
+```js
+return {
+  // 控制显示/隐藏
+  snackOpened,
+  // 当前配置参数
+  snackOptions,
+  // 打开/展示组件方法
+  snackOpen,
+  // 关闭组件方法
+  snackClose,
+}
+```
+
+2. 封装消息组件，通过读取全局状态来引入状态变量，从而达到全局状态变量控制当前组件的效果；
+3. 在根节点，比如 `baseLayout.tsx` 内引入消息条组件，从而达到提升消息条组件至全局的目的；
+4. 在业务组件内通过引入全局状态暴露的方法来控制消息条组件的内容和展示，**注意，理论上一个 page 同时只展示一个消息条**
+
+### 使用方法
+
+在业务中快速使用的例子（精简了核心代码）：
+
+```ts
+import { useModel } from 'umi'
+
+export default () => {
+  const { snackOpen } = useModel('mauiModel')
+
+  function alertSuccess() {
+    const { success, msg } = await getSomething()
+    snackOpen({
+      content: success ? '订阅成功' : msg,
+      type: success ? 'success' : 'error',
+    })
+  }
+}
+```
+
+## 设计原则
+
+### 拆分 Dialog 组件
+
+案例描述：在业务组件内，将对话框组件和图表渲染组件放在同一个父组件内，两者处于同级关系，在对话框组件内有一个受控的输入组件，当我们改变其值的时候，问题出现了：随着输入值的改变，整个函数组件都会被重新渲染，里面的函数渲染方法都会被重新调用，这样子会造成一定的渲染性能损耗。
+由于整个函数组件都被重新渲染，即使使用 `useCallback` 也无济于事
+
+为了处理这种问题，我们设计了以下方案：
+1. 将 Dialog 组件拆分，通过 `import` 方法进行引入，并将相关的状态变量从父组件下沉到 Dialog 组件内，随着输入值的改变，只会引起当前 Dialog 组件的改变，不再会影响业务组件；

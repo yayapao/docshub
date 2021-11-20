@@ -31,12 +31,6 @@ const sidebars = {
       collapsed: true,
       items: ['server/git', 'server/npm'],
     },
-    {
-      type: 'category',
-      label: 'Package',
-      collapsed: true,
-      items: ['package/nodejs', 'package/python'],
-    },
   ],
   browserSiderbar: [
     {
@@ -50,6 +44,20 @@ const sidebars = {
       label: 'Devtools',
       collapsed: true,
       items: ['browser/devtools'],
+    },
+  ],
+  librarySiderbar: [
+    {
+      type: 'category',
+      label: 'Library',
+      collapsed: true,
+      items: ['library/nodejs', 'library/python'],
+    },
+    {
+      type: 'category',
+      label: 'React',
+      collapsed: true,
+      items: ['library/react/concept', 'library/react/libs', 'library/react/qa'],
     },
   ],
   languageSiderBar: [

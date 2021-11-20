@@ -1,0 +1,712 @@
+---
+id: concept
+title: React Concept
+sidebar_label: concept
+slug: concept
+---
+
+
+## 数据自顶向下
+
+React内，组件作为独立个体，是不关心其他组件是怎样定义或者有无 state 的，因此state除了当前组件外，其他组件不可访问，**state 是局部封装**
+
+组件可以选择将其 state 作为属性传递给子组件，这通常被称为 **自顶向下** 或 **单向** 数据流
+
+任何 state 始终由该特定组件所有，并且从该 state 导出的任何数据或UI只影响树中 **下方** 的组件
+
+
+## diff算法
+
+diff 算法的基本规则：
+
+- 比对不同类型的元素：当根节点为不同类型的元素时，React 会拆卸原有的树并且建立起新的树
+- 比对相同类型的元素：当比对两个相同类型的 React 元素时，React 会保留 DOM 节点，仅比对及更新有改变的属性
+- 比对相同类型的组件元素：当组件更新时，组件实例保持不变
+
+如何理解呢？
+
+比如，一个元素原本是 `<div>` 标签，结果变成了 `<span>` 标签，那么此时会触发对比不同类型的元素的规则，即会从当前元素开始，重新构建整个子节点。这个过程可以表示如下：
+
+- 首先卸载当前组件实例，组件实例将执行 `componentWillUnmount()` 方法，同时之前和组件关联的 state 也会被销毁
+- 再重新构建新的树节点，依次调用 `componentWillMount()` 和 `componentDidMount()` 方法
+- 根节点以下的子节点也会执行上述操作，即卸载后重新装载
+
+对于相同元素呢，比如 `className` 改变了，那么对保留 DOM 结果，仅仅改变其属性
+
+对于组件，比如props更新了，这时组件实例保持不变，更新其props以和最新的元素保持一致，并且调用该实例的 `componentWillReceviceProps()` 和 `componentWillUpdate()` 方法，之后调用与 `render()` 方法
+
+对Dom元素的子节点进行递归时，React绘同时递归两个子元素的列表，当产生差异时，会生成一个突变（mutation）
+
+这样比较造成的一个问题就是，当我不在意列表顺序时，在头插入和尾部插入会造成不一样的性能损耗，在头部插入相当于整个列表的重新渲染，而尾部插入只会影响一个节点，这种情况可能会带来性能问题，因此，react通过支持 key 属性来规避这个风险
+
+所谓key值，实际上就是给某一个dom元素添加一个唯一标识，通过key值来匹配原有树上的子元素以及最新树上的子元素，但是建议不要使用，原因：
+- 改变原数组来重新渲染，如果通过 index 来标识，实际上跟有无key并无关系，还是会造成性能损耗
+- 如果key是一个下标，那么当修改顺序时，一些非受控组件，比如输入框可能会导致部无预期的后果
+
+
+## React Hook
+
+> 它可以让你在不编写 class 的情况下使用 state 以及其他的 React 特性
+
+### Why?
+
+在之前版本，只有通过 `class` 关键字声明的组件才能够使用 state 等 react 特性，通过函数声明的组件通过常常用来渲染简单的 `react dom`
+
+React Hook 的出现就是为了解决这一现状, **最直接的优点就如 Ryan 所说：减少了大量重复代码**
+
+在使用过程中，通过 class 来创建组件的劣势慢慢显露出来，主要表现在：
+
+1. **在组件之间复用状态逻辑很难**，即不同组件之间需要用到同一个 state 及其处理方法
+2. **复杂组件变得难以理解**，即不同的生命周期函数（同一个方法）内需要执行多个任务，
+   比如监听事件，获取数据等，此时又无法再将组件进行更小粒度的拆分
+3. **class 本身难以理解**，主要是关于 this 的概念，它是复用父类的 this，并在此基础上进行改写
+4. 对于 TypeScript 更加友好
+
+基于此，使用 react hook 来改变这一状态
+
+### Trivia
+
+Hook 是一个特殊的函数，它可以让你“钩入” React 的特性，也就是说，可以让本身不具备 state 属性的函数组件，能够使用 state 等 react 特性
+
+`useState` 和 `useEffect` 之所以能够在单个组件内多次使用，是因为 React 保证 HooK 的调用顺序在每次渲染中是相同的，如果通过判断语句等来调用 HooK，则会引起 HooK 不能按照顺序执行，从而引起 bug，因此 React Hook 方法放在函数作用域的最外层
+
+自定义 Hook 更像是一种约定而不是功能，在 React 内，如果一个函数以 `use` 开头并调用其他 React Hook，其就是一个自定义 hook
+
+**使用原则**
+
+- 仅在 **函数最外层** 使用 Hook，不要在循环，条件和嵌套函数内调用 Hook
+- 仅在 **函数组件** 内调用 Hook
+
+### useEffect
+
+如何在 `useEffect` 内发起一个异步请求？
+
+```typescript
+/**
+ * 查询数据的写法
+ * 通过设置 ignore 保证在组件卸载后，不会再重新设置组件状态，通过 return 一个清理函数来实现
+ * 仅当 query 发生变化时，才会重新调用该 useEffect
+ */
+useEffect(() => {
+  let ignore = false
+  ;(async () => {
+    const result = await axios(
+      'https://hn.algolia.com/api/v1/search?query=' + query
+    )
+    if (!ignore) setCount(result.count)
+  })()
+  return function cleanup() {
+    ignore = true
+  }
+}, [query])
+```
+
+这里通过局部变量 `ignore` 来处理：<b>异步请求返回结果前，组件已经销毁了</b>的场景。当组件已经销毁了，我们不应该继续使用 `useState` 方法来继续为其赋值（没啥大的影响，但是会有 warning 信息）。此时通过一个局部变量来进行标记，当组件卸载后不再执行后续步骤。
+
+### useState
+
+> 用来解决在函数组件内使用 state 特性的问题
+
+**知识要点**
+
+1. 一般来说，函数执行完毕，其作用域内的变量等会被回收掉，但是通过 `useState` 设置的变量会被 React 保留
+
+2. 可以这么读：向 `useState()` 内传入一个参数作为初始化数据，其会返回两个参数: state 和 setState，即当前的 state 和改变它的方法
+
+3. 不像 class 中的 `this.setState`，**更新 state 变量总是替换它而不是合并它**
+
+```js
+import React, { useState, useEffect } from 'react'
+
+interface Data {
+  name: string;
+  age: number;
+}
+
+// 这里结合 typescript 来使用
+function Test() {
+  const [data, setData] =
+    useState <
+    Data >
+    {
+      name: '',
+      age: 17,
+    }
+
+  /**
+   * 和 class 的 `setState()` 方法不同
+   * 通过 hook 来更新 state 是直接替换，而 `setState()` 是合并操作
+   * 这意味着 setData 时要传入完整的 state
+   */
+  useEffect(() => {
+    const { age } = data
+    setData({
+      ...data,
+      age: age + 1,
+    })
+  }, [])
+}
+```
+
+---
+
+我们接下来来讨论，`useState` 一些特性带来的"麻烦"
+
+React 在设计时出于性能的考虑，将多个状态的改变放在一个队列内，争取只重绘一次就能够解决问题。这样子就意味着，`useState` 本身是异步的，直接表现就是，当你调用 `setState` 方法之后，立即读取 `state` 仍为旧值，即读取不同步。
+
+看下面一个例子：
+
+```typescript
+const [timer, setTimer] = useState<number>(0)
+
+function handleTimer() {
+  const v = setTimeout(() => {}, 0)
+  setTimer(v)
+}
+
+useEffect(() => {
+  return function cleanup() {
+    // 仍为 0
+    clearTimeout(timer)
+  }
+}, [])
+```
+
+在上面的例子中，**并不能清除当前的定时器任务**，原因在于：timer 是 useState 的一个返回，读的是旧值，写的是新值，不是同一个值（即不同引用）。
+
+要解决这个问题，我们可以设置一个局部变量来保持同一引用，或者可以尝试一些更 React 的方式，使用 useRef 来保持其实例引用：
+
+```typescript
+const timer = useRef(0)
+
+function handleTimer() {
+  timer.current = setTimeout(() => {}, 0)
+}
+
+useEffect(() => {
+  return function cleanup() {
+    // correct!
+    clearTimeout(timer.current)
+  }
+}, [])
+```
+
+### useRef
+
+useRef 返回一个可变的 ref 对象，其 `.current` 属性被初始化为传入的参数。
+本质上来说就是在变量的 `.current` 保存了一个指向子组件实例的值
+
+```ts
+function Test() {
+  const helloRef = useRef(null)
+  // 使用
+  helloRef.current.focus()
+  return <input ref={helloRef} />
+}
+```
+
+### useReducer
+
+useReducer 可以看作是 `useState` 的进阶版本， 在 state 逻辑较复杂且包含多个子值，或者下一个 state 依赖于之前的 state 等场景中更加适用
+
+useReducer 的 state 和 dispatch 方法仅在当前声明组件内使用，在另外的组件内不能够访问到，一个解决办法是通过 useContext 来进行共享
+
+```js
+import React, { useState, useEffect, useContext, useReducer } from 'react'
+import { TriviaState } from '@/index.d.ts'
+
+/**
+ * 声明 reducer 方法，处理 action，返回新的 state
+ * 这里结合 typescript 使用，需要在 reducer 方法内指定 state 的类型和返回值类型
+ */
+function reducer(state: TriviaState, action): TriviaState {
+  switch (action.type) {
+    case 'showPanel':
+      return {
+        ...state,
+        visible: true,
+        current: action.current ? action.current : -127,
+      }
+    default:
+      break
+  }
+}
+
+function Test(props) {
+  // 初始值
+  const initState = {
+    triviaList: [],
+    current: -127,
+    visible: false,
+  }
+  // 声明 state 和 dispatch 方法，同时初始化 state
+  const [state, dispatch] = useReducer(reducer, initState)
+
+  const initTriviaList = async () => {
+    const params = {
+      group: state.group,
+    }
+    const res = await getTriviaList(params)
+    if (res.success) {
+      // 触发 state 更新
+      dispatch({
+        type: 'triviaList',
+        triviaList: res.data.list,
+      })
+    }
+  }
+
+  // 直接使用 state.triviaList 等
+}
+```
+
+### useContext
+
+接受一个 context 对象，并返回该 context 的当前值，当前的 context 值由上层组件中距离当前组件最近的 `<MyContext.Provider>` 的 value 决定
+
+调用了 useContext 的组件总会在 context 值变化时重新渲染
+
+useContext(MyContext) 能够读取 context 的值以及订阅 context 的变化
+
+下面将演示，如何将 useContext 和 useReducer 两者结合，从而达到共享 state 和 dispatch 方法的目的
+
+```js
+/**
+ * 声明一个 Context 对象，用来承载和订阅 state 和 dispatch
+ * 这里结合了 typescript
+ */
+import React from 'react';
+
+interface TriviaContext {
+    state: {};
+    dispatch: React.Dispatch<any>
+}
+
+export const TriviaContext = React.createContext<TriviaContext>({
+    state: {},
+    dispatch: () => {}
+});
+
+/**
+ * 组件A，提供 useReducer 内的 state 和 dispatch 方法
+ */
+import React, { useState, useEffect, useContext, useReducer } from 'react';
+import { TriviaState } from '@/index.d.ts';
+
+function reducer(state: TriviaState, action): TriviaState {
+    // statement
+}
+
+function A(props) {
+	// 初始值
+	const initState = {
+        triviaList: [],
+        current: -127,
+        visible: false
+    };
+    // 声明 state 和 dispatch 方法，同时初始化 state
+	const [state, dispatch] = useReducer(reducer, initState);
+
+	return (
+		将 state 和 dispatch 方法提供呗 context
+		<TriviaContext.Provider value={{ state, dispatch }}>
+		// statement
+		</TriviaContext.Provider>
+	);
+}
+```
+
+准备就绪后，在组件 B 内，对该 context 进行消费
+
+```js
+import React, { useContext, useEffect, useState } from 'react'
+import { TriviaContext } from './context'
+
+function B(props) {
+  // 获取 context 订阅内容，进行消费，对于 state 和 dispatch 可以直接使用
+  const { state, dispatch } = useContext(TriviaContext)
+
+  const cancel = () => {
+    dispatch({
+      type: 'closePanel',
+    })
+  }
+
+  useEffect(() => {
+    console.log(state)
+  }, [state.current])
+
+  // statement
+}
+```
+
+## HOC
+
+HOC 表示高阶组件，是基于 React 的组合特性而形成的设计模式，是一种对组件的抽象
+
+- 高阶组件是参数为组件，返回值为新组件的函数
+- 可以类比函数式编程，其接受一个组件，返回一个新组件
+- 通过函数进行封装，实现对组件的抽象
+- HOC 不会修改原组件，它会返回一个新组件，所以 HOC 是一个纯函数，没有副作用
+
+回想一下，在项目内什么地方有用到过高阶组件？
+
+- Redux 的 `connect(mapStateToProps, mapDispatchToProps)(FocusView)` 就是一个典型例子，`connect(mapStateToProps, mapDispatchToProps)` 返回一个 enhance 方法，然后将 FocusView 组件作为参数进行传递，最后获得一个新的组件
+- react-router 的 `withRouter(FlowHeader)` 为 props 添加了 history 属性
+- 再进一步想想，如果不使用 `PureComponent`，可以使用高阶组件来为每个组件添加 `shouldComponentUpdate()` 方法
+
+ok，看一个 HOC 的例子
+
+```js
+// test.js
+import React from 'react'
+
+export function enhance(WrappedComponent) {
+  return class extends React.PureComponent<{ name: string }, {}> {
+    static getDerivedStateFromProps(props, state) {
+      console.log(props)
+      console.log(state)
+    }
+    // 根据官方文档约定，不要将多余的 props 进行传递
+    render() {
+      // 过滤掉非此 HOC 额外的 props，且不要进行透传
+      const { extraProp, ...passThroughProps } = this.props
+
+      // 将 props 注入到被包装的组件中。
+      // 通常为 state 的值或者实例方法。
+      const injectedProp = someStateOrInstanceMethod
+
+      // 将 props 传递给被包装组件
+      return (
+        <WrappedComponent injectedProp={injectedProp} {...passThroughProps} />
+      )
+    }
+  }
+}
+
+export class Test extends React.PureComponent<{ name: string }, {}> {
+  constructor(props) {
+    super(props)
+  }
+  render() {
+    return <div>{this.props.name}</div>
+  }
+}
+```
+
+在该组件内，使用 HOC
+
+```js
+import React from 'react'
+import { Test, enhance } from '@/view/Homepage/Focus/test'
+
+// 通过使用HOC，在每次 render 之前，都会打印当前的 props 和 state
+const EnhanceTest = enhance(Test)
+class FocusView extends React.PureComponent<focusProps, focusState> {
+  render() {
+    return <Test name="hello" />
+  }
+}
+```
+
+重新再看看 redux 的 connect 函数，`const ConnectedComment = connect(mapStateToProps, mapDispatchToProps)(CommentList);`，实际上它进行了函数柯里化
+
+- `const enhance = connect(mapStateToProps, mapDispatchToProps);` connect 是一个函数，它的返回值为另外一个函数
+- `const ConnectedComment = enhance(CommentList);` 返回值为 HOC，它会返回已经连接 Redux store 的组件
+- 这样可以利用函数的优势，即通过自由组合来最大化利用
+
+一些注意的地方：
+
+- 不要在 `render()` 方法内使用 HOC，因为 HOC 会返回一个新的组件，根据 diff 算法，每次 render 都会将其卸载再加载，一方面会有性能问题，更重要的是会丢失组件和其子组件的状态
+- 可以将其放在 class 声明外，在极少数情况下，你需要动态调用 HOC。你可以在组件的生命周期方法或其构造函数中进行调用
+- 如果原组件有静态方法，则必须将静态方法也进行挂载，如果知道有哪些静态方法，则可以直接挂载，更好的是通过 react 提供的 `hoist-non-react-statics` 来拷贝所有的静态方法
+
+```js
+import hoistNonReactStatic from 'hoist-non-react-statics'
+
+function enhance(WrappedComponent) {
+  class Enhance extends React.Component {
+    /*...*/
+  }
+  hoistNonReactStatic(Enhance, WrappedComponent)
+  return Enhance
+}
+```
+
+## Ref
+
+### 总结
+
+Ref 可以理解为将 DOM 元素或者组件实例单独拿出来进行管理，官网上给出了适合使用的时机：
+
+- 管理焦点，文本选择或媒体播放，即一些需要操作 dom 去完成的事件
+- 触发强制动画
+- 集成第三方 DOM 库
+
+注意，**避免使用 refs 来做任何可以通过声明式实现来完成的事情**，特别是在使用过程中，结合 typescript 特别麻烦，要根据不同的 ref 使用情况来声明不同的检测方法
+
+Ref 在生命周期内的使用：
+
+- React 在组件卸载时传入 null 值，即 `componentWillUnmount()` 时会将 this.myRef.current 置为 null 来进行垃圾回收
+- ref 会在 componentDidMount 或 componentDidUpdate 生命周期钩子触发前更新，这意味着可以在 componentDidMount 和 componentDidUpdate 声明周期函数内获取到 this.myRef.current 的值
+
+Ref 相关的 api:
+
+- `this.myRef = React.createRef()` 创建一个 ref
+- `ref={this.myRef}` 将 myRef 挂载到指定元素/组件实例上，建立联系
+- `forwardRef((props, ref) => {})` 来将父组件 ref 和子组件内的 dom/组件实例建立联系
+
+### 探索过程
+
+思考一个问题，如果一个输入框需要在渲染完成后，自动获取焦点（参看 antd api 文档，并没有自动获取焦点的介绍），怎么做？
+
+第一个思路，就是通过 `document.querySelect()` 来获取 dom 元素，再为其触发 `focus()` 事件，这个操作在`render()`执行完之后，即在 `componentDidMount()` 和 `componentDidUpdate()` 生命周期内执行
+
+```js
+class Test extends React.PureComponent {
+    render() {
+        return (
+            <input type="text" className='title' />
+        );
+    }
+
+    componentDidMount() {
+        let node = document.querySelector('.title') as HTMLInputElement;
+        node.focus();
+    }
+}
+```
+
+第二个思路，通过 react 提供的 Refs 来执行，这里记录一个真实的案例，有一个表单放在 antd 的 drawer 内，通过点击事件来更改其展示类型，现在通过 ref 方式来为第一个 Input 添加聚焦
+
+- 在 `constructor()` 方法内创建一个 Refs，并挂载到 `this.myRef` 上，将其分发给实例属性，方便在整个组件内都可以使用
+- 在指定元素内通过 `ref` 属性来建立 `this.myRef` 和指定元素之间的关系
+- 访问 myRef 属性，通过 `this.myRef.current` 来访问 ref 的元素，通常要进行 null 判断
+- `this.myRef.current` 会根据 ref 挂载的节点类型的不同而发生改变，当 ref 属性用于 HTML 元素时，其 current 值为其底层 DOM 元素，当 ref 属性为自定义组件（即自定义类型时），其 current 指向该类型的实例对象，相当于完成了一次子组件向父组件的通信
+- 你不能在函数组件上使用 ref 属性，因为他们没有实例，但是可以在函数组件内部使用
+
+```js
+import React from 'react'
+
+class DrawerForm extends React.PureComponent<DrawerViewProps, DrawerViewState> {
+  /**
+   * ts 声明 myRef 类型，要注意在 ts 内 ref 的声明方法，放在其生命周期函数外面
+   * 这里其范性内存放 antd 的 Input 类型，如果是自定义的组件，这里存放自定义的 class 声明
+   */
+  myRef: React.RefObject<Input> | null
+  constructor(props) {
+    this.myRef = React.createRef()
+  }
+
+  render() {
+    return <Input ref={this.myRef} size="small" />
+  }
+
+  componentDidMount() {
+    // 执行一些负操作，会导致组件重新渲染，因此将mount阶段的聚焦放在异步事件内
+    setTimeout(() => {
+      if (this.myRef.current !== null) {
+        this.myRef.current.focus()
+      }
+    }, 0)
+  }
+
+  componentDidUpdate(prevProps) {
+    // 组件更新之后重新聚焦
+    if (this.myRef.current !== null) {
+      this.myRef.current.focus()
+    }
+  }
+
+  componentWillUnmount() {
+    console.log('componentWillUnmount', this.myRef) // 此时 this.myRef.current === null
+  }
+}
+```
+
+ok，这里我们已经可以在父组件内通过 ref 拿到 dom 节点和子组件的实例对象了，进一步思考一个问题，如果在父组件内需要拿到子组件内的 dom 节点，应该怎么做？
+
+第一个想法是在子组件内通过 ref 获取指定 dom 节点，然后将其传递给父组件，react 提供了一个更加直接的办法，即 ref 转发
+
+- 子组件通过 React.forwardRef(props, ref) 来接收父组件传值
+- 子组件将接收的 ref 挂载到需要 solo 的节点
+
+```js
+// 父组件
+import React from 'react'
+import Child from './child'
+
+class DrawerForm extends React.PureComponent<DrawerViewProps, DrawerViewState> {
+  // 因为 ref 在通过 forwardRef 转发之后实际挂载在 div 节点上，所以此时 ts 类型声明为 HTMLDivElement
+  myRef: React.RefObject<HTMLDivElement> | null
+  constructor(props) {
+    this.myRef = React.createRef()
+  }
+
+  render() {
+    return <Child ref={this.myRef} name="hello" />
+  }
+
+  componentDidMount() {
+    console.log(this.myRef.current) // 子组件 div 节点
+  }
+}
+
+// 子组件
+export const Child = React.forwardRef(
+  (props: { name: string }, ref: React.RefObject<HTMLDivElement> | null) => {
+    return <div ref={ref}>{props.name}</div>
+  }
+)
+```
+
+## Context
+
+> Context 提供了一个无需为每层组件手动添加 props，就能在组件树间进行数据传递的方法
+
+思考一个场景，实现系统的主题切换：
+
+1. 类似 iOS13 theme 的实现，通过配置 json 文件来管理不同主题的资源，封装一个 theme 类，在各个模块通过引入该类，使用类的成员变量，会有一个问题，就是更换主题之后需要重新加载页面才能够应用新的主题样式
+
+2. 参考[notepad++](https://notepad-plus-plus.org/) 结合 css filter invert 属性来改变颜色，问题就是颜色切换不够灵活
+
+3. 在 react 项目中，可以通过传递 props 来在各个组件内通过 props.theme 属性进行控制各个组件的展示，理论上可以实现，但是会造成各个组件都需要传递 props
+
+4. 通过类似 redux 的状态管理库来管理共享状态
+
+同时，React 提供 context 来解决此类问题：Context 提供了一种在组件之间共享此类值的方式，而不必显式地通过组件树的逐层传递 props
+
+更具体一点解释就是：有的时候在组件树中很多不同层级的组件需要访问同样的一批数据。Context 能让你将这些数据向组件树下所有的组件进行“广播”，所有的组件都能访问到这些数据，也能访问到后续的数据更新
+
+注意：Context 主要应用场景在于很多不同层级的组件需要访问同样一些的数据。请谨慎使用，因为这会使得组件的复用性变差。如果只是较少的组件需要用到公共数据，可以通过**组合组件**的方式来渲染
+
+所谓组合组件，直观的理解就是将某个需要用到公共元素的组件封装起来，在高层组件内进行引入，并且通过 props 属性将其进行传递
+
+首先封装一个 context 组件，用于在需要用到的组件内引入，Context 可以让我们无须明确地传遍每一个组件，就能将值深入传递进组件树
+
+```js
+import React from 'react'
+import { locale as customizeLocale } from '@/assets/locale'
+
+/**
+ * 为当前的 locale 创建一个 context，其值为一个 object，包含三个值
+ * 当 React 渲染一个订阅了这个 Context 对象的组件，这个组件会从组件树中离自身最近的那个匹配的 Provider 中读取到当前的 context 值
+ */
+export const LocaleContext = React.createContext({
+  // 当前语言
+  locale: 'zh_cn',
+  // 语言物料
+  assets: customizeLocale.zh_cn,
+  // 切换语言方法
+  toggleLocale: () => {
+    console.log('language checked!')
+  },
+})
+```
+
+之后，通过 LocaleContext.Provider 接受一个 state，将其传递给消费组件
+
+```js
+import React from 'react'
+// 国际化
+import { LocaleContext } from '@/cluster/context'
+import { locale as customizeLocale } from '@/assets/locale'
+
+class App extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = {
+      locale: 'en_us',
+      assets: customizeLocale.en_us,
+      toggleLocale: this.toggleLocal,
+    }
+  }
+
+  toggleLocal = (lang) => {
+    this.setState({
+      locale: lang,
+      assets: customizeLocale[lang],
+    })
+  }
+
+  render() {
+    return (
+      /**
+       * Provider 接收一个 value 属性，传递给消费组件
+       * 无论多深，任何组件都能读取这个值，在这个例子中，将 this.state 作为当前的值传递下去
+       * 当 Provider 的 value 值发生变化时，它内部的所有消费组件都会重新渲染
+       * 使用 Object.is 方法来进行新旧值对比，注意，如果是 value 的值为 object，则将其放在 this.state 内进行管理
+       */
+      <LocaleContext.Provider value={this.state}>
+        <div className={`homeBox ${systemConfig.hugeScreen ? 'max' : 'mac'}`}>
+          // statement
+        </div>
+      </LocaleContext.Provider>
+    )
+  }
+}
+
+export default App
+```
+
+最后，就是如何在组件内使用该 context，对于函数式组件和 class 组件，使用的方法会有所区别
+
+```js
+/**
+ * class 组件通过 static contextType = LocaleContext 来引入 context
+ * 使用 static 这个类属性来初始化你的 contextType，指定 contextType 读取当前的 context
+ * React 会往上找到最近的 theme Provider，然后通过 this.context 使用它的值
+ */
+import { LocaleContext } from '@/cluster/context'
+class ThemedButton extends React.Component {
+  static contextType = LocaleContext
+  render() {
+    return <Button theme={this.context} />
+  }
+}
+
+/**
+ * 对于函数式组件通过 LocaleContext.Consumer 来获取 context 值
+ */
+export function Header(props) {
+  return (
+    <LocaleContext.Consumer>
+      {/* value 在这里代表 this.context，也可以对其进行解构获取值 */}
+      {({ assets }) => (
+        <Row className="module-header" type="flex" justify="space-between">
+          // statement
+        </Row>
+      )}
+    </LocaleContext.Consumer>
+  )
+}
+```
+
+## fragments
+
+通过 `React.Fragments` 来将子元素列表添加到一个分组内，且不会添加额外的 dom 节点（一般组件需要封装在一个 div 元素内）
+
+在表格各组渲染中比较实用，目前仅支持 `key` 一种属性
+
+动机来源：
+
+- 在一个组件内返回一个子元素列表是一种很常见的模式
+- 子组件往往需要封装在 div 元素内
+- 但是在某些情况下加入 div 元素会产生错误，比如 table 标签内添加
+
+语法：
+
+```js
+function childList(props) {
+  return (
+    <dl>
+      {props.list.map((item) => {
+        ;<React.Fragment key={item.id}>
+          <dt>{item.name}</dt>
+          <dd>{item.label}</dd>
+        </React.Fragment>
+      })}
+    </dl>
+  )
+}
+```

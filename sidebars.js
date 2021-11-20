@@ -18,7 +18,12 @@ const sidebars = {
       type: 'category',
       label: 'Site Reliability',
       collapsed: true,
-      items: ['server/cloudServer', 'server/nginx', 'server/docker'],
+      items: [
+        'server/cloudServer',
+        'server/nginx',
+        'server/docker',
+        'server/db',
+      ],
     },
     {
       type: 'category',
@@ -38,7 +43,13 @@ const sidebars = {
       type: 'category',
       label: 'WPM',
       collapsed: true,
-      items: ['browser/corevitals', 'browser/chromeperf'],
+      items: ['browser/corevitals', 'browser/chromeperf', 'browser/navigator'],
+    },
+    {
+      type: 'category',
+      label: 'Devtools',
+      collapsed: true,
+      items: ['browser/devtools'],
     },
   ],
   languageSiderBar: [

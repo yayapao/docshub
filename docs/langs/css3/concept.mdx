@@ -1,0 +1,160 @@
+---
+id: concept
+title: CSS3 Concept
+sidebar_label: concept
+slug: concept
+---
+
+## CSS3 规范
+
+参考 [Airbnb CSS / Sass Styleguide](https://github.com/airbnb/css)
+
+- 2 个空格作为缩进
+- 选择器，属性名，属性值推荐用小写，推荐使用破折号而不是 camelCase
+- 不使用 id 选择器
+- 每个选择器另开新行
+- 大括号前和属性前添加空格
+- 规则声明之间用空行隔开
+- 注释独占一行，不要在写在行尾
+
+```css
+@charset "utf-8";
+/*样式表第一行声明样式表编码*/
+
+.body {
+  /*a. 布局定位属性 */
+  /*display, position, float, clear, visibility, overflow*/
+  display: block;
+
+  /*b. 自身属性，盒子模型*/
+  /*width, height, margin, padding, border */
+  /*5. 不需要为 0 指明单位*/
+  margin: 10px 0;
+
+  /*c. 文本属性*/
+  /*color, font, text-*, white-space..*/
+  /*6.颜色值不需要空格进行分隔，0-1小数，省略0*/
+  color: rgba(255, 255, 255, 0.75);
+  /*7. 统一使用单引号*/
+  font-family: 'Microsoft YaHei';
+
+  /*d. 其他属性*/
+  /*cursor, box-*, background-*...*/
+  cursor: pointer;
+
+  /* 定义无边框样式时，用 0 代替 none */
+  border: 0;
+}
+```
+
+## BFC
+
+BFC(Block Formatting Context) 块格式化上下文，结合 Box 和 Formatting Context 来理解：
+
+- Box 是 CSS 布局的最小单位
+- Formatting Context 是页面中的一块渲染区域，有自己的渲染规则，它决定其子元素如何定位以及和其他元素的关系和相互作用
+
+BFC 有点类似对象的封装特性，具有 BFC 特性的元素可以看作是隔离的独立容器，容器内的元素不会在布局上影响到外面的元素
+
+形成 BFC 的触发条件：
+
+- body 根元素
+- 浮动元素：float 除了 none 之外的值
+- 绝对定位：position: absolute || fixed
+- display 为 inline-block、table-cells、flex
+- overflow 除了 visible 之外的元素，通常使用 `overflow: hidden` 或者 `display: table-cell` 来实现 BFC
+
+## 盒子模型
+
+类似 swfit 的 UIView，每一个 html 元素都可以看成是一个方块，即“盒子”，根据 width/height 的界定，盒子模型分为**W3C 标准盒子模型**和**IE 怪异盒子模型**
+
+- W3C 标准盒子模型：content.height = height
+- IE 怪异盒子模型：content.height = height + padding + border.width
+
+`box-sizing` 用来切换块的盒子模型类型
+
+- `box-sizing: border-box;` 代表 IE 怪异盒子模型
+- `box-sizing: content-box;` 代表 W3C 标准盒子模型
+
+## media
+
+`@media` 可用于根据一个或多个基于设备类型、具体特点和环境的媒体查询来应用样式
+
+`@media` 可以针对不同的屏幕尺寸设置不同的样式，特别是如果你需要设置设计响应式的页面，`@media` 是非常有用的。当你重置浏览器大小的过程中，页面也会根据浏览器的宽度和高度重新渲染页面
+
+注意 `@media` 需要放在 CSS 内容的最下面，否则会被覆盖
+
+`@media` 样式规则： `@media 媒体类型 and (筛选条件){样式}`
+
+```css
+// max-width(小于等于)，min-height(大于等于) 高度同理
+@media screen and (max-width: 1680px) {
+  .V-content .con-cap .cap-time {
+    color: #fff;
+  }
+}
+```
+
+`@media screen and (orientation:portrait)`: 表示指定输出设备中的页面可见区域的高度大于或者等于宽度
+
+`@media screen and (orientation:landscape)`： 表示除 portrait 之外的所有情况
+
+## 文字样式相关
+
+`text-overflow` 属性确定如何向用户发出未显示的溢出内容信号，包含三个属性值，这个属性只对那些在块级元素溢出的内容有效，但是必须要与块级元素内联(inline)方向一致
+
+```css
+p {
+  /**
+   * 确定如何向用户展示溢出样式
+   * ellipsis: 用 ... 省略号来代替被截断的文本
+   * <string>: 通过自定义字段来代替被截断的文本。如果空间太小到连省略号都容纳不下，那么这个字符串也会被截断
+   * clip: 默认值，在内容区域的极限初裁剪文本
+   */
+  text-overflow: clip;
+}
+```
+
+`text-transform` 属性用来控制文本的大小写
+
+```css
+p {
+  /**
+   * 用来控制文本的大小写
+   * capitalize: 每个单词的首字母大写
+   * uppercase: 所有字母大写
+   * lowercase: 所有字母小写
+   * none: 默认值，不做任何转换
+   */
+  text-transform: none;
+}
+```
+
+`white-space` 属性用于确定如何处理元素内的空白（Tab，Space，Enter）
+
+```css
+p {
+  /**
+   * 用于确定如何处理元素内的空白（Tab，Space，Enter）
+   * pre-line: 所有空格、制表符合并成一个空格，回车不变，文本换行
+   * pre-wrap: 所有空白保留且生效，文本换行
+   * pre: 所有空白保留且生效，文本不换行
+   * nowrap: 所有的空白都合成一个空格，不换行
+   * normal: 默认值，所有的空白都合成一个空格，自动换行，这意味着回车等会失效
+   */
+  white-space: normal;
+}
+```
+
+`word-warp` 长单词或者 url 换行属性
+
+```css
+p {
+  /**
+   * 长单词或者url换行属性
+   * normal：浏览器默认值，只在允许的断字点换行
+   * break-word：在长单词或者url内部进行换行
+   */
+  word-wrap: normal;
+}
+```

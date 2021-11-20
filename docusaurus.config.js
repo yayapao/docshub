@@ -52,6 +52,10 @@ const themeConfig = {
             label: 'HTML5',
             to: '/docs/langs/html5/concept',
           },
+          {
+            label: 'CSS3',
+            to: '/docs/langs/css3/concept',
+          },
         ],
       },
       {

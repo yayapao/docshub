@@ -74,6 +74,12 @@ const sidebars = {
         'langs/html5/element',
       ],
     },
+    {
+      type: 'category',
+      label: 'CSS3',
+      collapsed: true,
+      items: ['langs/css3/concept', 'langs/css3/project'],
+    },
   ],
 }
 

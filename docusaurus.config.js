@@ -28,6 +28,16 @@ const themeConfig = {
           },
         ],
       },
+      {
+        label: 'Language',
+        position: 'left',
+        items: [
+          {
+            label: 'JavaScript',
+            to: '/docs/langs/javascript/concept',
+          },
+        ],
+      },
       // {
       //   type: 'doc',
       //   docId: 'intro',

@@ -35,6 +35,14 @@ const sidebars = {
       items: ['browser/corevitals', 'browser/chromeperf'],
     },
   ],
+  languageSiderBar: [
+    {
+      type: 'category',
+      label: 'JavaScript',
+      collapsed: true,
+      items: ['langs/javascript/concept', 'langs/javascript/grammar']
+    }
+  ]
 }
 
 module.exports = sidebars

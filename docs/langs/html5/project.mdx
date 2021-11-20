@@ -1,0 +1,118 @@
+---
+id: project
+title: HTML5 Project EXP
+sidebar_label: project
+slug: project
+---
+
+
+## 跨域
+
+出于浏览器的同源策略限制，协议，主机名，端口任一不同则形成跨域
+
+解决跨域的办法：
+
+- 通过 Nginx 反向代理
+- 结合 src 属性，通过 jsonp 来处理跨域
+- iframe 通过 postMessage 和 addEventListener('message')
+- 通过 websocket 进行通信
+
+jsonp 缺点：
+
+- 只能使用 get 请求
+- 安全问题
+- 不能返回各种 http 状态码
+
+```js
+// postMessage
+// 发起方
+var traget = document.getElementById('#test').postMessage('hello');
+// 接收方通过事件监听
+window.addEventListener('message', function (e) {});
+
+// jsonp
+// 向服务器test.com发出请求，该请求的查询字符串有一个callback参数，用来指定回调函数的名字
+<script src="http://test.com/service?callback=dosomething"></script>
+
+// 处理服务器返回回调函数
+<script type="text/javascript">
+    function dosomething(res){
+        // 处理获得的数据
+        console.log(res.data)
+    }
+</script>
+
+// 服务器回传数据
+dosomething({data: data});
+
+
+// websocket
+// 建立一个 websocket 实例对象
+var socket = new WebSocket("ws://www.test.com/service/data.do");
+// 只能够发送少量 string 类型的数据
+socket.send('hello');
+// 客户端接受服务端信息，通过监听 message
+socket.on('message', function(event) {
+    var data = event.data;
+})
+// 关闭 socket 协议
+socket.close();
+```
+
+### iframe 跨域问题
+
+这里记录一下项目内碰到的跨域问题以及解决办法
+
+iframe 相关跨域问题
+
+- [CSP: frame-ancestors](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/frame-ancestors)
+
+iframe srcdoc 属性尝试和拉取指定 url 的 document，在这个过程中：
+
+- 通过 http 请求获取指定 url 的文档模型
+- 通过 http 请求获取仍然存在跨域问题，通过替换成其他 url，发现可以获取到 html 元素，但是其中的引用资源，如果本身是相对路径，则会在本域加载不到
+- 在请求过程中服务器做了一次转发，因此会出现 302 状态码，直接被 onerror 捕获错误
+
+```js
+// 获取指定url的document
+getUrl () {
+  var request = this.makeHttpObject()
+  request.open("GET", targetUrl, true)
+  request.send(null)
+  request.addEventListener("loadend", function (e) {
+    console.log(e.target.responseText)
+    self.$refs.iframe.srcdoc = e.target.responseText
+  })
+  request.addEventListener("error", function (e) {
+    const headers = request.getResponseHeader("location")
+    console.log({ e, headers })
+  })
+},
+```
+
+## Android 和 iOS 键盘弹起样式问题
+
+解决 android 机键盘弹起和 iOS 解析方式不同问题：
+
+- 描述：iOS 会将元素及元素内子元素一起顶起，android 只会顶起父元素，其内部元素会产生样式问题
+- 解决：判断机型，监听屏幕的 `onresize` 事件，对子元素进行显示或者隐藏
+
+```javascript
+// andriod 兼容
+var u = navigator.userAgent
+
+if (u.indexOf('Android') > -1 || u.indexOf('Linux') > -1) {
+  //安卓手机
+  var oriH = document.body.offsetHeight
+  //  拿到获取焦点的input
+  function resize() {
+    var curH = document.body.offsetHeight
+    if (curH <= (oriH * 2) / 3) {
+      // 隐藏...
+    } else {
+      // 展示...
+    }
+  }
+  window.onresize = resize
+}
+```

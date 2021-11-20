@@ -64,6 +64,16 @@ const sidebars = {
       collapsed: true,
       items: ['langs/nodejs/concept', 'langs/nodejs/project'],
     },
+    {
+      type: 'category',
+      label: 'HTML5',
+      collapsed: true,
+      items: [
+        'langs/html5/concept',
+        'langs/html5/project',
+        'langs/html5/element',
+      ],
+    },
   ],
 }
 

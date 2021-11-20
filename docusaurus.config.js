@@ -48,6 +48,10 @@ const themeConfig = {
             label: 'Node.js',
             to: '/docs/langs/nodejs/concept',
           },
+          {
+            label: 'HTML5',
+            to: '/docs/langs/html5/concept',
+          },
         ],
       },
       {

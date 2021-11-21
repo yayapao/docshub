@@ -63,6 +63,17 @@ const sidebars = {
         'library/react/qa',
       ],
     },
+    {
+      type: 'category',
+      label: 'Webpack',
+      collapsed: true,
+      items: [
+        'library/webpack/concept',
+        'library/webpack/loader',
+        'library/webpack/plugin',
+        'library/webpack/optimization',
+      ],
+    },
   ],
   languageSiderBar: [
     {

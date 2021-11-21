@@ -138,7 +138,6 @@ gzip 是一个常用的优化方式，通过对资源文件进行进一步压缩
 
 react 内查看 `webpackDevServer.config.js` 配置，发现其已经开启了 gzip 压缩，即 `compress: true,`
 
-[koa2 内添加 gzip 配置](../package/e.node.md#koa-compress)
 
 对 nginx 进行配置，开启 gzip
 
@@ -162,7 +161,7 @@ gzip_types text/plain application/x-javascript text/css application/xml text/jav
 
 create-react-app 会将所有用到的模块都打包进一个js文件内，但是实际上首屏不用加载所有的功能模块，此时一个优化思路就是将不需要在首屏上加载的模块通过分片chunk的方式，异步进行加载，当进入到那个页面时，才去加载该模块进行渲染
 
-具体实现时通过 import 的异步加载方法结合 react-router 进行，参考[通过import()实现异步加载](../packages/b.react.md#通过import实现组件的异步加载)
+具体实现时通过 import 的异步加载方法结合 react-router 进行，参考通过import()实现异步加载
 
 ![afterasync](./afterasync.png)
 

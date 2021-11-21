@@ -1,0 +1,670 @@
+---
+id: libs
+title: Vue Libraries
+sidebar_label: libraries
+slug: libs
+---
+
+## Vuex
+
+> Vue的状态管理模式
+
+在设计思路上，Vuex和Redux并无太大区别，只不过它是一个专门为Vue应用开发的**状态管理模式**，它同样采用单向数据流：
+
+- state，驱动应用的数据源
+- view，以声明的方式将state映射到视图
+- actions，响应在view上用户触发事件导致state发生改变
+
+将组件的共享状态抽离到出来，以一个全局单例模式进行管理，下面介绍Vuex内比较重要的几个概念
+
+- state, getters 数据源，在组件内`computed`内进行映射
+- mutations, actions 事件，在组件内`methods`内进行映射
+
+### store
+
+首先声明一个容器，即store来存储相关的数据，如下
+
+```js
+// store/index.js
+import Vue from 'vue'
+import Vuex from 'vuex';
+
+Vue.use(Vuex);
+
+var store = new Vuex.Store({
+    state: {
+        list: [1,2,3]
+    },
+    actions: {
+    	delayAdd({ commit }, obj) {
+    		commit('increments', obj.payload)
+    	}
+    },
+    mutations: {
+		increments(state, payload) {
+    		// 在这里直接变更 state，不需要return
+    		state.list.concat(payload.list);
+    	}
+    },
+    getters: {
+        item: state => {
+            return state.list.find(item => item > 1);
+        }
+    },
+    modules: {
+
+    }
+});
+
+export default store;
+```
+
+之后，在声明Vue实例时，将store挂载到Vue的响应式系统内，之后可以通过 `this.$store` 来访问到store对象
+
+```js
+import Vue from 'vue'
+import App from './App.vue'
+import store from './store';
+
+Vue.config.productionTip = false
+
+new Vue({
+  store,
+  render: h => h(App),
+}).$mount('#app')
+```
+
+
+### state-mapState
+
+state 不用多说，是一个对象，view通过其进行渲染，actions触发改变它，是store实现的基础，更重要的问题是，在组件内如何获取state呢？
+
+在redux内，通过`mapStateToProps`来将store的state映射到props上，之后可以通过`this.props`来访问state
+
+在Vuex内，也有类似的方法，即`mapState`来访问state，mapState作为一个方法，传参可以接受数组和对象，返回一个对象，因此可以使用三点运算符来将其展开
+
+```js
+// demo.vue
+// statement
+<script>
+import Vue from "vue";
+import { mapState } from 'vuex';
+
+export default Vue.extend({
+  name: "VuexTest",
+  computed: {
+      ...mapState({
+      	  // 通过箭头函数返回
+          list: state => state.list,
+          // 通过字符串指定，等同于state.count
+          // 如果使用数组，实际上就是一个字符串数组，用来简化这种获取state的形式
+          count: 'count',
+          // 如果需要使用当前this，则需要使用常规函数
+          newCount(state) {
+          	return state.count + this.count;
+          }
+      })
+  },
+});
+</script>
+```
+
+除了mapState方法之外，还可以通过 `this.$store.state` 方法来访问当前state，一般不推荐
+
+
+### getters-mapGetters
+
+getter 可以看作是在store内对state逻辑处理的封装
+
+思考一个场景：state内有一个列表，然后每次组件内获取这个列表之后都需要对其进行筛选，来过滤掉某些字段，且这样的组件有多个，基本解决是在多个组件内获取state的数据，然后调用公用的方法来处理这份数据，基于这种思路Vuex提供了针对派生state的的解决方法，即利用getter来封装state内数据的处理逻辑
+
+getter可以看作是处理后的state，也是一份数据，在组件内可以通过`mapGetters`来进行获取，与`mapState`不同的是：当其传参为对象时，value不能是一个函数
+
+```js
+// demo.vue
+// statement
+<script>
+import Vue from "vue";
+import { mapGetters } from 'vuex';
+
+export default Vue.extend({
+  name: "VuexTest",
+  computed: {
+      ...mapGetters({
+          item: 'item'
+      }),
+  },
+});
+</script>
+```
+
+除了mapGetters方法来获取getters值之外，还可以通过 `this.$store.getters`来获取
+
+针对上面的场景，可以将gettters封装成一个方法，而不仅仅是一个值，来进行访问，如下：
+
+```js
+// statement
+var store = new Vuex.Store({
+    state: {
+        list: [1,2,3]
+    },
+    getters: {
+        details: (state) => (target) => {
+            return state.list.find(item => item === target);
+        }
+    },
+});
+```
+
+### mutations-mapMutations
+
+思考一些redux内reducer的用法，`Reducer(currentState, action) -> newState`，其中action为一个对象，可以保存type和data，通过 `store.dispatch(action)` 来触发reducer
+
+Vuex的 mutation 在某种程度上和 reducer 类似，先看看其声明方式：
+
+- 键名对应 type，在 commit 方法内调用
+- payload 对应额外传参
+- 通过 function，返回一个新的 state
+- commit 方法对应 dispatch
+
+```js
+var store = new Vuex.Store({
+    state: {
+        list: [1,2,3]
+    },
+    mutations: {
+    	increments(state, payload) {
+    		// 在这里直接变更 state，不需要return
+    		state.list.concat(payload.list);
+    	}
+    },
+});
+
+store.commit({
+	type: 'increments',
+	data: {}
+});
+```
+
+注意，mutation必须是同步函数，因为如果是异步函数，则不知在何时对其状态进行响应（即回调函数何时被调用），这部分和reducer的规则一样：
+
+- 不要直接修改state，修改其拷贝
+- 不要调用 `Date(), Math.random()` 等非纯函数
+- 不要做副作用的操作，比如api请求等
+
+继续思考一个问题，在组件内如何使用 mutation?
+
+可以通过 `mapMutations` 辅助函数来映射methods到mutations的关系，
+
+```vue
+<template>
+  <div>
+      <div>{{ list }}</div>
+      // 触发事件，改变 state
+      <button @click="add({type: 'add', list: [4,5]})">add</button>
+  </div>
+</template>
+
+<script>
+import Vue from "vue";
+import { mapState, mapMutations } from 'vuex';
+
+export default Vue.extend({
+  name: "VuexTest",
+  computed: {
+      ...mapState({
+          list: state => state.list,
+      }),
+  },
+  methods: {
+    ...mapMutations({
+      // 实际上映射成 this.$store.commit('add')
+      add: 'add'
+    })
+  },
+});
+</script>
+```
+
+### actions-mapActions
+
+Vuex 内也提出了 action 的概念，但是不同于 redux，它的出现主要是为了解决在 mutation 不能执行的异步问题
+
+- Action 提交的是 mutation，而不是直接变更 state，这意味着**不能再 action 内直接使用 state**，可以通过 `context` 进行取值
+- Action 可以包含任意的异步操作
+
+在 store 内新建一个actions
+
+```js
+var store = new Vuex.Store({
+  state: {
+    list: [1, 2, 3]
+  },
+  // 通过es6语法直接获取commit方法，可以传递其他值，用obj进行承接
+  actions: {
+    delayAdd({ commit }, obj) {
+      setTimeout(function() {
+        // mutuactions 通过 commit 来进行调用
+        commit("clear")
+      }, obj.time)
+    },
+    // 多层异步事件嵌套情况
+    async actionB ({ dispatch, commit }) {
+      // 等待 actionA 完成，action 通过 dispatch 来进行调用
+	    await dispatch('actionA')
+	    commit('gotOtherData', await getOtherData())
+	 }
+  },
+  mutations: {
+    add(state, payload) {
+      state.list = state.list.concat(payload.list)
+    },
+    clear(state) {
+        state.list = []
+    }
+  },
+});
+```
+
+在组件内使用，通常通过`mapActions`来进行映射，也可以通过`this.$store.dispatch('delayAdd')`来执行
+
+```vue
+<script>
+import Vue from "vue"
+import { mapState, mapActions } from "vuex"
+
+export default Vue.extend({
+  name: "VuexTest",
+  computed: {
+    ...mapState({
+      list: state => state.list
+    })
+  },
+  methods: {
+    ...mapActions({
+      delayAdd: 'delayAdd'
+    })
+  }
+})
+</script>
+```
+
+
+### module
+
+模块化是为了解决数据或者业务复杂的场景，Vuex通过module允许我们将store进行切分，每个module拥有自己的state,getters,actions,mutations
+
+一个简单的例子：注意 `namespaced` 的使用，如果设置为 true，则相当于添加 `moduleName: { ...module content }`，为模块设置了一个命名空间，将其内容放在该命名空间下
+
+先看看 `module` 在store.js内的应用
+
+```js
+// store.js
+import Vue from 'vue'
+import Vuex from 'vuex'
+import topology from './topologyModule'
+
+Vue.use(Vuex)
+
+const store = new Vuex.Store({
+  modules: {
+    "topology": topology
+  },
+  // statements
+})
+
+export default store
+```
+
+接着写入一个module.js
+
+```js
+// module.js
+export default {
+  namespaced: true,
+  state: {
+    // 原始数据
+    data: {
+      nodes: [],
+      edges: []
+    },
+  },
+  mutations: {
+    // payload 为传参
+    setTopologyData (state, { data }) {
+      state.data = Object.assign({}, data)
+    },
+  }
+}
+```
+
+最后，解决在组件内引用问题
+
+```vue
+<script>
+import { mapState, mapMutations } from "vuex"
+
+export default {
+  name: "TopologyDetails",
+  computed: {
+    // 第一种写法, state/moduleName/state
+    ...mapState({
+      currentNode: state => state.topology.data,
+    }),
+    // 第二种写法，先配置好路径，再引用 state
+    ...mapState('topology', {
+      currentNode: state => state.data,
+    }),
+  methods: {
+    ...mapMutations('topology', {
+      setTopologyData: 'setTopologyData'
+    })
+  }
+}
+</script>
+```
+
+
+## Vue CodeMirror
+
+::: tip
+基于 CodeMirror，适用于 Vue 的 Web 代码编辑器
+:::
+
+[CodeMirror](https://codemirror.net/)
+[Vue-CodeMirror](https://github.com/surmon-china/vue-codemirror)
+
+`npm install vue-codemirror --save` 引入依赖，通过 `import` 相关的插件资源来实现增量功能
+
+一个简单的入门示例：
+
+```vue
+<template>
+  <div>
+    <codemirror v-model="code" :options="cmOptions" />
+  </div>
+</template>
+
+<script>
+import { codemirror } from 'vue-codemirror'
+import 'codemirror/addon/selection/active-line.js'
+// vue grammar extension
+import 'codemirror/mode/vue/vue.js'
+// control theme
+import 'codemirror/lib/codemirror.css'
+import 'codemirror/theme/base16-dark.css'
+
+const langs = {
+  vue: 'text/x-vue',
+  js: 'text/javascript'
+}
+
+export default {
+  components: {
+    codemirror
+  },
+  props: {
+    value: {
+      type: String,
+      default: 'hello world!'
+    },
+    lang: {
+      type: String,
+      default: 'vue'
+    }
+  },
+  data () {
+    return {
+      code: this.value,
+      langs,
+      cmOptions: {
+        tabSize: 2,
+        mode: langs[this.lang],
+        styleActiveLine: true,
+        theme: 'base16-dark',
+        lineNumbers: true,
+        line: true,
+        readOnly: true
+      }
+    }
+  }
+}
+</script>
+```
+
+
+
+## Vue Router
+
+::: tip
+Vue Router 是 Vue.js 官方的路由管理器。它和 Vue.js 的核心深度集成，让构建单页面应用变得易如反掌
+:::
+
+
+通过 `npm install -s vue-router` 安装package
+
+在组件内可以使用
+
+- `this.$route` 访问当前路有对象，在组件生命周期函数内均可以访问
+- `this.$router` 访问路由器，可以通过路由器来进行路有控制，控制跳转新路由等，相当于一个Router实例
+
+
+### Q&A
+
+1. `Navigating to current location is not allowed`
+
+- 原因：导航重复请求，由 vue-router 抛出错误
+- 解决：屏蔽这个错误提示，vue-router 升级版本之后，`Router.push()` 改为异步方法，通过重写 `catch` 方法来阻止抛出错误的操作
+
+```js
+// 捕获这个错误，但是不再抛出
+this.$router.push({
+    name: "host",
+    query: this.queryData
+}).catch(err => {})
+```
+
+
+### 导航守卫
+
+**全局守卫**
+
+从一个路由跳转至一个新的路由，期间会经历一个过程，即已经离开当前路由和即将进入新的路由，这两个过程由vue-router提供的导航守卫来进行控制
+
+- 全局前置守卫，通过 `router.beforeEach((to, from, next) => {})` 进行，对于前置守卫，它可以在适当的时机更改路由，其表现通过 `next()` 函数的传参进行控制，且该方法必须被调用来resolve这个守卫函数，需要重点关注`next()`的表现
+- 全局后置守卫，通过 `router.afterEach((to, from) => {})` 进行
+- 可以为每个路由单独配置守卫
+
+```js
+// statements
+const router = new Router({
+    routes
+});
+
+router.beforeEach((to, from, next) => {
+    console.log(to, from);
+    // 不进行传参，则表示执行下一个钩子，如果全部钩子函数执行完毕，则导航状态更新为confirmed
+    next();
+    // 传入一个布尔值，且值为false，会中断当前导航，如果该过程中url发生改变，则重定向为from地址
+    next(false);
+    // 传入一个Error实例，会使导航终止，且错误会上报给 router.onError()
+    next(new Error('error'));
+    // 传入一个对象，将其重定向到指定路由，配置参考路由配置
+    next({
+      path: '/page'
+    });
+});
+
+router.afterEach((to, from) => {
+    console.log(to, from);
+});
+```
+
+**组件内守卫**
+
+即在组件内可以通过钩子函数监听到路由变化
+- 需要显示调用 `next()`
+- 在 `beforeRouteEnter` 内，Vue 实例还没有初始化，此时不能直接访问 this，但是可以通过传递回调来兼容
+- `beforeRouteLeave` 通常使用场景：禁止用户在还未保存修改行为时突然离开，通过 `next(false)` 来阻止取消路由跳转
+
+```js
+export default {
+  beforeRouteEnter (to, from, next) {
+    // 在渲染该组件的对应路由被 confirm 前调用
+    // 不能获取组件实例 `this`，因为当守卫执行前，组件实例还没被创建
+    next(vm => {
+      // 兼容方法，传递回调函数，在实例创建后调用
+    }) 
+  },
+  beforeRouteUpdate (to, from, next) {
+    // 在当前路由改变，但是该组件被复用时调用
+    // 举例来说，对于一个带有动态参数的路径 /foo/:id，在 /foo/1 和 /foo/2 之间跳转的时候，
+    // 由于会渲染同样的 Foo 组件，因此组件实例会被复用。而这个钩子就会在这个情况下被调用
+    // 可以访问组件实例 `this`
+  },
+  beforeRouteLeave (to, from, next) {
+    // 导航离开该组件的对应路由时调用
+    // 可以访问组件实例 `this`
+    next(false)
+  }
+}
+```
+
+
+### 基本使用
+
+动态路由匹配和嵌套路由的区别：其命中路由相似，但是其意义不同，嵌套路由会在当前路由内渲染子路由，有父子关系
+
+注意区别`this.$route`内的query和params属性：
+
+- params 用于动态路由匹配，例如 `router.push({ name: 'page1', params: { name: 'uuuu' }})` 会命中 /page1/uuuu
+- query 为查询参数，通过 `?` 来进行标识，例如 `router.push({ name: 'page1', query: { name: 'rrrr' }})` 会命中 /page1?name=rrrr
+
+通过配置 `redirect` 进行重定向
+ 
+封装一个路由器，其输出为一个Router实例
+
+```js
+import Vue from 'vue';
+import Router from 'vue-router';
+import Page1 from './Page1';
+import Page2 from './Page2';
+import PageChild from './PageChild';
+import PageNull from './PageNull';
+
+// 向Vue内注入Router插件，使其能够在全局范围内被使用
+Vue.use(Router);
+
+// 不仅定义了匹配规则，同时也定义了匹配优先级
+const routes = [
+  // 通过:name进行动态匹配，在组件内通过 `this.$route.params.name` 获取动态参数
+  // 此时 /page1 不会命中该路由，直接展示404
+  // 通过 name 属性来为路由设置别名
+    { path: '/page1/:name', name: 'page1', component: Page1 },
+    // children用于匹配子路由，需要在父路有中，添加 <router-view>
+    {
+        path: '/page2', component: Page2,
+        children: [{
+          // 匹配到 /page2/child 时会命中
+            path: 'child',
+            component: PageChild
+        }]
+    },
+    // 通过通配符来匹配前面都没有命中的路由，通常为404页面
+    { path: '*', component: PageNull }
+];
+
+export const router = new Router({
+    routes
+});
+```
+
+将路由器应用到app内
+
+```js
+import Vue from 'vue'
+import App from './App.vue'
+import { router } from './bootcamp/Router';
+
+Vue.config.productionTip = false
+
+new Vue({
+  router,
+  render: h => h(App),
+}).$mount('#app')
+```
+
+在了解了路由的匹配声明方式和规则之后，下面继续了解怎么实现路由跳转，可以参考`window.history`特性进行理解，提供四种方法：
+
+- `<router-link to="/page1/uuu">test</router-link>`，通过 router-link 标签来进行路由跳转
+- `this.$router.push('/page1/uuu')` 通过路由器实例来进行跳转
+- `this.$router.replacereplace('/page1/uuu')` 通过路由器实例来进行跳转，区别于push方法，它会替换当前的路由
+- `this.$router.go(-1)` 后退
+
+
+### 高级特性
+
+你会发现，对于动态路由匹配，在组件内每次都需要去通过 `this.$route.params` 去获取参数，这里提供三种方式对其进行解耦操作，即直接将参数作为props传入组件
+
+- 通过布尔模式进行配置，是否启动props来接受参数
+- 对象模式，直接为 `props` 进行赋值，将对象进行传递
+
+```js
+const routes = [
+    {
+        path: '/page2', component: Page2,
+        children: [{
+            path: 'child/:name',
+            component: PageChild,
+            // 布尔模式
+            // props: true,
+            // 对象模式
+            // props: { name: 'yyy' },
+            // 函数模式
+            props: route => {
+                // route 为当前路由对象
+                return {
+                    name: route.params.name
+                }
+            }
+        }]
+    },
+];
+
+// PageChild
+<template>
+  <div>
+      {{name}}
+  </div>
+</template>
+
+// 通过 props 来接受 name 参数，比如当路由为 /page2/child/yy 时，其name值为yy
+<script lang='ts'>
+import Vue from "vue";
+export default Vue.extend({
+  name: "PageChildren",
+  props: ['name'],
+});
+</script>
+```
+
+还有一个很棒的特性，滚动行为记录，这个特性在博客网站内很有帮助，它能够记录你之前访问页面所在的位置，但是这个功能仍有局限性：
+
+- 这个功能只在支持 `history.pushState` 的浏览器中可用
+- 第三个参数 savedPosition 当且仅当 popstate 导航 (通过浏览器的 前进/后退 按钮触发) 时才可用
+
+```js
+const router = new VueRouter({
+  routes: [...],
+  scrollBehavior (to, from, savedPosition) {
+    if (savedPosition) {
+      return savedPosition;
+    } else {
+      // 利用hash模仿锚点位置
+      // return to.hash
+      return {x: 0, y: 0};
+    }
+  }
+})
+```
+

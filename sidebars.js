@@ -65,6 +65,15 @@ const sidebars = {
     },
     {
       type: 'category',
+      label: 'Vue',
+      collapsed: true,
+      items: [
+        'library/vue/concept',
+        'library/vue/libs',
+      ],
+    },
+    {
+      type: 'category',
       label: 'Webpack',
       collapsed: true,
       items: [

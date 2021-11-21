@@ -67,10 +67,13 @@ const sidebars = {
       type: 'category',
       label: 'Vue',
       collapsed: true,
-      items: [
-        'library/vue/concept',
-        'library/vue/libs',
-      ],
+      items: ['library/vue/concept', 'library/vue/libs'],
+    },
+    {
+      type: 'category',
+      label: 'NestJs',
+      collapsed: true,
+      items: ['library/nestjs/concept', 'library/nestjs/qa'],
     },
     {
       type: 'category',

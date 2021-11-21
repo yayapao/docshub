@@ -15,7 +15,7 @@ const themeConfig = {
     items: [
       { to: '/blog', label: 'Blog', position: 'left' },
       {
-        label: 'Runtime',
+        label: 'DevOps',
         position: 'left',
         items: [
           {
@@ -51,6 +51,10 @@ const themeConfig = {
           {
             label: 'Python3',
             to: '/docs/langs/python/concept',
+          },
+          {
+            label: 'Golang',
+            to: '/docs/langs/go/concept',
           },
           {
             label: 'HTML5',

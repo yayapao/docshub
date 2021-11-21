@@ -57,7 +57,11 @@ const sidebars = {
       type: 'category',
       label: 'React',
       collapsed: true,
-      items: ['library/react/concept', 'library/react/libs', 'library/react/qa'],
+      items: [
+        'library/react/concept',
+        'library/react/libs',
+        'library/react/qa',
+      ],
     },
   ],
   languageSiderBar: [
@@ -85,6 +89,18 @@ const sidebars = {
     },
     {
       type: 'category',
+      label: 'Python3',
+      collapsed: true,
+      items: ['langs/python/concept', 'langs/python/grammar'],
+    },
+    {
+      type: 'category',
+      label: 'Golang',
+      collapsed: true,
+      items: ['langs/go/concept', 'langs/go/grammar'],
+    },
+    {
+      type: 'category',
       label: 'HTML5',
       collapsed: true,
       items: [
@@ -93,12 +109,7 @@ const sidebars = {
         'langs/html5/element',
       ],
     },
-    {
-      type: 'category',
-      label: 'Python3',
-      collapsed: true,
-      items: ['langs/python/concept', 'langs/python/grammar'],
-    },
+
     {
       type: 'category',
       label: 'CSS3',

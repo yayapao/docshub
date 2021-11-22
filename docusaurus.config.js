@@ -100,8 +100,9 @@ const themeConfig = {
       },
       {
         href: 'https://github.com/Y-lonelY',
-        label: 'GitHub',
+        className: 'header-github-link',
         position: 'right',
+        'aria-label': 'GitHub repository',
       },
     ],
   },

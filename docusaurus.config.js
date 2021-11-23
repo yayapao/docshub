@@ -94,9 +94,10 @@ const themeConfig = {
         ],
       },
       {
-        label: 'Repo',
+        className: 'header-npm-link',
         position: 'right',
         to: '/docs/repo/',
+        'aria-label': 'npm repository',
       },
       {
         href: 'https://github.com/Y-lonelY',

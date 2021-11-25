@@ -4,66 +4,17 @@ title: Network
 sidebar_label: Network
 ---
 
+[中科大郑烇、杨坚全套《计算机网络（自顶向下方法 第7版，James F.Kurose，Keith W.Ross）》课程](https://www.bilibili.com/video/BV1JV411t7ow?p=4)
 [国防科技大学 - 计算机网络](https://www.bilibili.com/video/BV1ft411G7Bu?p=2&spm_id_from=pageDriver)
 
+## 网络基础
 
-## 协议层次及分层模型
+### 网络结构
 
-协议定义不同 node 之间的规范
-
-接口定义同一个 node 中不同模块的规范
-
-
-
-### 网络协议栈
-
-应用层：process - process, message
-
-- FTP, SMTP, HTTP
-
-（表示层：ISO 标准7层模型，加密、压缩）
-
-（会话层：ISO 标准7层模型，多个流数据的同步）
-
-传输层：end - end, segment(数据段)
-
-- TCP, UDP
-
-网络层：host - host, datagram/packet(报文)
-
-- IP, routing protocol
-
-链路层：point - point, frame(帧)
-
-- PPP
-
-物理层：bits on the wire, bits(比特)
-
-
-
-
-
-## 网络应用
-
-### 网络应用架构
-
-
-### 网络传输层协议
-
-#### TCP
-
-reliable transport
-
-flow control: 发送方的流量要小于接收方流量的消费速度，不能把接收方的缓冲器给淹没Lee
-
-congestion control（拥赛控制）: 在高负载时能够控制流量，避免发出去的包被丢弃
-
-conneection-oriented（面向连接）: 在服务端和客户端建立连接
-
-
-
-
-
+互联网的结构可以分为：
+- 网络边缘（edge），比如主机、服务器
+- 网络核心（core），比如交换机
+- 接入网和物理媒介（access），用来连接边缘和核心
 
 
 

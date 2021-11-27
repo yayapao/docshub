@@ -7,7 +7,8 @@
 
 import React, { memo } from 'react'
 import clsx from 'clsx'
-import Image from '@docusaurus/theme-classic'
+// 通过 @theme/IdealImage 会产生 bug
+import Image from '@docusaurus/plugin-ideal-image/src/theme/IdealImage'
 import Link from '@docusaurus/Link'
 
 import styles from './styles.module.css'

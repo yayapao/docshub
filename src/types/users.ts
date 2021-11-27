@@ -10,7 +10,7 @@ export type User = {
   preview: any;
   website: string;
   source: string | null;
-  tags: TagType[];
+  tags?: TagType[];
 };
 
 export type TagType =

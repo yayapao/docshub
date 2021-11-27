@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react'
 
 import Layout from '@theme/Layout'
 import ShowcaseCard from './_components/ShowcaseCard'
+import { User } from '@site/src/types/users'
 import styles from './styles.module.css'
 
 const TITLE = 'Docusaurus Site Showcase'
@@ -27,12 +28,19 @@ function ShowcaseHeader() {
 }
 
 function ShowcaseCards() {
+  const user: User = {
+    title: 'hello',
+    description: 'hello',
+    preview: 'https://up-server-common-1305955125.cos.ap-shanghai.myqcloud.com/fe/metrics/coding.jpg?imageMogr2/thumbnail/!50p',
+    source: 'https://github.com/Y-lonelY/upDocs',
+    website: 'https://github.com/Y-lonelY/upDocs'
+  }
   return (
     <section className="margin-top--lg margin-bottom--xl">
       <div className="container margin-top--lg">
         <h2 className={styles.showcaseHeader}>All sites</h2>
         <ul className={styles.showcaseList}>
-          <ShowcaseCard key="test" user="hello" />
+          <ShowcaseCard key="test" user={user} />
         </ul>
       </div>
     </section>

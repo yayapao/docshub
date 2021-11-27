@@ -96,7 +96,7 @@ const themeConfig = {
       {
         className: 'header-npm-link',
         position: 'right',
-        to: '/docs/repo/',
+        to: 'repo',
         'aria-label': 'npm repository',
       },
       {
@@ -135,6 +135,7 @@ const config = {
   ...metaConfig,
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
+  plugins: [require.resolve('@docusaurus/plugin-ideal-image')],
   presets: [
     [
       '@docusaurus/preset-classic',

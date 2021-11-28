@@ -140,6 +140,14 @@ const sidebars = {
       items: ['langs/css3/concept', 'langs/css3/project'],
     },
   ],
+  wpmonitSiderBar: [
+    {
+      type: 'category',
+      label: 'wpmonit',
+      collapsed: false,
+      items: ['repo/wpmonit/readme', 'repo/wpmonit/metrics'],
+    },
+  ]
 }
 
 module.exports = sidebars

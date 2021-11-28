@@ -8,6 +8,6 @@ export const users: User[] = [
     preview:
       'https://docs-1300606192.cos.ap-shanghai.myqcloud.com/repo/wpmonit.jpg',
     source: 'https://github.com/Y-lonelY/wpmonit',
-    website: 'https://www.npmjs.com/package/wpmonit',
+    website: '/docs/repo/wpmonit/readme',
   },
 ]

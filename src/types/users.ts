@@ -1,17 +1,18 @@
 export type Tag = {
-  label: string;
-  description: string;
-  color: string;
-};
+  label: string
+  description: string
+  color: string
+}
 
 export type User = {
-  title: string;
-  description: string;
-  preview: any;
-  website: string;
-  source: string | null;
-  tags?: TagType[];
-};
+  key: string
+  title: string
+  description: string
+  preview: any
+  website: string
+  source: string | null
+  tags?: TagType[]
+}
 
 export type TagType =
   | 'favorite'
@@ -23,4 +24,4 @@ export type TagType =
   | 'large'
   | 'meta'
   | 'personal'
-  | 'rtl';
+  | 'rtl'

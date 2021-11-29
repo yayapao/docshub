@@ -34,17 +34,12 @@ const ShowcaseCard = memo(({ user }: { user: User }) => (
             {user.title}
           </Link>
         </h4>
-        {user.source && (
+        {user.github && (
           <Link
-            href={user.source}
+            href={user.github}
             tabIndex={0}
-            className={clsx(
-              'button button--secondary button--sm',
-              styles.showcaseCardSrcBtn
-            )}
-          >
-            source
-          </Link>
+            className="header-github-link"
+          ></Link>
         )}
       </div>
       <p className={styles.showcaseCardBody}>{user.description}</p>

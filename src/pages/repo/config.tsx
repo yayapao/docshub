@@ -7,7 +7,16 @@ export const users: User[] = [
     description: 'Web performance measure SDK!',
     preview:
       'https://docs-1300606192.cos.ap-shanghai.myqcloud.com/repo/wpmonit.jpg',
-    source: 'https://github.com/Y-lonelY/wpmonit',
+    github: 'https://github.com/Y-lonelY/wpmonit',
     website: '/docs/repo/wpmonit/readme',
+  },
+  {
+    key: 'reactErrorCatcher',
+    title: 'React Error Catcher',
+    description: 'Web performance measure SDK!',
+    preview:
+      'https://docs-1300606192.cos.ap-shanghai.myqcloud.com/repo/react-error-catcher.jpg',
+    github: 'https://github.com/Y-lonelY/react-error-catcher',
+    website: '/docs/repo/react-error-catcher/readme',
   },
 ]

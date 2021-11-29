@@ -12,6 +12,26 @@
 // @ts-check
 
 /** @type {import('@docusaurus/plugin-content-docs').SidebarsConfig} */
+const repoSiderbarsConfig = {
+  wpmonitSiderBar: [
+    {
+      type: 'category',
+      label: 'wpmonit',
+      collapsed: false,
+      items: ['repo/wpmonit/readme', 'repo/wpmonit/metrics'],
+    },
+  ],
+  reactErrorCatcher: [
+    {
+      type: 'category',
+      label: 'React Error Catcher',
+      collapsed: false,
+      items: ['repo/react-error-catcher/readme', 'repo/react-error-catcher/design'],
+    },
+  ],
+}
+
+/** @type {import('@docusaurus/plugin-content-docs').SidebarsConfig} */
 const sidebars = {
   serverSiderbar: [
     {
@@ -140,14 +160,7 @@ const sidebars = {
       items: ['langs/css3/concept', 'langs/css3/project'],
     },
   ],
-  wpmonitSiderBar: [
-    {
-      type: 'category',
-      label: 'wpmonit',
-      collapsed: false,
-      items: ['repo/wpmonit/readme', 'repo/wpmonit/metrics'],
-    },
-  ]
+  ...repoSiderbarsConfig,
 }
 
 module.exports = sidebars

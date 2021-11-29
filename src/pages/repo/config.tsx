@@ -13,7 +13,7 @@ export const users: User[] = [
   {
     key: 'reactErrorCatcher',
     title: 'React Error Catcher',
-    description: 'Web performance measure SDK!',
+    description: 'Powerful error catcher in React!',
     preview:
       'https://docs-1300606192.cos.ap-shanghai.myqcloud.com/repo/react-error-catcher.jpg',
     github: 'https://github.com/Y-lonelY/react-error-catcher',

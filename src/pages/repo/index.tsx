@@ -22,7 +22,7 @@ function ShowcaseCards() {
   return (
     <section className="margin-top--lg margin-bottom--xl">
       <div className="container margin-top--lg">
-        <h2 className={styles.showcaseHeader}>All sites</h2>
+        <h2 className={styles.showcaseHeader}>My repos</h2>
         <ul className={styles.showcaseList}>
           {users &&
             users.map((u) => {

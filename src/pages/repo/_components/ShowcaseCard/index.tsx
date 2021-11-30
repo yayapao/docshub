@@ -34,6 +34,14 @@ const ShowcaseCard = memo(({ user }: { user: User }) => (
             {user.title}
           </Link>
         </h4>
+        {user.npm && (
+          <Link
+            href={user.npm}
+            style={{ marginRight: '.4rem' }}
+            tabIndex={1}
+            className="header-npm-link"
+          ></Link>
+        )}
         {user.github && (
           <Link
             href={user.github}

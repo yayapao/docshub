@@ -8,6 +8,7 @@ export const users: User[] = [
     preview:
       'https://docs-1300606192.cos.ap-shanghai.myqcloud.com/repo/wpmonit.jpg',
     github: 'https://github.com/Y-lonelY/wpmonit',
+    npm: 'https://www.npmjs.com/package/wpmonit',
     website: '/docs/repo/wpmonit/readme',
   },
   {
@@ -17,6 +18,7 @@ export const users: User[] = [
     preview:
       'https://docs-1300606192.cos.ap-shanghai.myqcloud.com/repo/react-error-catcher.jpg',
     github: 'https://github.com/Y-lonelY/react-error-catcher',
+    npm: 'https://www.npmjs.com/package/react-error-catcher',
     website: '/docs/repo/react-error-catcher/readme',
   },
 ]

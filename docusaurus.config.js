@@ -94,7 +94,7 @@ const themeConfig = {
         ],
       },
       {
-        className: 'header-npm-link',
+        className: 'header-repo-link',
         position: 'right',
         to: 'repo',
         'aria-label': 'npm repository',

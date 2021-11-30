@@ -10,7 +10,8 @@ export type User = {
   description: string
   preview: any
   website: string
-  github?: string | null
+  github?: string
+  npm?: string
   tags?: TagType[]
 }
 

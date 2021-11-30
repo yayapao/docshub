@@ -38,17 +38,17 @@ const themeConfig = {
             label: 'Server',
             to: '/docs/cloudServer/',
             // 设置高亮
-            activeBaseRegex: '/docs/server'
+            activeBaseRegex: '/docs/server',
           },
           {
             label: 'Browser',
             to: '/docs/browser/corevitals',
-            activeBaseRegex: '/docs/browser'
+            activeBaseRegex: '/docs/browser',
           },
           {
             label: 'Library',
             to: '/docs/library/nodejs',
-            activeBaseRegex: '/docs/library'
+            activeBaseRegex: '/docs/library',
           },
         ],
       },
@@ -59,37 +59,37 @@ const themeConfig = {
           {
             label: 'JavaScript',
             to: '/docs/langs/javascript/concept',
-            activeBaseRegex: '/docs/langs/javascript'
+            activeBaseRegex: '/docs/langs/javascript',
           },
           {
             label: 'TypeScript',
             to: '/docs/langs/typescript/concept',
-            activeBaseRegex: '/docs/langs/typescript'
+            activeBaseRegex: '/docs/langs/typescript',
           },
           {
             label: 'Node.js',
             to: '/docs/langs/nodejs/concept',
-            activeBaseRegex: '/docs/langs/nodejs'
+            activeBaseRegex: '/docs/langs/nodejs',
           },
           {
             label: 'Python3',
             to: '/docs/langs/python/concept',
-            activeBaseRegex: '/docs/langs/python'
+            activeBaseRegex: '/docs/langs/python',
           },
           {
             label: 'Golang',
             to: '/docs/langs/go/concept',
-            activeBaseRegex: '/docs/langs/go'
+            activeBaseRegex: '/docs/langs/go',
           },
           {
             label: 'HTML5',
             to: '/docs/langs/html5/concept',
-            activeBaseRegex: '/docs/langs/html5'
+            activeBaseRegex: '/docs/langs/html5',
           },
           {
             label: 'CSS3',
             to: '/docs/langs/css3/concept',
-            activeBaseRegex: '/docs/langs/html5'
+            activeBaseRegex: '/docs/langs/html5',
           },
         ],
       },
@@ -135,7 +135,10 @@ const config = {
   ...metaConfig,
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
-  plugins: [require.resolve('@docusaurus/plugin-ideal-image')],
+  plugins: [
+    require.resolve('@docusaurus/plugin-ideal-image'),
+    require.resolve('docusaurus-plugin-sass'),
+  ],
   presets: [
     [
       '@docusaurus/preset-classic',

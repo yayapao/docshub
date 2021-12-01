@@ -22,10 +22,13 @@
     "@svgr/webpack": "^5.5.0",
     "clsx": "^1.1.1",
     "docusaurus-plugin-sass": "^0.2.1",
+    "ele-utility": "^1.1.7",
     "file-loader": "^6.2.0",
     "prism-react-renderer": "^1.2.1",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
+    "react-icons": "^4.3.1",
+    "react-spring": "^9.3.2",
     "sass": "^1.44.0",
     "url-loader": "^4.1.1"
   },

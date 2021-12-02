@@ -1,12 +1,12 @@
 import React, { CSSProperties } from 'react'
 
-export const HighlightWithCode: React.FC<{ bgColor: string }> = ({
+export const HighlightWithCode: React.FC<{ bgcolor: string }> = ({
   children,
-  bgColor,
+  bgcolor,
 }) => (
   <code
     style={{
-      backgroundColor: bgColor,
+      backgroundColor: bgcolor,
       borderRadius: '2px',
       color: '#fff',
       padding: '0.2rem',
@@ -16,15 +16,15 @@ export const HighlightWithCode: React.FC<{ bgColor: string }> = ({
   </code>
 )
 
-export const HighlightWithText: React.FC<{ bgColor?: string, style?: CSSProperties }> = ({
+export const HighlightWithText: React.FC<{ bgcolor?: string, style?: CSSProperties }> = ({
   children,
-  bgColor = '#7385e4',
+  bgcolor = '#7385e4',
   style = {}
 }) => (
   <span
     style={{
       display: 'inline-block',
-      backgroundColor: bgColor,
+      backgroundColor: bgcolor,
       borderRadius: '2px',
       color: '#fff',
       padding: '.2rem .3rem',

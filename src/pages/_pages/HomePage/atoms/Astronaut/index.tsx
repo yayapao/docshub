@@ -2,6 +2,7 @@ import { animated, useSpring } from 'react-spring'
 import React, { useState } from 'react'
 import styles from './styles.module.css'
 import clsx from 'clsx'
+import { onServer } from 'ele-utility'
 import AstronautDark from './atoms/AstronautDark'
 import AstronautLight from './atoms/AstronautLight'
 
@@ -57,11 +58,8 @@ const Astronaut: React.FC<Props> = (props) => {
         }}
         className={styles.ImageContainer}
       >
-        {window.screen.width > 1000 ? (
-          <AstronautDark onMouseEnter={onMouseEnter} />
-        ) : (
-          <AstronautLight onMouseEnter={onMouseEnter} />
-        )}
+        <AstronautDark onMouseEnter={onMouseEnter} />
+        {/* <AstronautLight onMouseEnter={onMouseEnter} /> */}
       </animated.div>
       <p className={styles.Text}>Poke me 👆 to mutate my color State.</p>
     </div>

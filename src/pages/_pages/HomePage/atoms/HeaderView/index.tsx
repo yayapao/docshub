@@ -13,14 +13,7 @@ const HeaderView: React.FC = () => {
   const { siteConfig } = useDocusaurusContext()
   const { windowHeight } = useWindowSize()
   const [toTypeWords] = useState(
-    shuffle([
-      'simple',
-      'straightforward',
-      'understandable',
-      'boilerplate free',
-      'flexible',
-      'fun',
-    ])
+    shuffle(['documented', 'straightforward', 'understandable'])
   )
 
   return (
@@ -42,7 +35,7 @@ const HeaderView: React.FC = () => {
         <div className={styles.ButtonContainer}>
           <PrimaryButton
             className={styles.GetStartedButton}
-            to={'/docs/introduction'}
+            to={'/blog'}
           >
             GET STARTED
           </PrimaryButton>
@@ -53,7 +46,7 @@ const HeaderView: React.FC = () => {
         </div>
       </div>
       <Astronaut className={styles.AstronautImage} />
-      {windowHeight > 900 && windowHeight < 1200 && <MouseScroller />}
+      {/* {windowHeight > 900 && windowHeight < 1200 && <MouseScroller />} */}
     </div>
   )
 }

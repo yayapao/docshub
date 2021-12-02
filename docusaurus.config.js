@@ -5,6 +5,10 @@
 const lightCodeTheme = require('prism-react-renderer/themes/github')
 const darkCodeTheme = require('prism-react-renderer/themes/dracula')
 
+const customFields = {
+  githubUrl: 'https://github.com/Y-lonelY'
+}
+
 // 顶栏公告信息
 const announcementBar = {
   // id: 'support_us',
@@ -164,6 +168,7 @@ const config = {
     ],
   ],
   themeConfig,
+  customFields
 }
 
 module.exports = { ...config }

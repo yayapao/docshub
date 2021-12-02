@@ -1,8 +1,11 @@
 # Dependencies
 /node_modules
 
+# dist
+*.tar.gz
+
 # Production
-/build
+/dist
 
 # Generated files
 .docusaurus

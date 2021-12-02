@@ -1,9 +1,9 @@
 import React, { useState } from 'react'
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext'
-import HeaderTyper from './components/HeaderTyper'
+import HeaderTyper from './Typer'
 import PrimaryButton from '@site/src/components/Button/PrimaryButton'
 import GithubButton from '@site/src/components/Button/GithubButton'
-import { useWindowSize } from '../../../../hooks/useWindowSize'
+import { useWindowSize } from '@site/src/hooks/useWindowSize'
 import MouseScroller from './MouseScroller'
 import Astronaut from '../Astronaut'
 import { shuffle } from 'ele-utility'
@@ -30,7 +30,8 @@ const HeaderView: React.FC = () => {
     >
       <div>
         <h1 className={styles.HeaderTitle}>
-          State Management <span className={styles.SeparatorText}>made</span>
+          <span className={styles.SeparatorText}>Nice</span> to doc ,
+          <span className={styles.SeparatorText}> Nice</span> to code!
         </h1>
         <HeaderTyper
           className={styles.HeaderTyper}
@@ -38,7 +39,6 @@ const HeaderView: React.FC = () => {
           delay={5000}
           defaultText={toTypeWords[0] || 'simple'}
         />
-        <p className={styles.DescriptionText}>{siteConfig.tagline}</p>
         <div className={styles.ButtonContainer}>
           <PrimaryButton
             className={styles.GetStartedButton}

@@ -18,9 +18,8 @@
 
 .HeaderTitle {
   color: var(--ifm-navbar-link-color);
-  font-size: var(--ifm-font-size-36);
+  font-size: 2.2rem;
   font-weight: normal;
-
   transition: font-size 100ms cubic-bezier(0.17, 0.67, 0.83, 0.67);
 }
 
@@ -41,6 +40,7 @@
 .ButtonContainer {
   display: flex;
   flex-direction: row;
+  margin-top: 1.6rem;
 }
 
 .GithubButton {
@@ -123,6 +123,79 @@
   }
 }
 /* mousescroll end */
+
+/* typer start */
+.TyperContainer {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  height: 5rem;
+}
+
+.TyperText {
+  color: var(--ifm-navbar-link-color);
+  font-size: 3rem;
+  font-weight: bold;
+}
+
+.TyperCursor {
+  background-color: var(--ifm-navbar-link-active-color);
+  margin-left: 10px;
+  margin-top: 10px;
+
+  width: 0.6rem;
+  height: 4rem;
+}
+
+.Typer_Cursor_Blink {
+  -webkit-animation: blink 0.8s infinite;
+  animation: blink 0.8s infinite;
+}
+
+@-webkit-keyframes blink {
+  0% {
+    background: transparent;
+  }
+  50% {
+    background: var(--ifm-navbar-link-active-color);
+  }
+  100% {
+    background: transparent;
+  }
+}
+
+@keyframes blink {
+  0% {
+    background: transparent;
+  }
+  50% {
+    background: var(--ifm-navbar-link-active-color);
+  }
+  100% {
+    background: transparent;
+  }
+}
+
+@media (max-width: 768px) {
+  .TyperContainer {
+    height: 2rem;
+  }
+
+  .TyperText {
+    font-size: var(--ifm-font-size-40);
+  }
+
+  .TyperCursor {
+    height: 2rem;
+    width: 0.3rem;
+    margin-left: 5px;
+    margin-top: 5px;
+  }
+}
+
+
+/* typer end */
 
 @media (max-width: 996px) {
   .AstronautImage {

@@ -25,14 +25,38 @@ google 坚信对于应用性能的不断优化会为作者和整个互联网带�
 
 这里先对上述各个模块进行概述，以帮助读者了解它是怎么一回事，后面在对各个模块进行更加深入的思考和分析。
 
-## What's Core Web Vitals?
+## What's metrics?
+
+我们沿用 google 定义的 core web vitals 作为核心指标，同时我们需要获取页面在生命周期内关键节点信息：
+
+- navigator timing 描述页面加载过程
+- paint timing 描述页面绘制耗时
+- resource timing 描述资源加载耗时
 
 
 ## How to collect?
 
+对于采集的问题，采用客户端 SDK 埋点 + 服务端处理，对于服务端通常会需要上报、消费、存储、查询服务，这里主要针对客户端采集上报的 SDK 设计进行研究
+
+- [wpmonit](https://github.com/Y-lonelY/wpmonit)
+- [GoogleChrome/web-vitals](https://github.com/GoogleChrome/web-vitals)
+- [perfume](https://github.com/Zizzamia/perfume.js)
+- [sentry-javascript](https://github.com/getsentry/sentry-javascript)
 
 ## Visualability
 
+如何将数据呈现出来是一门学问：同一份数据，在不同的上下文通过不同的条件组合总能发现新的观测视角。
+
+通常我们会设计这样一些核心模块：
+
+概览
+
+最近 N 天性能视图，描述应用每天页面加载的综合情况
+
+core web vitals
+
+页面加载瀑布图
+
+页面性能排行
 
 ## How to improve?
-

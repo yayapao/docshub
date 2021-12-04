@@ -9,9 +9,7 @@ import { HighlightWithText } from '../../src/components/Highlights'
 
 ## 通用技能
 
-### 服务状态
-
-#### 启停服务
+### 启停服务
 
 - `service --status-all` 查看所有服务
 - `service [server-name] stop` 停止服务
@@ -19,16 +17,14 @@ import { HighlightWithText } from '../../src/components/Highlights'
 - `service [server-name] restart` 重启服务
 - `service [server-name] status` 查看服务状态
 
-#### TOP 查看当前系统运行情况
+### TOP 查看当前系统运行情况
 
 `top` 查看当前系统进程信息（但是在容器内，该命令并不准确，需要去文件内查看真是内存使用），也可以通过 `ps -aux` 来查看
 
 - 按照内存占用排序：按下 `M`
 - 按照 CPU 占用排序，按下 `P`
 
-<!-- todo 其他参数 -->
-
-#### 解决端口占用
+### 解决端口占用
 
 查看端口占用情况
 
@@ -69,12 +65,14 @@ import { HighlightWithText } from '../../src/components/Highlights'
 - `zip -r xxx.zip xxx` 压缩指定文件夹为 .zip 文件
 - `unzip xxx.zip` 直接解压指定文件，输出到当前目录
 - `zip xxx.zip 1.txt 2.txt` 将 1.txt 和 2.txt 压缩为 xxx.zip
-- `unzip xxx.zip -d /home` 将 xxx.zip 解压到 /home 目录下
+- `unzip xxx.zip -d /home` 将 xxx.zip 解压到 `/home` 目录下
 
 <HighlightWithText>通过 tar 解/压文件</HighlightWithText>
 
 - `tar -zcvf target.tar.gz [package files]` 进行压缩
 - `tar -zxvf target.tar.gz` 解压文件
+
+<!-- fix Highlights -->
 
 #### 可执行权限
 
@@ -100,6 +98,25 @@ import { HighlightWithText } from '../../src/components/Highlights'
 
 ## 常用工具
 
+### coscli
+
+[coscli](https://cloud.tencent.com/document/product/436/63143) 是腾讯云对象存储的客户端命令行工具。基于此，我们可以方便地在本地对对象存储进行操作
+
+:::info
+注意在 macos 内，将可执行脚本直接放到 `usr/local/bin` 目录下，就能够直接全局调用
+:::
+
+下面对其常用操作进行记录，方便随时查阅
+
+```bash
+# 将本地图片上传到 cos 指定 bucket 内，调换顺序则可以直接从 cos 上下载文件到本地
+coscli cp ./xxx.png cos://xxx-1300606192/showcase/xxx.png
+
+# 注意需要为 bucket name 加上 cos:// 前缀来查看具体内容
+coscli ls
+coscli cos://xxx-1300606192
+```
+
 ### bash 的 url 工具 -- curl
 
 执行 `curl https://www.xxx.com` 就可以发出一个 GET 请求，服务器返回值会在命令行内输出
@@ -110,7 +127,6 @@ import { HighlightWithText } from '../../src/components/Highlights'
 - `-d` 用来表示 post 请求的 body 内容
 - `-G` 用来指定 GET 方法，比如 `curl -G -d 'key1=v1' -d 'k2=v2' https://www.xxx.com`，表示发送一个 GET 请求，`https://www.xxx.com?key1=v1&key2=v2`，如果不指定 -G，则会发送一个 POST 请求
 
-<!-- todo 更多例子 -->
 
 ### VIM
 
@@ -163,7 +179,6 @@ ubuntu 通常内置 `yum` 和 `apt-get`
 
 `time=$(date "+%Y%m%d-%H%M%S")` 格式化当前时间，注意 `date` 后面加空格
 
-## 常用工具
 
 ## Q&A
 

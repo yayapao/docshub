@@ -51,6 +51,24 @@ module.exports = {
 
 最终，通过直接引入 `import Image from '@docusaurus/plugin-ideal-image/src/theme/IdealImage'` 的方式解决
 
+### .mdx 内引入自定义组件之后，高亮状态失效的问题
+
+通过在组件使用的后面加上 .md 的注释后解决，例如：
+
+```mdx
+import { HighlightWithText } from '../../src/components/Highlights'
+
+<HighlightWithText>通过 tar 解/压文件</HighlightWithText>
+
+- `tar -zcvf target.tar.gz [package files]` 进行压缩
+- `tar -zxvf target.tar.gz` 解压文件
+
+<!-- fix Highlights -->
+
+// 添加上面的注释后，能够正常展示高亮
+#### 可执行权限
+```
+
 ## Support
 
 This website is built using [Docusaurus](https://docusaurus.io/), a modern static website generator.

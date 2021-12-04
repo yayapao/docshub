@@ -98,10 +98,10 @@ const themeConfig = {
         ],
       },
       {
-        className: 'header-repo-link',
+        className: 'header-showcase-link',
         position: 'right',
-        to: 'repo',
-        'aria-label': 'npm repository',
+        to: 'showcase',
+        'aria-label': 'showcase',
       },
       {
         href: 'https://github.com/Y-lonelY',

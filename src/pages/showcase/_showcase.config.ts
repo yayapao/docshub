@@ -35,7 +35,7 @@ export const getProjects: () => Application[] = () => {
       description: 'Web performance measure!',
       preview:
         'https://docs-1300606192.cos.ap-shanghai.myqcloud.com/repo/wpmonit.jpg',
-      website: '/docs/repo/wpmonit/readme',
+      website: '/docs/project/wpm/wpm',
       tags: ['opensource', 'performance', 'design'],
     },
   ]

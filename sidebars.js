@@ -32,6 +32,18 @@ const repoSiderbarsConfig = {
 }
 
 /** @type {import('@docusaurus/plugin-content-docs').SidebarsConfig} */
+const projectSiderbarsConfig = {
+  wpmSiderBar: [
+    {
+      type: 'category',
+      label: 'wpm',
+      collapsed: false,
+      items: ['project/wpm/wpm'],
+    },
+  ]
+}
+
+/** @type {import('@docusaurus/plugin-content-docs').SidebarsConfig} */
 const sidebars = {
   serverSiderbar: [
     {
@@ -161,6 +173,7 @@ const sidebars = {
     },
   ],
   ...repoSiderbarsConfig,
+  ...projectSiderbarsConfig
 }
 
 module.exports = sidebars

@@ -12,46 +12,75 @@ import Image from '@docusaurus/plugin-ideal-image/src/theme/IdealImage'
 import Link from '@docusaurus/Link'
 
 import styles from './styles.module.css'
-import { Repository, Tag } from '../../../../types/users'
+import { Application, Tag, TagType } from '@site/src/types/showcase'
+import { Tags } from '../../_showcase.config'
 
 interface Props extends Tag {
   id: string
 }
 
-const ShowcaseCard = memo(({ user }: { user: Repository }) => (
-  <li key={user.title} className="card shadow--md">
+const TagComp = React.forwardRef<HTMLLIElement, Tag>(
+  ({ label, color, description }, ref) => (
+    <li ref={ref} className={styles.tag} title={description}>
+      <span className={styles.textLabel}>{label.toLowerCase()}</span>
+      <span className={styles.colorLabel} style={{ backgroundColor: color }} />
+    </li>
+  )
+)
+
+function ShowcaseCardTag({ tags }: { tags: TagType[] }) {
+  const tagObjects = tags.map((tag) => ({ tag, ...Tags[tag] }))
+
+  return (
+    <>
+      {tagObjects.map((tagObject, index) => {
+        const id = `showcase_card_tag_${tagObject.tag}`
+
+        return <TagComp key={index} {...tagObject} />
+      })}
+    </>
+  )
+}
+
+const ShowcaseCard = memo(({ application }: { application: Application }) => (
+  <li key={application.title} className="card shadow--md">
     <div className={clsx('card__image', styles.showcaseCardImage)}>
-      <Image img={user.preview} alt={user.title} />
+      <Image img={application.preview} alt={application.title} />
     </div>
     <div className="card__body">
       <div className={clsx(styles.showcaseCardHeader)}>
         <h4 className={styles.showcaseCardTitle}>
           <Link
-            href={user.website}
+            href={application.website}
             tabIndex={0}
             className={styles.showcaseCardLink}
           >
-            {user.title}
+            {application.title}
           </Link>
         </h4>
-        {user.npm && (
+        {application.npm && (
           <Link
-            href={user.npm}
+            href={application.npm}
             style={{ marginRight: '.4rem' }}
             tabIndex={1}
             className="header-npm-link"
           ></Link>
         )}
-        {user.github && (
+        {application.github && (
           <Link
-            href={user.github}
+            href={application.github}
             tabIndex={0}
             className="header-github-link"
           ></Link>
         )}
       </div>
-      <p className={styles.showcaseCardBody}>{user.description}</p>
+      <p className={styles.showcaseCardBody}>{application.description}</p>
     </div>
+    {application.tags && (
+      <ul className={clsx('card__footer', styles.cardFooter)}>
+        <ShowcaseCardTag tags={application.tags} />
+      </ul>
+    )}
   </li>
 ))
 

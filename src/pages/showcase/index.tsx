@@ -1,14 +1,17 @@
 import React, { useState, useMemo, useEffect } from 'react'
 
 import Layout from '@theme/Layout'
+import clsx from 'clsx'
 import ShowcaseCard from './_components/ShowcaseCard'
+import FavoriteIcon from '@site/src/components/Icons/FavoriteIcon'
 import styles from './styles.module.css'
-import { getRepos } from './_showcase.config'
+import { getRepos, getProjects } from './_showcase.config'
 
-const TITLE = 'Docs For Repositories'
-const DESCRIPTION = 'List of the documents for npm or repositories!'
+const TITLE = 'Genki Dama of Docshub'
+const DESCRIPTION = 'The accumulated learnings is focused on a specific point.'
 
 const repos = getRepos()
+const projects = getProjects()
 
 function ShowcaseHeader() {
   return (
@@ -21,17 +24,35 @@ function ShowcaseHeader() {
 
 function ShowcaseCards() {
   return (
-    <section className="margin-top--lg margin-bottom--xl">
-      <div className="container margin-top--lg">
-        <h2 className={styles.showcaseHeader}>My repos</h2>
-        <ul className={styles.showcaseList}>
-          {repos &&
-            repos.map((u) => {
-              return <ShowcaseCard key={u.key} user={u} />
-            })}
-        </ul>
-      </div>
-    </section>
+    <main>
+      <section className="margin-top--lg margin-bottom--xl">
+        <div className="container">
+          <div
+            className={clsx('margin-bottom--md', styles.showcaseFavoriteHeader)}
+          >
+            <h2>Project</h2>
+            <FavoriteIcon svgClass={styles.svgIconFavorite} />
+          </div>
+          <ul className={styles.showcaseList}>
+            {projects &&
+              projects.map((u) => {
+                return <ShowcaseCard key={u.key} application={u} />
+              })}
+          </ul>
+        </div>
+      </section>
+      <section className="margin-top--lg margin-bottom--xl">
+        <div className="container margin-top--lg">
+          <h2 className={styles.showcaseHeader}>My repos</h2>
+          <ul className={styles.showcaseList}>
+            {repos &&
+              repos.map((u) => {
+                return <ShowcaseCard key={u.key} application={u} />
+              })}
+          </ul>
+        </div>
+      </section>
+    </main>
   )
 }
 

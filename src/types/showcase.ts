@@ -4,15 +4,15 @@ export type Tag = {
   color: string
 }
 
-export type User = {
+export type Application = {
   key: string
   title: string
   description: string
   preview: any
   website: string
+  tags: TagType[]
   github?: string
   npm?: string
-  tags?: TagType[]
 }
 
 export type TagType =
@@ -20,9 +20,6 @@ export type TagType =
   | 'opensource'
   | 'product'
   | 'design'
-  | 'i18n'
-  | 'versioning'
-  | 'large'
-  | 'meta'
   | 'personal'
-  | 'rtl'
+  | 'performance'
+  | 'errors'

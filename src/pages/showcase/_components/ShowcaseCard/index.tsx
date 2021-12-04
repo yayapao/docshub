@@ -12,13 +12,13 @@ import Image from '@docusaurus/plugin-ideal-image/src/theme/IdealImage'
 import Link from '@docusaurus/Link'
 
 import styles from './styles.module.css'
-import { User, Tag } from '../../../../types/users'
+import { Repository, Tag } from '../../../../types/users'
 
 interface Props extends Tag {
   id: string
 }
 
-const ShowcaseCard = memo(({ user }: { user: User }) => (
+const ShowcaseCard = memo(({ user }: { user: Repository }) => (
   <li key={user.title} className="card shadow--md">
     <div className={clsx('card__image', styles.showcaseCardImage)}>
       <Image img={user.preview} alt={user.title} />

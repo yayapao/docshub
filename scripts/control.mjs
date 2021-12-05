@@ -24,7 +24,7 @@ switch (target) {
     deltag(rest)
     break
   case 'rls':
-    release()
+    release(...rest)
   default:
     log(chalk.red(ALERT_MESSAGE))
     log(`Support command ===> ${cmds.join(' ')}`)
@@ -44,7 +44,8 @@ async function build(values) {
 // 生成 tag，并推送到 git
 async function tag(name) {
   const COMMIT_ID = await $`git rev-parse --short HEAD`
-  const tagName = name || COMMIT_ID
+  const COMMIT_NAME = String(COMMIT_ID).trim()
+  const tagName = name || COMMIT_NAME
   log(chalk.blue(`Tag name is ${tagName}`))
   const dt = dayjs().format('YYYY-MM-DD HH:mm:ss')
   await $`git tag -a ${tagName} -m "Created at ${dt}"`
@@ -76,9 +77,10 @@ async function deltag(name) {
 }
 
 // build 之后将资源上传到 cos，同时创建 tag
-async function release() {
+async function release(name) {
   const COMMIT_ID = await $`git rev-parse --short HEAD`
-  const path = `dist-${COMMIT_ID}.tar.gz`
+  const fileName = name || String(COMMIT_ID).trim()
+  const path = `dist-${fileName}.tar.gz`
   await build()
   // 删除之前打包文件
   await $`rm -rf dist-*.tar.gz`
@@ -87,5 +89,5 @@ async function release() {
   // 上传到 cos
   await $`coscli cp -r ${path} ${COSPATH}`
   // 新建 tag 触发 webhooks，引起服务器更新
-  await tag()
+  await tag(uuid)
 }

@@ -1,11 +1,13 @@
 {
-  "name": "my-website",
+  "name": "docshub",
   "version": "0.0.0",
   "private": true,
   "scripts": {
+    "zx": "zx scripts/control.mjs",
     "docusaurus": "docusaurus",
     "dev": "docusaurus start",
-    "build": "docusaurus build --bundle-analyzer --out-dir dist",
+    "build": "docusaurus build --out-dir dist",
+    "build:ana": "docusaurus build --bundle-analyzer --out-dir dist",
     "swizzle": "docusaurus swizzle",
     "deploy": "docusaurus deploy",
     "clear": "docusaurus clear",
@@ -21,6 +23,7 @@
     "@mdx-js/react": "^1.6.21",
     "@svgr/webpack": "^5.5.0",
     "clsx": "^1.1.1",
+    "dayjs": "^1.10.7",
     "docusaurus-plugin-sass": "^0.2.1",
     "ele-utility": "^1.1.7",
     "file-loader": "^6.2.0",

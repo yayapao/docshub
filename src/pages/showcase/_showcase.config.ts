@@ -7,7 +7,7 @@ export const getRepos: () => Application[] = () => {
       title: 'wpmonit',
       description: 'Web performance measure SDK!',
       preview:
-        'https://docs-1300606192.cos.ap-shanghai.myqcloud.com/repo/wpmonit.jpg',
+        'https://docs-1300606192.cos.ap-shanghai.myqcloud.com/showcase/wpmonit.jpg',
       github: 'https://github.com/Y-lonelY/wpmonit',
       npm: 'https://www.npmjs.com/package/wpmonit',
       website: '/docs/repo/wpmonit/readme',
@@ -18,7 +18,7 @@ export const getRepos: () => Application[] = () => {
       title: 'React Error Catcher',
       description: 'Powerful error catcher in React!',
       preview:
-        'https://docs-1300606192.cos.ap-shanghai.myqcloud.com/repo/react-error-catcher.jpg',
+        'https://docs-1300606192.cos.ap-shanghai.myqcloud.com/showcase/react-error-catcher.jpg',
       github: 'https://github.com/Y-lonelY/react-error-catcher',
       npm: 'https://www.npmjs.com/package/react-error-catcher',
       website: '/docs/repo/react-error-catcher/readme',
@@ -34,7 +34,7 @@ export const getProjects: () => Application[] = () => {
       title: 'wpm',
       description: 'Web performance measure!',
       preview:
-        'https://docs-1300606192.cos.ap-shanghai.myqcloud.com/repo/wpmonit.jpg',
+        'https://docs-1300606192.cos.ap-shanghai.myqcloud.com/showcase/wpm.jpeg',
       website: '/docs/project/wpm/wpm',
       tags: ['opensource', 'performance', 'design'],
     },

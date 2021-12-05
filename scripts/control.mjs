@@ -32,7 +32,7 @@ switch (target) {
 
 // 打包当前项目
 async function build(values) {
-  if (values.includes('--analysis')) {
+  if (values && values.includes('--analysis')) {
     await $`yarn build:ana`
   } else {
     await $`yarn build`

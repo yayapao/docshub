@@ -4,7 +4,7 @@ import dayjs from 'dayjs'
 
 const log = console.log
 const ALERT_MESSAGE = '\nPlease confirm your input!\n'
-const COSPATH = "cos://docs-1300606192/rls/"
+const COSPATH = `cos://docs-1300606192/rls`
 
 const cmds = ['build', 'upload', 'tag', 'deltag', 'rls', 'help']
 let choose = await question('Choose command: ', {
@@ -37,15 +37,20 @@ async function build(values) {
   } else {
     await $`yarn build`
   }
-  
+
   log(chalk.white.bgGreen.bold(`Successfully built at ${Date.now()}`))
 }
 
 // 生成 tag，并推送到 git
 async function tag(name) {
-  const COMMIT_ID = await $`git rev-parse --short HEAD`
-  const COMMIT_NAME = String(COMMIT_ID).trim()
-  const tagName = name || COMMIT_NAME
+  let tagName = name
+
+  if (!name) {
+    const COMMIT_ID = await $`git rev-parse --short HEAD`
+    const COMMIT_NAME = String(COMMIT_ID).trim()
+    tagName = COMMIT_NAME
+  }
+
   log(chalk.blue(`Tag name is ${tagName}`))
   const dt = dayjs().format('YYYY-MM-DD HH:mm:ss')
   await $`git tag -a ${tagName} -m "Created at ${dt}"`
@@ -76,18 +81,27 @@ async function deltag(name) {
   }
 }
 
-// build 之后将资源上传到 cos，同时创建 tag
+/**
+ * 发布脚本：build 之后将资源上传到 cos，同时创建 tag
+ * @param name 可以指定 name 主动触发发布流程，避免没有提交导致资源名称重复的问题
+ */
 async function release(name) {
-  const COMMIT_ID = await $`git rev-parse --short HEAD`
-  const fileName = name || String(COMMIT_ID).trim()
+  let fileName = name
+
+  if (!name) {
+    const COMMIT_ID = await $`git rev-parse --short HEAD`
+    fileName = String(COMMIT_ID).trim()
+  }
+
   const path = `dist-${fileName}.tar.gz`
+
   await build()
   // 删除之前打包文件
   await $`rm -rf dist-*.tar.gz`
   // 打包本次更新
   await $`tar -czvf ${path} ./dist`
   // 上传到 cos
-  await $`coscli cp -r ${path} ${COSPATH}`
+  await $`coscli cp ${path} ${COSPATH}/${path}`
   // 新建 tag 触发 webhooks，引起服务器更新
-  await tag(uuid)
+  await tag(fileName)
 }

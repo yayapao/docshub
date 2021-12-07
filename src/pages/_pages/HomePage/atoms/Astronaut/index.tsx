@@ -4,6 +4,7 @@ import styles from './styles.module.css'
 import clsx from 'clsx'
 import Sun from './atoms/Sun'
 import Planet from './atoms/Planet'
+import Meteor from './atoms/Meteor'
 
 type Props = { className?: string }
 
@@ -13,7 +14,7 @@ const Astronaut: React.FC<Props> = (props) => {
   const [inAnimation, setInAnimation] = useState(false)
   const [triggeredAnimationColor, setTriggeredAnimationColor] = useState(false)
   const [activeSVG, setActiveSVG] = useState<String>('planet')
-  const SVGs = ['planet', 'sun']
+  const SVGs = ['planet', 'sun', 'meteor']
 
   // Animation
   const animatedAstronautProps = useSpring({
@@ -45,7 +46,8 @@ const Astronaut: React.FC<Props> = (props) => {
   }
 
   const clickSVG = () => {
-    const index = Math.floor(Math.random() * 2)
+    const len = SVGs.length
+    const index = Math.floor(Math.random() * len)
     const name = SVGs[index]
     // 找出一个随机的，并且与上一次不一样的结果
     if (!name || activeSVG === name) {
@@ -75,6 +77,9 @@ const Astronaut: React.FC<Props> = (props) => {
         )}
         {activeSVG === 'sun' && (
           <Sun onMouseEnter={onMouseEnter} onClick={clickSVG} />
+        )}
+        {activeSVG === 'meteor' && (
+          <Meteor onMouseEnter={onMouseEnter} onClick={clickSVG} />
         )}
       </animated.div>
       <p className={styles.Text}>Poke me 👆</p>

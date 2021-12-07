@@ -1,10 +1,9 @@
 import { animated, useSpring } from 'react-spring'
-import React, { useState } from 'react'
+import React, { useState, useCallback } from 'react'
 import styles from './styles.module.css'
 import clsx from 'clsx'
-import { onServer } from 'ele-utility'
-import AstronautDark from './atoms/AstronautDark'
-import AstronautLight from './atoms/AstronautLight'
+import Sun from './atoms/Sun'
+import Planet from './atoms/Planet'
 
 type Props = { className?: string }
 
@@ -13,6 +12,8 @@ const Astronaut: React.FC<Props> = (props) => {
   const [isRaised, setIsRaised] = useState(false)
   const [inAnimation, setInAnimation] = useState(false)
   const [triggeredAnimationColor, setTriggeredAnimationColor] = useState(false)
+  const [activeSVG, setActiveSVG] = useState<String>('planet')
+  const SVGs = ['planet', 'sun']
 
   // Animation
   const animatedAstronautProps = useSpring({
@@ -43,6 +44,17 @@ const Astronaut: React.FC<Props> = (props) => {
     }
   }
 
+  const clickSVG = () => {
+    const index = Math.floor(Math.random() * 2)
+    const name = SVGs[index]
+    // 找出一个随机的，并且与上一次不一样的结果
+    if (!name || activeSVG === name) {
+      clickSVG()
+    } else {
+      setActiveSVG(name)
+    }
+  }
+
   return (
     <div className={clsx(styles.Container, className)}>
       <animated.div
@@ -58,10 +70,14 @@ const Astronaut: React.FC<Props> = (props) => {
         }}
         className={styles.ImageContainer}
       >
-        <AstronautDark onMouseEnter={onMouseEnter} />
-        {/* <AstronautLight onMouseEnter={onMouseEnter} /> */}
+        {activeSVG === 'planet' && (
+          <Planet onMouseEnter={onMouseEnter} onClick={clickSVG} />
+        )}
+        {activeSVG === 'sun' && (
+          <Sun onMouseEnter={onMouseEnter} onClick={clickSVG} />
+        )}
       </animated.div>
-      <p className={styles.Text}>Poke me 👆 to mutate my color State.</p>
+      <p className={styles.Text}>Poke me 👆</p>
     </div>
   )
 }

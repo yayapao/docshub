@@ -5,6 +5,8 @@ import clsx from 'clsx'
 import Sun from './atoms/Sun'
 import Planet from './atoms/Planet'
 import Meteor from './atoms/Meteor'
+import UFO from './atoms/UFO'
+import Moon from './atoms/Moon'
 
 type Props = { className?: string }
 
@@ -14,7 +16,7 @@ const Astronaut: React.FC<Props> = (props) => {
   const [inAnimation, setInAnimation] = useState(false)
   const [triggeredAnimationColor, setTriggeredAnimationColor] = useState(false)
   const [activeSVG, setActiveSVG] = useState<String>('planet')
-  const SVGs = ['planet', 'sun', 'meteor']
+  const SVGs = ['planet', 'sun', 'meteor', 'ufo', 'moon']
 
   // Animation
   const animatedAstronautProps = useSpring({
@@ -81,8 +83,13 @@ const Astronaut: React.FC<Props> = (props) => {
         {activeSVG === 'meteor' && (
           <Meteor onMouseEnter={onMouseEnter} onClick={clickSVG} />
         )}
+        {activeSVG === 'ufo' && (
+          <UFO onMouseEnter={onMouseEnter} onClick={clickSVG} />
+        )}
+        {activeSVG === 'moon' && (
+          <Moon onMouseEnter={onMouseEnter} onClick={clickSVG} />
+        )}
       </animated.div>
-      <p className={styles.Text}>Poke me 👆</p>
     </div>
   )
 }

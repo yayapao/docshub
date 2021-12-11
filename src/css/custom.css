@@ -17,6 +17,9 @@
 
   /* icon */
   --site-color-svgIcon-favorite: #fe6b8b;
+
+  /* highlight */
+  --highlight-with-badge: #5C6BC0;
 }
 
 .docusaurus-highlight-code-line {

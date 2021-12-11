@@ -52,3 +52,45 @@
     opacity: 0;
   }
 }
+
+.standardContent {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+}
+
+.standardLabel {
+  display: block;
+  font-weight: bold;
+  margin-right: 1rem;
+}
+
+.standardVitals {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: space-evenly;
+  justify-content: center;
+}
+
+.vitalsBox {
+  height: 1.5rem;
+  line-height: 18px;
+  padding: .2rem 1rem;
+  font-size: .875rem;
+  font-weight: bold;
+  text-align: center;
+  color: #fff;
+}
+
+.good {
+  background-color: #52c41a;
+}
+
+.improve {
+  background-color: #fa8c16;
+}
+
+.bad {
+  background-color: #f5222d;
+}

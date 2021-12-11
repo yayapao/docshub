@@ -140,7 +140,6 @@ const config = {
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
   plugins: [
-    require.resolve('@docusaurus/plugin-ideal-image'),
     require.resolve('docusaurus-plugin-sass'),
   ],
   presets: [

@@ -38,7 +38,7 @@ const projectSiderbarsConfig = {
       type: 'category',
       label: 'wpm',
       collapsed: false,
-      items: ['project/wpm/wpm'],
+      items: ['project/wpm/wpm', 'project/wpm/metrics'],
     },
   ]
 }

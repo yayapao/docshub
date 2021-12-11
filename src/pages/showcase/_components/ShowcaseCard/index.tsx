@@ -7,8 +7,6 @@
 
 import React, { memo } from 'react'
 import clsx from 'clsx'
-// 通过 @theme/IdealImage 会产生 bug
-import Image from '@docusaurus/plugin-ideal-image/src/theme/IdealImage'
 import Link from '@docusaurus/Link'
 
 import styles from './styles.module.css'
@@ -45,7 +43,7 @@ function ShowcaseCardTag({ tags }: { tags: TagType[] }) {
 const ShowcaseCard = memo(({ application }: { application: Application }) => (
   <li key={application.title} className="card shadow--md">
     <div className={clsx('card__image', styles.showcaseCardImage)}>
-      <Image img={application.preview} alt={application.title} />
+      <img src={application.preview} alt={application.title} />
     </div>
     <div className="card__body">
       <div className={clsx(styles.showcaseCardHeader)}>

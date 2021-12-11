@@ -1,6 +1,7 @@
 import { CSSProperties } from 'react'
 
 export interface HighlightWithBadgeProps {
+  label: string
   inactive?: boolean
   supcolor?: string
   style?: CSSProperties

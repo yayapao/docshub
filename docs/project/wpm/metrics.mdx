@@ -7,9 +7,13 @@ slug: metrics
 
 import Tabs from '@theme/Tabs'
 import TabItem from '@theme/TabItem'
-import { HighlightWithText } from '@site/src/components/Highlights'
+import {
+  HighlightWithText,
+  HighlightWithBadge,
+  VitalStandard,
+} from '@site/src/components/Highlights'
 
-Web 指标是 Google 在 2020 左右发布的一项新计划，旨在为应用质量衡量提供统一标准，为此，它定义了大量的 web 指标。 这里我们也对 web 指标进行分类：
+Web 指标是 Google 在 2020 左右发布的一项新计划，旨在为应用质量衡量提供统一标准，为此，它定义了大量的 web 指标。 这里我们按照重要程度对 web 指标进行分类：
 
 :::info web metrics
 
@@ -20,22 +24,121 @@ Web 指标是 Google 在 2020 左右发布的一项新计划，旨在为应用�
 
 ## Core Web Vitals
 
-对于核心指标，Google 提出了三个最核心的指标：LCP、FID 和 CLS，分别对应加载性能、可交互性以及视觉稳定性。
+对于核心指标，Google 提出了三个最<HighlightWithBadge label="核心" />的指标：LCP、FID 和 CLS，分别对应加载性能、可交互性以及视觉稳定性。同时以用户为中心为其制定<HighlightWithBadge label="衡量标准" />
 
 <HighlightWithText>如何理解核心?</HighlightWithText>
 
 - 这三个指标不仅能够被实际测量，并且适用于所有网页应用，更关键的是，它们能够反映**以用户为中心**的关键结果的真实体验，即 RUM 指标。
 
-⚠️ 注意：各个指标的衡量指标具有广泛的指导意义，但是对于特殊的应用其阈值可以动态调整
+<HighlightWithText>如何定义页面可用？</HighlightWithText>
+
+<!-- fix Highlights -->
+
+简而言之，页面存在足够的元素让用户可以交互，则认为该页面[可用](https://web.dev/user-centric-performance-metrics/#questions)，LCP 是衡量页面是否可用的核心指标
+
+<HighlightWithText>衡量标准</HighlightWithText>
+
+一个良好的测量阈值为页面加载的**第 75 个百分位数**
+
+- <VitalStandard label="LCP" good="<2.5sec" improve="2.5~4sec" bad=">4sec" />
+
+:::caution
+各个指标的衡量指标具有广泛的指导意义，但是对于特殊的应用其阈值可以动态调整
+:::
 
 <!-- fix Highlights -->
 
 ### LCP(Largest Contentful Paint)
 
-[LCP](https://web.dev/lcp/) 用来衡量页面加载性能
+[LCP](https://web.dev/lcp/)（最大内容绘制） 用来衡量页面加载性能。
 
-对于为什么选用最大绘制内容作为衡量标准，很大程度是因为其他指标不够准确，比如当进入页面先加载一个 loading 效果，即使主要内容还没加载出来，此时页面会认为已经完成了 load 、DOMContentLoaded 或者被捕获到 FCP 指标。因为 Google 选择使用 LCP 来作为 RUM 加载性能的衡量标准，为此也给了一个经典的解释：
+LCP 度量从用户进入 web 应用到在可视区域内渲染最大可见内容元素所需的时间。最大可见内容元素通常是图片或视频，也可能是大型块级文本元素。
+
+为什么选用 LCP 作为衡量标准?
+
+很大程度是因为其他指标不够准确，比如当进入页面先加载一个 loading 效果，即使主要内容还没加载出来，此时页面会认为已经完成了 load 、DOMContentLoaded 或者被捕获到 FCP 指标。因为 Google 选择使用 LCP 来作为 RUM 加载性能的衡量标准，为此也给了一个经典的解释：
 
 > "Sometimes simpler is better. A more accurate way to measure when the main content of a page is loaded is to look at when the largest element was rendered!"
 
-衡量标准：75%的访问用户其真实 LCP 小于 2.5s，则认为该应用表现良好，大于 4s 则表现糟糕
+在弄清楚 LCP 是什么、其衡量标准以及选择 LCP 作为加载性能指标之后，我们还需要清楚：
+
+- 如何确定一个元素的大小？
+- 何时报告 LCP?
+- 元素或者页面布局更改了怎么处理？
+
+对于以上问题，我给出一些关键信息，具体内容还是建议参考[LCP 官方文档](https://web.dev/lcp/)
+
+:::note 关键
+
+- LCP 计算可视区域内**初始元素的尺寸**，而不是 size，如果元素尺寸发生变化，始终取较小的尺寸。例如，远小于其原始尺寸的缩小图像将仅报告图像的显示尺寸，而拉伸或放大成更大尺寸的图像将仅报告图像的原始尺寸
+- LCP 的值会随着页面加载而发生改变，并且始终以更大的元素作为当前值，在分析时，取最近的 LCP 即可
+
+:::
+
+#### 如何在浏览器运行内采集 LCP？
+
+通常情况下，我们直接使用官方的[web-vitals](https://github.com/GoogleChrome/web-vitals)即可，这里出于学习目的对其源码进行解读：
+
+通过浏览器提供的 `PerformanceObserver` API 对应用加载过程中 **largest-contentful-paint** 类型进行监听。在 `entryHandler` 方法内对值进行比较、替换。
+
+```typescript
+// observe.ts 定义指标监控通用方法
+export const obverse = (
+  type: string,
+  callback: PerformanceEntryHandler
+): PerformanceObserver | undefined => {
+  try {
+    // 验证是否支持监听该类事件
+    if (PerformanceObserver.supportedEntryTypes.includes(type)) {
+      const po: PerformanceObserver = new PerformanceObserver((l) =>
+        l.getEntries().map(callback)
+      )
+
+      po.observe({ type, buffered: true })
+      return po
+    }
+  } catch (e) {
+    // Do nothing.
+  }
+  return
+}
+
+const entryHandler = (entry: PerformanceEntry) => {
+  // The startTime attribute returns the value of the renderTime if it is not 0,
+  // and the value of the loadTime otherwise.
+  const value = entry.startTime
+
+  // If the page was hidden prior to paint time of the entry,
+  // ignore it and mark the metric as final, otherwise add the entry.
+  if (value < visibilityWatcher.firstHiddenTime) {
+    metric.value = value
+    metric.entries.push(entry)
+  }
+  report()
+}
+
+// 在 getLCP.ts 内调用 observe 方法，entryHandler 用来赋值
+const po = observe('largest-contentful-paint', entryHandler)
+```
+
+在页面 hidden 时或者用户产生交互事件时，捕获 entry 并进行上报，触发自定义回调
+
+```typescript
+const stopListening = () => {
+  // 如果定义的 metric 采集器内含有 LCP 指标，则将其记录加入到 finalMetrics 内，之后调用自定义函数
+  if (!finalMetrics.has(metric)) {
+    po.takeRecords().map(entryHandler as PerformanceEntryHandler)
+    po.disconnect()
+    finalMetrics.add(metric)
+    report()
+  }
+}
+
+;['keydown', 'click'].forEach((type) => {
+  addEventListener(type, stopListening, { once: true, capture: true })
+})
+
+onHidden(stopListening, true)
+```
+
+不难看出，为了采集指标的准确性，需要对用户已经产生交互/页面隐藏的情况特别注意！

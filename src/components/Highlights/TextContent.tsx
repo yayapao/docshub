@@ -45,7 +45,7 @@ export const HighlightWithText: React.FC<{
  * @returns React.FC
  */
 export const HighlightWithBadge: React.FC<HighlightWithBadgeProps> = ({
-  children,
+  label,
   inactive,
   supcolor = '#7385e4',
   style = {},
@@ -62,12 +62,13 @@ export const HighlightWithBadge: React.FC<HighlightWithBadgeProps> = ({
         ...style,
       }}
     >
-      {children}
+      {label}
       <sup
         className={clsx(styles.dot, !inactive && styles.active)}
         style={{
           backgroundColor: supcolor,
           color: supcolor,
+          left: `${label.length * 14 + 2}px`,
         }}
       ></sup>
     </span>

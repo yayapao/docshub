@@ -63,6 +63,7 @@
   display: block;
   font-weight: bold;
   margin-right: 1rem;
+  width: 50px
 }
 
 .standardVitals {
@@ -71,16 +72,18 @@
   flex-wrap: nowrap;
   justify-content: space-evenly;
   justify-content: center;
+  width: 360px;
 }
 
 .vitalsBox {
   height: 1.5rem;
   line-height: 18px;
   padding: .2rem 1rem;
-  font-size: .875rem;
+  font-size: 12px;
   font-weight: bold;
   text-align: center;
   color: #fff;
+  width: 33%;
 }
 
 .good {

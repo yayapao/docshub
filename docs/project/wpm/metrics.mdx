@@ -17,7 +17,7 @@ Web 指标是 Google 在 2020 左右发布的一项新计划，旨在为应用�
 
 :::info web metrics
 
-1. 核心指标：我们继续沿用 Google 对 [Core Web Vitals](https://web.dev/vitals/#core-web-vitals) 的定义
+1. 核心指标：我们继续沿用 Google 对 [Core Web Vitals](https://web.dev/vitals/#core-web-vitals) 的定义，即 LCP、FID 和 CLS
 2. 重要指标：
 
 :::
@@ -41,6 +41,7 @@ Web 指标是 Google 在 2020 左右发布的一项新计划，旨在为应用�
 一个良好的测量阈值为页面加载的**第 75 个百分位数**
 
 - <VitalStandard label="LCP" good="<2.5sec" improve="2.5~4sec" bad=">4sec" />
+- <VitalStandard label="FID" good="<100ms" improve="100~300ms" bad=">300ms" />
 
 :::caution
 各个指标的衡量指标具有广泛的指导意义，但是对于特殊的应用其阈值可以动态调整
@@ -48,9 +49,9 @@ Web 指标是 Google 在 2020 左右发布的一项新计划，旨在为应用�
 
 <!-- fix Highlights -->
 
-### LCP(Largest Contentful Paint)
+### LCP
 
-[LCP](https://web.dev/lcp/)（最大内容绘制） 用来衡量页面加载性能。
+[LCP](https://web.dev/lcp/)（Largest Contentful Paint：最大内容绘制） 用来衡量页面加载性能。
 
 LCP 度量从用户进入 web 应用到在可视区域内渲染最大可见内容元素所需的时间。最大可见内容元素通常是图片或视频，也可能是大型块级文本元素。
 
@@ -66,7 +67,7 @@ LCP 度量从用户进入 web 应用到在可视区域内渲染最大可见内�
 - 何时报告 LCP?
 - 元素或者页面布局更改了怎么处理？
 
-对于以上问题，我给出一些关键信息，具体内容还是建议参考[LCP 官方文档](https://web.dev/lcp/)
+对于以上问题，我归纳了一些技术点，具体内容还是建议参考[LCP 官方文档](https://web.dev/lcp/)
 
 :::note 关键
 
@@ -75,7 +76,7 @@ LCP 度量从用户进入 web 应用到在可视区域内渲染最大可见内�
 
 :::
 
-#### 如何在浏览器运行内采集 LCP？
+#### 如何在浏览器运行时内采集 LCP？
 
 通常情况下，我们直接使用官方的[web-vitals](https://github.com/GoogleChrome/web-vitals)即可，这里出于学习目的对其源码进行解读：
 
@@ -142,3 +143,49 @@ onHidden(stopListening, true)
 ```
 
 不难看出，为了采集指标的准确性，需要对用户已经产生交互/页面隐藏的情况特别注意！
+
+### FID
+
+[FID](https://web.dev/fid/)（First Input Delay：首次输入延迟） 用来衡量页面的交互性。
+
+FID 度量用户进入 web 应用并产生交互（点击链接、点按按钮等等）动作到浏览器响应并能够实际处理此次交互的耗时。这种衡量方案的对象是被用户首次点击的任何互动式元素。
+
+为什么选用 FID 作为衡量标准?
+
+用户对 web 应用的第一印象不仅仅是元素绘制的速度，当需要与应用进行交互式，可交互度也是一个重要的衡量标准。用户输入延迟不可避免，因此 FID 被选中，因为核心指标需要它。
+
+对于 FID 我们需要清楚：
+
+- 为什么会发生输入延迟？
+- 什么是首次输入？
+- 为什么只考虑首次输入？
+
+:::note 关键
+
+- FID 测量的是发起事件处理后到浏览器执行处理程序前所花费的时间，边界要清楚，不将其他环节纳入进来的原因是担心开发者为了优化而优化
+- 首次输入是非连续性的交互行为，侧重 response，而滚动、缩放属于连续性的交互，具有完全不同的性能约束（即执行机制）
+
+:::
+
+#### 如何在浏览器运行时内采集 FID？
+
+在讨论如何在浏览器运行时采集 FID 之前，我们先观察这个经典 FID 过程，测量 FID 实际上就是计算用户输入到主线程完全空闲的耗时
+
+![fid](/img/wpm/fid.svg)
+
+参考 [web-vitals](https://github.com/GoogleChrome/web-vitals) 我们不难看出，FID 的测量主要通过 `first-input` 进行计算
+
+```typescript
+const entryHandler = (entry: PerformanceEventTiming) => {
+  // Only report if the page wasn't hidden prior to the first input.
+  if (entry.startTime < visibilityWatcher.firstHiddenTime) {
+    metric.value = entry.processingStart - entry.startTime
+    metric.entries.push(entry)
+    report(true)
+  }
+}
+
+const po = observe('first-input', entryHandler as PerformanceEntryHandler)
+```
+
+### CLS

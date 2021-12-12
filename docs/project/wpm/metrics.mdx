@@ -38,10 +38,13 @@ Web 指标是 Google 在 2020 左右发布的一项新计划，旨在为应用�
 
 <HighlightWithText>衡量标准</HighlightWithText>
 
-一个良好的测量阈值为页面加载的**第 75 个百分位数**
+<!-- fix Highlights -->
+
+为了确保 web 应用的大部分访问用户能够达成建议目标值，通常取采样数的 **75 分位**
 
 - <VitalStandard label="LCP" good="<2.5sec" improve="2.5~4sec" bad=">4sec" />
 - <VitalStandard label="FID" good="<100ms" improve="100~300ms" bad=">300ms" />
+- <VitalStandard label="CLS" good="<0.1" improve="0.1~0.25" bad=">0.25" />
 
 :::caution
 各个指标的衡量指标具有广泛的指导意义，但是对于特殊的应用其阈值可以动态调整
@@ -173,7 +176,7 @@ FID 度量用户进入 web 应用并产生交互（点击链接、点按按钮�
 
 ![fid](/img/wpm/fid.svg)
 
-参考 [web-vitals](https://github.com/GoogleChrome/web-vitals) 我们不难看出，FID 的测量主要通过 `first-input` 进行计算
+参考 [web-vitals](https://github.com/GoogleChrome/web-vitals) 我们不难看出，FID 的测量主要通过采集 `first-input` 事件，对其进行处理
 
 ```typescript
 const entryHandler = (entry: PerformanceEventTiming) => {
@@ -189,3 +192,25 @@ const po = observe('first-input', entryHandler as PerformanceEntryHandler)
 ```
 
 ### CLS
+
+[CLS](https://web.dev/cls/)（Cumulative Layout Shift：累积布局偏移） 用来衡量页面视觉稳定性，用来量化用户经历意外布局偏移的频率。
+
+CLS 会衡量 web 应用在整个生命周期内发生的所有意外布局偏移中的**最大一连串的布局偏移分数**。得分是零到任意正数，其中 0 表示无偏移，且数字越大，网页的布局偏移越大。
+
+为什么选用 CLS 作为衡量标准？
+
+大多数情况下，用户希望 web 应用是“所见即所得”的，如果目标元素经常偏移（位置经常发生变化），这无疑是很恼火的。累积布局偏移 (CLS) 是测量视觉稳定性的一个以用户为中心的重要指标，因为该项指标有助于量化用户经历意外布局偏移的频率。
+
+对于 CLS 我们需要清楚：
+
+- 如何定义布局偏移和累积布局偏移？
+- 如何计算布局偏移分数？
+
+:::note 关键
+
+- 每当一个可见元素的位置从一个已渲染帧变更到下一个已渲染帧时，就发生了布局偏移
+- 只有当现有元素的起始位置发生变更时才算作布局偏移，新增元素不算在内
+- 影响分数和距离分数都是基于可视区域
+
+:::
+

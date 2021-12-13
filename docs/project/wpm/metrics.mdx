@@ -259,9 +259,13 @@ const entryHandler = (entry: LayoutShift) => {
 const po = observe('layout-shift', entryHandler as PerformanceEntryHandler)
 ```
 
-## 重要 Web 指标
+## Web Supported Metrics
 
-重要 web 指标用来对 core web vitals 进行补充，它们既包含实验室指标，也会包含真实用户指标，定义这些指标有助于获取范围更广的体验或者帮助诊断特定问题。
+web 辅助指标用来对 core web vitals 进行补充，它们既包含实验室测量，也会包含真实用户测量，定义这些指标有助于获取范围更广的体验或者帮助诊断特定问题。
+
+
+- <VitalStandard label="FCP" good="<1.8sec" improve="1.8~3sec" bad=">3sec" />
+
 
 ### TTFB
 
@@ -270,6 +274,13 @@ const po = observe('layout-shift', entryHandler as PerformanceEntryHandler)
 对于 TTFB 我们无法给出一个通用的衡量标准，因为不同的业务场景、公司、地区甚至是硬件都可能存在差异，只能说越快越好。
 
 ![TTFB](/img/wpm/ttfb.png)
+
+:::note 关键
+
+- TTFB 适用于所有资源请求
+- TTFB 值为 0 的可能情况是资源从缓存中读取或者没有设置`Timing-Origin-Allow`或者连接已经建立
+
+:::
 
 #### 如何在浏览器 runtime 采集 TTFB?
 
@@ -310,6 +321,8 @@ export const getTTFB = (onReport: ReportHandler) => {
 ```
 
 ### FCP
+
+[FCP](https://web.dev/fcp/)（First Contentful Paint：首次内容绘制）是一个测量加载效率的辅助指标。
 
 ### TBT
 

@@ -225,8 +225,8 @@ CLS 会衡量 web 应用在整个生命周期内发生的所有意外布局偏�
 相比 LCP 和 FID，CLS 的计算会稍显复杂，它同样通过 `obverse` 对 **layout-shift** 指标进行采集。
 
 ```typescript
-let sessionValue = 0;
-let sessionEntries: PerformanceEntry[] = [];
+let sessionValue = 0
+let sessionEntries: PerformanceEntry[] = []
 
 const entryHandler = (entry: LayoutShift) => {
   // CLS 仅计算用户连续输入事件，用户输入 500ms 内发生的布局偏移会带有 hadRecentInput 标志
@@ -259,16 +259,58 @@ const entryHandler = (entry: LayoutShift) => {
 const po = observe('layout-shift', entryHandler as PerformanceEntryHandler)
 ```
 
-
 ## 重要 Web 指标
 
 重要 web 指标用来对 core web vitals 进行补充，它们既包含实验室指标，也会包含真实用户指标，定义这些指标有助于获取范围更广的体验或者帮助诊断特定问题。
 
 ### TTFB
 
+[TTFB](https://web.dev/ttfb/)（Time to First Byte：首字节耗时）用来测量客户端发起资源请求到客户端接收到第一个字节的耗时
+
+对于 TTFB 我们无法给出一个通用的衡量标准，因为不同的业务场景、公司、地区甚至是硬件都可能存在差异，只能说越快越好。
+
+![TTFB](/img/wpm/ttfb.png)
+
+#### 如何在浏览器 runtime 采集 TTFB?
+
+同样我们参考 web-vitals 对其进行分析，获取 TTFB 会更简单，只需要获取 `navigation.responseStart` 即可，但是需要注意在何时进去取值
+
+```typescript
+// 确保在 loadEventEnd 之后执行
+const afterLoad = (callback: () => void) => {
+  if (document.readyState === 'complete') {
+    setTimeout(callback, 0)
+  } else {
+    addEventListener('pageshow', callback)
+  }
+}
+
+export const getTTFB = (onReport: ReportHandler) => {
+  const metric = initMetric('TTFB')
+
+  afterLoad(() => {
+    try {
+      const navigationEntry = performance.getEntriesByType('navigation')[0]
+
+      metric.value = (
+        navigationEntry as PerformanceNavigationTiming
+      ).responseStart
+
+      // 排除异常情况的采集
+      if (metric.value < 0 || metric.value > performance.now()) return
+
+      metric.entries = [navigationEntry]
+
+      onReport(metric)
+    } catch (error) {
+      // Do nothing.
+    }
+  })
+}
+```
+
 ### FCP
 
 ### TBT
 
 ### TTI
-

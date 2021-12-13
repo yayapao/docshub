@@ -79,11 +79,11 @@ LCP 度量从用户进入 web 应用到在可视区域内渲染最大可见内�
 
 :::
 
-#### 如何在浏览器运行时内采集 LCP？
+#### 如何在浏览器 runtime 采集 LCP？
 
 通常情况下，我们直接使用官方的[web-vitals](https://github.com/GoogleChrome/web-vitals)即可，这里出于学习目的对其源码进行解读：
 
-通过浏览器提供的 `PerformanceObserver` API 对应用加载过程中 **largest-contentful-paint** 类型进行监听。在 `entryHandler` 方法内对值进行比较、替换。
+通过对浏览器提供的 [PerformanceObserver](https://developer.mozilla.org/zh-CN/docs/Web/API/PerformanceObserver/PerformanceObserver) API 进行封装，来捕获指定的观测类型。对于 LCP、FID 以及 CLS 等指标均适用，其实现如下：
 
 ```typescript
 // observe.ts 定义指标监控通用方法
@@ -106,7 +106,11 @@ export const obverse = (
   }
   return
 }
+```
 
+通过对应用加载过程中 **largest-contentful-paint** 类型进行监听。在 `entryHandler` 方法内对值进行比较、替换。
+
+```typescript
 const entryHandler = (entry: PerformanceEntry) => {
   // The startTime attribute returns the value of the renderTime if it is not 0,
   // and the value of the loadTime otherwise.
@@ -170,7 +174,7 @@ FID 度量用户进入 web 应用并产生交互（点击链接、点按按钮�
 
 :::
 
-#### 如何在浏览器运行时内采集 FID？
+#### 如何在浏览器 runtime 采集 FID？
 
 在讨论如何在浏览器运行时采集 FID 之前，我们先观察这个经典 FID 过程，测量 FID 实际上就是计算用户输入到主线程完全空闲的耗时
 
@@ -208,9 +212,63 @@ CLS 会衡量 web 应用在整个生命周期内发生的所有意外布局偏�
 
 :::note 关键
 
-- 每当一个可见元素的位置从一个已渲染帧变更到下一个已渲染帧时，就发生了布局偏移
+- CLS 针对不稳定元素进行计算
+- 可见区域内的元素在不同帧的位置发生变化，则该页面发生了布局偏移
 - 只有当现有元素的起始位置发生变更时才算作布局偏移，新增元素不算在内
 - 影响分数和距离分数都是基于可视区域
+- CLS 仅计算用户连续输入事件，比如点击、按键
 
 :::
+
+#### 如何在浏览器 runtime 采集 CLS?
+
+相比 LCP 和 FID，CLS 的计算会稍显复杂，它同样通过 `obverse` 对 **layout-shift** 指标进行采集。
+
+```typescript
+let sessionValue = 0;
+let sessionEntries: PerformanceEntry[] = [];
+
+const entryHandler = (entry: LayoutShift) => {
+  // CLS 仅计算用户连续输入事件，用户输入 500ms 内发生的布局偏移会带有 hadRecentInput 标志
+  if (!entry.hadRecentInput) {
+    const firstSessionEntry = sessionEntries[0]
+    const lastSessionEntry = sessionEntries[sessionEntries.length - 1]
+
+    // 每次偏移时间小于 1s 且整个会话最大持续时间小于 5s 的数据会被采集
+    if (
+      sessionValue &&
+      entry.startTime - lastSessionEntry.startTime < 1000 &&
+      entry.startTime - firstSessionEntry.startTime < 5000
+    ) {
+      sessionValue += entry.value
+      sessionEntries.push(entry)
+    } else {
+      sessionValue = entry.value
+      sessionEntries = [entry]
+    }
+
+    // 这里不再进行累计，而是取窗口内 CLS 的最大值
+    if (sessionValue > metric.value) {
+      metric.value = sessionValue
+      metric.entries = sessionEntries
+      report()
+    }
+  }
+}
+
+const po = observe('layout-shift', entryHandler as PerformanceEntryHandler)
+```
+
+
+## 重要 Web 指标
+
+重要 web 指标用来对 core web vitals 进行补充，它们既包含实验室指标，也会包含真实用户指标，定义这些指标有助于获取范围更广的体验或者帮助诊断特定问题。
+
+### TTFB
+
+### FCP
+
+### TBT
+
+### TTI
 

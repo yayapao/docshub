@@ -18,7 +18,7 @@ Web 指标是 Google 在 2020 左右发布的一项新计划，旨在为应用�
 :::info web metrics
 
 1. 核心指标：我们继续沿用 Google 对 [Core Web Vitals](https://web.dev/vitals/#core-web-vitals) 的定义，即 LCP、FID 和 CLS
-2. 重要指标：
+2. 辅助指标：重要指标通过给核心指标打辅助，比如 FCP 之于 LCP，TTI 和 TBT 之于 FID。它们通常是实验指标
 
 :::
 
@@ -157,7 +157,7 @@ onHidden(stopListening, true)
 
 FID 度量用户进入 web 应用并产生交互（点击链接、点按按钮等等）动作到浏览器响应并能够实际处理此次交互的耗时。这种衡量方案的对象是被用户首次点击的任何互动式元素。
 
-为什么选用 FID 作为衡量标准?
+为什么需要 FID 作为可交互性的衡量标准?
 
 用户对 web 应用的第一印象不仅仅是元素绘制的速度，当需要与应用进行交互式，可交互度也是一个重要的衡量标准。用户输入延迟不可避免，因此 FID 被选中，因为核心指标需要它。
 
@@ -263,9 +263,9 @@ const po = observe('layout-shift', entryHandler as PerformanceEntryHandler)
 
 web 辅助指标用来对 core web vitals 进行补充，它们既包含实验室测量，也会包含真实用户测量，定义这些指标有助于获取范围更广的体验或者帮助诊断特定问题。
 
-
 - <VitalStandard label="FCP" good="<1.8sec" improve="1.8~3sec" bad=">3sec" />
-
+- <VitalStandard label="TTI" good="<5sec" bad=">5sec" />
+- <VitalStandard label="TBT" good="<300ms" bad=">300ms" />
 
 ### TTFB
 
@@ -322,8 +322,80 @@ export const getTTFB = (onReport: ReportHandler) => {
 
 ### FCP
 
-[FCP](https://web.dev/fcp/)（First Contentful Paint：首次内容绘制）是一个测量加载效率的辅助指标。
+[FCP](https://web.dev/fcp/)（First Contentful Paint：首次内容绘制）是用来测量**加载效率**的辅助指标。
+
+:::caution
+
+我们注意到 google 开发者手册内已经找不到关于 FP 的描述
+
+:::
+
+FCP 测量进入 web 应用到页面可视区域内任意内容完成渲染的耗时。这里内容指的是文本、图片、`<svg>` 或者非白色的 `<canvas>` 元素。
+
+#### 如何在浏览器 runtime 采集 FCP?
+
+直接通过浏览器提供 `performance` API 获取
+
+```typescript
+const entryHandler = (entry: PerformanceEntry) => {
+  if (entry.name === 'first-contentful-paint') {
+    if (po) {
+      po.disconnect()
+    }
+
+    // 确保使用页面隐藏之前的数据
+    if (entry.startTime < visibilityWatcher.firstHiddenTime) {
+      metric.value = entry.startTime
+      metric.entries.push(entry)
+      report(true)
+    }
+  }
+}
+const po = observe('paint', entryHandler)
+```
+
+### TTI
+
+[TTI](https://web.dev/tti/) 是用来测量可交互性的辅助指标
+
+为什么需要 TTI 指标呢？
+
+参考 FID 的背景，主要原因就是你所见的不一定是所得的，web 看似具有交互性（因为渲染出来了一些内容），但是此时可能 JavaScript 并未完成加载，所看到的元素并不具备可交互性。
+
+对于 TTI 我们需要清楚：
+
+- 它的测量规则？
+- 为什么它是一个实验室指标？
+
+![TTI](/img/wpm/tti.svg)
+
+:::note 关键
+
+- 对于测量规则，我们总结一些关键词帮助记忆：LCP 为起点、5秒安静窗口、没有长任务、不超过2个 GET 请求
+- 用户的不同操作可能产生不同的 TTI，从而导致大量的差异
+
+:::
 
 ### TBT
 
-### TTI
+[TBT](https://web.dev/tbt/) 是用来测量可交互性的辅助指标
+
+TBT 用来测量 LCP 到 TTI 之间，主线程的阻塞时间，它也是一个实验室指标。
+
+FID 已经有了 TTI 作为辅助指标，为什么还需要 TBT？
+
+因为 TBT 衡量 LCP 到 TTI 这段时间内的主线程阻塞时常，比如一个页面，存在3个51ms长任务和存在一个10s的长任务，其 TTI 的值是相同的，但是实际体验却相差甚远，第一种情况的 TBT 为 3ms，第二种情况的 TBT 为 9950ms，此时就能体现出差距
+
+对于 TBT 我们需要清楚：
+
+- 如何解释主线程阻塞
+
+:::note 关键
+
+- 每当出现长任务时，主线程都被视为阻塞状态
+- 在主线程上，单次执行超过 50ms 的任务称为长任务
+- TBT 计算的是所有(长任务耗时 - 50ms)的累计值
+
+:::
+
+

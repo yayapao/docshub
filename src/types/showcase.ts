@@ -13,10 +13,12 @@ export type Application = {
   tags: TagType[]
   github?: string
   npm?: string
+  isCore?: boolean
 }
 
 export type TagType =
   | 'favorite'
+  | 'core'
   | 'opensource'
   | 'product'
   | 'design'

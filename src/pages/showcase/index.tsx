@@ -3,7 +3,6 @@ import React, { useState, useMemo, useEffect } from 'react'
 import Layout from '@theme/Layout'
 import clsx from 'clsx'
 import ShowcaseCard from './_components/ShowcaseCard'
-import FavoriteIcon from '@site/src/components/Icons/FavoriteIcon'
 import styles from './styles.module.css'
 import { getRepos, getProjects } from './_showcase.config'
 
@@ -30,8 +29,7 @@ function ShowcaseCards() {
           <div
             className={clsx('margin-bottom--md', styles.showcaseFavoriteHeader)}
           >
-            <h2>Project</h2>
-            <FavoriteIcon svgClass={styles.svgIconFavorite} />
+            <h2>FTE(Frontend Trustworthy Engineering)</h2>
           </div>
           <ul className={styles.showcaseList}>
             {projects &&

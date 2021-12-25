@@ -33,6 +33,14 @@ const repoSiderbarsConfig = {
 
 /** @type {import('@docusaurus/plugin-content-docs').SidebarsConfig} */
 const projectSiderbarsConfig = {
+  fteSiderBar: [
+    {
+      type: 'category',
+      label: 'FTE',
+      collapsed: false,
+      items: ['project/fte/fte',],
+    },
+  ],
   wpmSiderBar: [
     {
       type: 'category',

@@ -30,13 +30,23 @@ export const getRepos: () => Application[] = () => {
 export const getProjects: () => Application[] = () => {
   return [
     {
+      key: 'fte',
+      title: 'FTE',
+      description: 'Frontend trustworthy engineering!',
+      preview:
+        'https://docs-1300606192.cos.ap-shanghai.myqcloud.com/showcase/fte.jpg',
+      website: '/docs/project/fte/fte',
+      isCore: true,
+      tags: ['core'],
+    },
+    {
       key: 'wpm',
       title: 'wpm',
       description: 'Web performance measure!',
       preview:
         'https://docs-1300606192.cos.ap-shanghai.myqcloud.com/showcase/wpm.jpeg',
       website: '/docs/project/wpm/wpm',
-      tags: ['opensource', 'performance', 'design'],
+      tags: ['performance', 'design'],
     },
   ]
 }
@@ -46,6 +56,12 @@ export const Tags: Record<TagType, Tag> = {
     label: 'Favorite',
     description: 'My favorite showcase that you must absolutely check-out!',
     color: '#e9669e',
+  },
+
+  core: {
+    label: 'Core',
+    description: 'Cores of the techniques!',
+    color: '#f30',
   },
 
   // For open-source sites, a link to the source code is required

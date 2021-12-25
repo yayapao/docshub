@@ -33,9 +33,9 @@ switch (target) {
 // 打包当前项目
 async function build(values) {
   if (values && values.includes('--analysis')) {
-    await $`yarn build:ana`
+    await $`pnpm run build:ana`
   } else {
-    await $`yarn build`
+    await $`pnpm run build`
   }
 
   log(chalk.white.bgGreen.bold(`Successfully built at ${Date.now()}`))

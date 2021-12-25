@@ -8,7 +8,7 @@
 import React, { memo } from 'react'
 import clsx from 'clsx'
 import Link from '@docusaurus/Link'
-
+import FavoriteIcon from '@site/src/components/Icons/FavoriteIcon'
 import styles from './styles.module.css'
 import { Application, Tag, TagType } from '@site/src/types/showcase'
 import { Tags } from '../../_showcase.config'
@@ -47,6 +47,9 @@ const ShowcaseCard = memo(({ application }: { application: Application }) => (
     </div>
     <div className="card__body">
       <div className={clsx(styles.showcaseCardHeader)}>
+        {application.isCore && (
+          <FavoriteIcon size="small" svgClass={styles.svgIconFavorite} />
+        )}
         <h4 className={styles.showcaseCardTitle}>
           <Link
             href={application.website}

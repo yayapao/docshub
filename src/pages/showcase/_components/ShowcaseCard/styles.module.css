@@ -44,6 +44,11 @@
   width: 100%;
 }
 
+.svgIconFavoriteXs,
+.svgIconFavorite {
+  color: var(--site-color-svgIcon-favorite);
+}
+
 .showcaseCardTitle,
 .showcaseCardHeader .svgIconFavorite {
   margin-right: 0.25rem;

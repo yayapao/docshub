@@ -6,7 +6,7 @@ const lightCodeTheme = require('prism-react-renderer/themes/github')
 const darkCodeTheme = require('prism-react-renderer/themes/dracula')
 
 const customFields = {
-  githubUrl: 'https://github.com/Y-lonelY'
+  githubUrl: 'https://github.com/Y-lonelY',
 }
 
 // 顶栏公告信息
@@ -23,6 +23,13 @@ const announcementBar = {
 const themeConfig = {
   colorMode: {
     respectPrefersColorScheme: true,
+  },
+  // 全局搜索
+  algolia: {
+    appId: 'YE0FY4L3G1',
+    apiKey: '63462328d9b41ce71ccd849c34bd8753',
+    indexName: 'docshub',
+    contextualSearch: true,
   },
   // announcementBar,
   navbar: {
@@ -139,9 +146,7 @@ const config = {
   ...metaConfig,
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
-  plugins: [
-    require.resolve('docusaurus-plugin-sass'),
-  ],
+  plugins: [require.resolve('docusaurus-plugin-sass')],
   presets: [
     [
       '@docusaurus/preset-classic',
@@ -167,7 +172,7 @@ const config = {
     ],
   ],
   themeConfig,
-  customFields
+  customFields,
 }
 
 module.exports = { ...config }

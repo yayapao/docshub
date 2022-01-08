@@ -1,0 +1,19 @@
+---
+id: github
+title: Github
+sidebar_label: Github
+---
+
+:::note what's Github?
+Github 是一个帮助开发者管理代码的云上服务。
+:::
+
+
+## 如何向开源仓库提交 pr?
+
+1. 找到开源作品的 github 仓库，fork 其到自己的组织；
+2. clone fork 后的仓库到本地；
+3. 新建一个分支(`git checkout -b [branch_name]`)，同时设置其 upstream 为原开源作品的地址(`git remote add upstream [open-source repo's address]`)
+4. 通过 `git remote -v` 来检查 remote 和 upstream 地址，理论上 remote 指向 fork 地址，upstream 指向原仓库地址；
+5. 在当前分支上修改代码，并推送到 origin;
+6. 在 github 上可以看到一个 pull&request 的按钮，点击后继续创建一个 pr 即可；

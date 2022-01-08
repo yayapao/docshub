@@ -63,6 +63,7 @@ const sidebars = {
         'server/nginx',
         'server/docker',
         'server/db',
+        'server/github'
       ],
     },
     {

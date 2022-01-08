@@ -33,11 +33,11 @@ yarn husky install
 
 之后执行 `npx husky add .husky/commit-msg 'npx --no-install commitlint --edit "$1"'` 来添加 commit-message 的脚本文件到 `.husky/commit-msg.sh`，编辑文件，添加相应脚本
 
-<b>获取 commit message?</b>
+**获取 commit message?**
 
 在 commit-msg.sh 内，通过读取 `$1` 传参可以获取提交信息的保存路径，之后通过读取该路径的文件信息，获取提交信息，通常保存在 `./.git/COMMIT_EDITMSG` 
 
-<b>如何编写验证脚本？</b>
+**如何编写验证脚本？**
 
 我们需要：
 
@@ -144,7 +144,7 @@ rsa(非对称加密)
 
 之后到指定目录内复制 `pub` 内容到 github 即可
 
-<b>如果不希望内次提交都输入密码，在生成 keys 时直接 enter</b>
+**如果不希望内次提交都输入密码，在生成 keys 时直接 enter**
 
 ### 切换当前项目 http to ssh
 

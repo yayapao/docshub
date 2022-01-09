@@ -3,6 +3,9 @@ import { HighlightWithBadgeProps } from './data'
 import clsx from 'clsx'
 import styles from './styles.module.css'
 
+/**
+ * 高亮当前文本内容
+ */
 export const HighlightWithCode: React.FC<{ bgcolor: string }> = ({
   children,
   bgcolor,

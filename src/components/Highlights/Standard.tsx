@@ -3,6 +3,9 @@ import { VitalsSrandardProps } from './data'
 import clsx from 'clsx'
 import styles from './styles.module.css'
 
+/**
+ * 用来展示不同指标的衡量标准
+ */
 export const VitalStandard: React.FC<VitalsSrandardProps> = ({
   label,
   good,

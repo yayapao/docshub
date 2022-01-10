@@ -178,7 +178,7 @@ FID 度量用户进入 web 应用并产生交互（点击链接、点按按钮�
 
 在讨论如何在浏览器运行时采集 FID 之前，我们先观察这个经典 FID 过程，测量 FID 实际上就是计算用户输入到主线程完全空闲的耗时
 
-![fid](/img/wpm/fid.svg)
+![fid](/img/fte/fid.svg)
 
 参考 [web-vitals](https://github.com/GoogleChrome/web-vitals) 我们不难看出，FID 的测量主要通过采集 `first-input` 事件，对其进行处理
 
@@ -273,7 +273,7 @@ web 辅助指标用来对 core web vitals 进行补充，它们既包含实验�
 
 对于 TTFB 我们无法给出一个通用的衡量标准，因为不同的业务场景、公司、地区甚至是硬件都可能存在差异，只能说越快越好。
 
-![TTFB](/img/wpm/ttfb.png)
+![TTFB](/img/fte/ttfb.png)
 
 :::note 关键
 
@@ -367,7 +367,7 @@ const po = observe('paint', entryHandler)
 - 它的测量规则？
 - 为什么它是一个实验室指标？
 
-![TTI](/img/wpm/tti.svg)
+![TTI](/img/fte/tti.svg)
 
 :::note 关键
 

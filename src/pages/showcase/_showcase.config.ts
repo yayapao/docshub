@@ -48,6 +48,15 @@ export const getProjects: () => Application[] = () => {
       website: '/docs/project/wpm/wpm',
       tags: ['performance', 'design'],
     },
+    {
+      key: 'sentry',
+      title: 'sentry',
+      description: 'Focusing on error reporting!',
+      preview:
+        'https://docs-1300606192.cos.ap-shanghai.myqcloud.com/showcase/sentry.jpg',
+      website: '/docs/project/sentry/sentry',
+      tags: ['errors', 'performance'],
+    },
   ]
 }
 

@@ -1,0 +1,50 @@
+---
+id: sentry
+title: Sentry
+sidebar_label: start sentry
+slug: sentry
+---
+
+[Sentry](https://docs.sentry.io/product/) 是我在研究前端可信赖工程的一个重要课题，它是一个 toB 商业化平台，能够支持真实用户的错误追踪和性能监控，同时它也是一个社区的开源项目。
+
+官方文档：
+- [github sentry](https://github.com/getsentry/sentry)
+- [sentry 产品文档](https://docs.sentry.io/)
+- [sentry 开发者文档](https://develop.sentry.dev/)
+- [sentry api docs](https://docs.sentry.io/api/)
+
+社区资源:
+
+- [抓 Bug 神器的工作原理——聊聊 Sentry 的架构](https://mp.weixin.qq.com/s?__biz=MzIzNzUzMDMyMg==&mid=2247484709&idx=1&sn=c92c8875c4a4bc6ec3a389bca3ce0519&chksm=e8c67898dfb1f18e1e7ecf6a024c3100b370df3b44a0cba59c67864dae19f3b3c5923aebb480&mpshare=1&scene=1&srcid=0804EkTqdYUD83GTilZi21uK&sharer_sharetime=1628050462144&sharer_shareid=7ea829c266ade297fbf226905a62adfa&version=3.1.12.70057&platform=mac#rd)
+
+我们在实践过程中，对 sentry 进行了更加深入的研究和改造，使其更加强大，同时也更加贴近实际业务。因此，对于 sentry 我们更多地思考如果基于开源项目对其进行理解和使用？
+
+- 如何在私有化部署？
+- 如何理解 Sentry 架构？
+- 如何改造 Sentry SDK?
+- 如何使用 Sentry?
+- 如何进行贴近业务的设计？
+
+这里先对上述各个模块进行概述，以帮助读者了解它是怎么一回事，后面在对各个模块进行更加深入的思考和分析。
+
+## How to self-hosted?
+
+在进行本地开发前，我们需要搭建运行 Sentry 所需的服务和环境。
+
+作为一个开源项目，Sentry 提供了官方的私有化部署方案，即[self-hosted](https://github.com/getsentry/self-hosted)，它是一个 composed 的容器镜像，如果你仅需要本地跑或者接入少量项目时，它是足够的。
+
+但是，如果你希望拥有可扩展的能力并且能够支撑更多的项目和并发量，我更建议**对其服务进行拆分**，我会直接切入到该点对其进行介绍。
+
+## How to develop at local?
+
+在环境准备完毕之后，紧接着我们需要将项目拷贝下来并在本地进行运行（注意，在开发环境内，直接基于项目的 self-hosted 即可，拆分服务的方案更适用于生产环境）。
+
+我们会介绍如何在本地运行 sentry 项目并创建第一个项目。
+
+## What's architecture?
+
+
+
+## How to contribute to SDK?
+
+## How to get closer to application?

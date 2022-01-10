@@ -44,9 +44,17 @@ const projectSiderbarsConfig = {
   wpmSiderBar: [
     {
       type: 'category',
-      label: 'wpm',
+      label: 'WPM',
       collapsed: false,
       items: ['project/wpm/wpm', 'project/wpm/metrics'],
+    },
+  ],
+  sentrySiderBar: [
+    {
+      type: 'category',
+      label: 'Sentry',
+      collapsed: false,
+      items: ['project/sentry/sentry'],
     },
   ]
 }

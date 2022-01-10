@@ -54,7 +54,7 @@ const projectSiderbarsConfig = {
       type: 'category',
       label: 'Sentry',
       collapsed: false,
-      items: ['project/sentry/sentry'],
+      items: ['project/sentry/sentry', 'project/sentry/self_hosted'],
     },
   ]
 }

@@ -1,0 +1,115 @@
+---
+id: self_hosted
+title: 私有化部署
+sidebar_label: self hosted
+slug: self_hosted
+---
+
+在本章节，我们将介绍私有化部署 Sentry 环境准备的两种方式。
+
+## 官方推荐的开发环境准备
+
+通过其[开发者文档](https://develop.sentry.dev/environment/)来查看如何在部署本地开发环境。
+
+版本要求：
+- sentry version: 这里基于 sentry-21.6.3 进行介绍
+- OS: MacOS
+
+### 环境搭建
+
+这里记录本地环境搭建的关键步骤：
+
+- 从 [sentry](https://github.com/getsentry/sentry) 内 clone 项目到本地，这里**建议选择最新的稳定 release 版本**
+
+- 执行 `xcode-select --install` 或者启动 Xcode 更新 Xcode CLI tools，目的是安装 MacOS 的基础开发环境
+
+- 进入 sentry 本地目录，执行 `brew bundle --verbose` 安装在 Brewfile 内列出的各种软件
+
+- Sentry 依赖 [python wheels](https://pythonwheels.com/)，它包含一些二进制包，需要保证 MacOS 版本较新且本机内安装有 Rust 执行环境
+
+- Sentry 利用 [pyenv](https://github.com/pyenv/pyenv) 来安装和管理 python 版本，执行 `brew install pyenv` 安装一下，之后执行 `make setup-pyenv` 安装 Sentry 依赖环境
+
+  - 安装完成之后，执行 `which python` --> 预期出现 `/usr/bin/python`
+  - 修改 `bash_profile`，添加 `#pyenv \n eval "$(pyenv init -)" \n export PATH="$HOME/.pyenv/bin:$PATH"` 来指定路径
+  - 执行 `eval "$SHELL"` 重启控制台，**重启控制台特别关键**
+  - 再次执行 `which python` --> 预期出现 `/Users/you/.pyenv/shims/python`，相当于做了一次拦截，将 python 命令托管给 pyenv 后统一处理
+  - 在 sentry 根目录下，执行 `python -m venv .venv` 创建虚拟运行环境
+  - `source .venv/bin/activate` 启用运行环境
+  - 此时在虚拟环境内执行 `which python` --> 预期出现 `/Users/you/sentry/.venv/bin/python`
+
+- Sentry 依赖 [volta](https://github.com/volta-cli/volta) 来安装和管理 Node.js 版本
+
+  - 执行 `curl https://get.volta.sh | bash` 来 install volta
+  - 执行 `eval "$SHELL"` 来重启控制台，**真的很重要**
+  - 修改 `bash_profile`，添加 `export VOLTA_HOME="$HOME/.volta" \n export PATH="$VOLTA_HOME/bin:$PATH"`
+
+- 执行 `make bootstrap` 来安装 sentry 依赖，启动 sentry 依赖服务，可以直接在 Docker Dashboard 内观察
+
+- Sentry 依赖 [direnv](https://github.com/direnv/direnv) 来自动激活你的虚拟环境，设置一些必要的环境变量，并且会自动检测你的环境是否可用
+  - 执行 `brew install direnv` ，之后在 `.zshrc` 文件末尾添加配置 `eval "$(direnv hook zsh)"`
+  - 执行 `eval "$SHELL"` 重启控制台
+
+### 本地运行 Sentry
+
+在本地仓库内，重点观察 `Makfile`, `setup.py` 文件，下面介绍本地运行命令：
+
+- 执行 `make bootstrap` 在 docker 内启动服务
+- 执行 `sentry help` 查看相关命令
+
+:::caution --workers
+如果需要走通 sentry 上报的全部流程(即启动所有服务)，需要执行 `sentry devserver --workers`
+:::
+
+#### 打包构建
+
+这里我们参考源仓库的 `/docker/builder.*` 文件来查看构建流程，基于此，我们开发了一个构建脚本：
+
+```bash
+function build() {
+  set -e
+
+  if [[ ! -f setup.py ]]; then
+      >&2 echo "Cannot find setup.py, make sure you have mounted your source dir to /workspace"
+      exit 1
+  fi
+
+  # fe env
+  cd ./js
+  yarn install --frozen-lockfile --production --quiet
+
+  # fe package
+  cd ../
+  mv ./node_modules ./node_modules_backup
+  rm -rf ./dist
+  mkdir ./node_modules
+  echo "Populating node_modules cache..."
+  cp -R ./js/node_modules/* ./node_modules/
+
+  # py env
+  pip3 install pkginfo==1.5.0.1
+  pip3 install wheel
+
+  # py package
+  export YARN_CACHE_FOLDER="$(mktemp -d)"
+  python setup.py bdist_wheel --build-number 0
+  rm -r "$YARN_CACHE_FOLDER"
+  pkginfo -f requires_dist --single --sequence-delim=! dist/*.whl | tr ! \\n > dist/requirements.txt
+
+  # output dist.tar.gz
+  tar -zcvf dist.tar.gz ./dist/*
+  rm dist.tar.gz
+
+  # recover node_modules
+  rm -rf ./node_modules
+  mv ./node_modules_backup ./node_modules
+}
+```
+
+
+### TroubleShooting
+
+##### Q: 在本地创建项目时，发现 `POST /api/0/teams/sentry/sentry/projects/` 报错 `400 invaild platform` ?
+
+查看源码发现程序需要读取 `integration-docs` 目录下的文件，返回静态页面
+
+通过执行 `sentry repair --with-docs` 拉取最新的集成列表，安装在本地的 sentry 内

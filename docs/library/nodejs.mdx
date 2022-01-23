@@ -5,9 +5,97 @@ sidebar_label: Node.js
 slug: nodejs
 ---
 
-[zx](https://github.com/google/zx) - 一个脚本工具，基于 Node.js 的 child_process 对 shell 进行封装，能以接近 javascript 语法来编写 shell 脚本
+import {
+  HighlightWithCode,
+} from '@site/src/components/Highlights'
 
 [cross-env](https://github.com/kentcdodds/cross-env) - 解决了 node 的环境变量在不同平台的 (eg: `NODE_ENV=production`) 的设置兼容性问题
+
+## zx
+
+:::note zx
+[zx](https://github.com/google/zx) 是一个 Google 的 util 脚本工具，基于 Node.js 的 child_process 对 shell 进行封装，能以接近 ES6 的语法来编写 bash 脚本
+:::
+
+我们通常在 `.mjs` 文件对编写 zx 脚本，它具备如下特性：
+
+- 支持大部分的 node.js 特性和语法
+- 能够转换 [bash 命令](https://github.com/google/zx#functions)
+- 内置编写脚本的[常用依赖](https://github.com/google/zx#packages)
+
+这里我们直接以一个例子开始：
+
+```js
+#!/usr/bin/env zx
+
+import dayjs from 'dayjs'
+
+const log = console.log
+const ALERT_MESSAGE = '\nPlease confirm your input!\n'
+const cmds = ['tag']
+
+/**
+ * 判断是否传递命令行参数
+ * 如果传递，则直接获取参数，并将其丢入 switch 内进行判断
+ * 如果没传递，则通过 question(readline) 来引导用户传入
+ * 注意：两种方式获取的参数类型不一样，前者为数据，后者为空格拼接的字符串
+ */
+const [nodePath, zxPath, scriptName, ...restData] = process.argv
+let choose
+if (!restData || restData.length === 0) {
+  const crt = await question('Choose command: ', {
+    choices: cmds,
+  })
+  // 处理字符串
+  choose = crt.split(' ')
+} else {
+  choose = restData
+}
+
+// 根据参数进行路由判断
+const [target, ...rest] = choose
+switch (target) {
+  case 'tag':
+    tag(...rest)
+    break
+  default:
+    log(chalk.red(ALERT_MESSAGE))
+    log(`Support command ===> ${cmds.join(' ')}`)
+}
+
+// 生成 tag，并推送到 git
+async function tag(name) {
+  let tagName = name
+
+  if (!name) {
+    const COMMIT_ID = await $`git rev-parse --short HEAD`
+    const COMMIT_NAME = String(COMMIT_ID).trim()
+    tagName = COMMIT_NAME
+  }
+
+  log(chalk.blue(`Tag name is ${tagName}`))
+  const dt = dayjs().format('YYYY-MM-DD HH:mm:ss')
+  await $`git tag -a ${tagName} -m "Created at ${dt}"`
+  await $`git push --tag`
+  log(chalk.black.bgGreen.bold(`Successfully tag at ${Date.now()}`))
+}
+```
+
+如上脚本所示，我们在一行申明 <HighlightWithCode>#!/usr/bin/env zx</HighlightWithCode> 之后，就可以编写相关的执行脚本，通过 <HighlightWithCode>const res = await $`bash command`</HighlightWithCode>的形式来执行原生 bash 命令，同时我们会根据用户输入的命令行参数来执行不同的动作。
+
+### 如何获取命令行内参数？
+
+在执行类似 `zx control.mjs build params1 params2` 命令时，我们可以通过 [node.js-process.argv](http://nodejs.cn/api/process/process_argv.html) 来获取执行参数
+
+相较于 `node control.js` 直接执行指定脚本的形式，通过 zx 执行会存在一点区别：通常来说，`process.argv` 返回一个指定顺序的数组：
+
+1. 第一个元素是 `process.execPath`, 通常是 node 的执行文件路径；
+2. 第二个元素是正在执行的 javascript 文件，由于 zx 作为中间层，因此在执行 zx 脚本时，指向的是 zx 的执行文件路径，**区别就在于此**；
+3. 剩下的会按照顺序依次填入数组；
+
+
+
+
 
 ## NEL
 

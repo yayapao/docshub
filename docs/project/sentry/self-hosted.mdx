@@ -31,7 +31,7 @@ slug: self_hosted
 
   - 安装完成之后，执行 `which python` --> 预期出现 `/usr/bin/python`
   - 修改 `bash_profile`，添加 `#pyenv \n eval "$(pyenv init -)" \n export PATH="$HOME/.pyenv/bin:$PATH"` 来指定路径
-  - 执行 `eval "$SHELL"` 重启控制台，**重启控制台特别关键**
+  - 执行 `eval "$SHELL"` **重启控制台特别关键**
   - 再次执行 `which python` --> 预期出现 `/Users/you/.pyenv/shims/python`，相当于做了一次拦截，将 python 命令托管给 pyenv 后统一处理
   - 在 sentry 根目录下，执行 `python -m venv .venv` 创建虚拟运行环境
   - `source .venv/bin/activate` 启用运行环境
@@ -51,7 +51,7 @@ slug: self_hosted
 
 ### 本地运行 Sentry
 
-在本地仓库内，重点观察 `Makfile`, `setup.py` 文件，下面介绍本地运行命令：
+在本地仓库内，重点观察 `Makfile`, `setup.py` 文件，下面介绍运行命令：
 
 - 执行 `make bootstrap` 在 docker 内启动服务
 - 执行 `sentry help` 查看相关命令

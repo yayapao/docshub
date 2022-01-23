@@ -1,0 +1,32 @@
+---
+id: usage
+title: Sentry C/S Usage
+sidebar_label: usage
+slug: usage
+---
+
+本章节我们会从 SDK 配置和 Sentry Web 两方面来解读 Sentry 平台的核心概念。
+
+## SDK Config
+
+这里我们以浏览器端接入为例（其他平台接入配置可以参考[docs-platform](https://docs.sentry.io/platforms/javascript/)）其配置如下：
+
+```javascript
+import * as Sentry from '@sentry/browser'
+import { Integrations } from '@sentry/tracing'
+
+Sentry.init({
+  dsn: 'https://examplePublicKey@o0.ingest.sentry.io/0',
+  release: 'my-project-name@2.3.12',
+  integrations: [new Integrations.BrowserTracing()],
+
+  // Set tracesSampleRate to 1.0 to capture 100%
+  // of transactions for performance monitoring.
+  // We recommend adjusting this value in production
+  tracesSampleRate: 1.0,
+})
+```
+
+###
+
+## Sentry Web Server

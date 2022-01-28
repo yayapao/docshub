@@ -38,7 +38,7 @@ import { HighlightWithText } from '../../src/components/Highlights'
 
 核心步骤如下:
 
-```
+```bash
 # 登录服务器,创建 root 账户,设置密码,修改相关配置
 $ sudo passwd root
 >>> passwd: password updated successfully
@@ -60,8 +60,25 @@ $ sudo service ssh restart
 
 核心步骤:
 
-```
-# 根据腾讯云文档修改安装、启动并且配置 vsftpd 服务之后,需要注意新建 linux 用户时,设置语义化的用户名
+```bash
+# 根据腾讯云文档修改安装、启动并且配置 vsftpd 服务,相关配置:
+# 修改配置,并且注释 listen_ipv6=YES(即 ipv6 不生效)
+anonymous_enable=NO
+local_enable=YES
+chroot_local_user=YES
+chroot_list_enable=YES
+chroot_list_file=/etc/vsftpd/chroot_list
+listen=YES
+# 添加配置
+local_root=/home/xxx
+allow_writeable_chroot=YES
+pasv_enable=YES
+pasv_address=xxx.xx.xxx.xx #请修改为您的 Linux 云服务器公网 IP
+pasv_min_port=40000
+pasv_max_port=45000
+
+
+# 需要注意新建 linux 用户时,设置语义化的用户名
 $ useradd xxx
 $ passed xxx
 
@@ -71,7 +88,34 @@ $ mkdir /xxx
 $ chmod -R 777 /home/xxx
 
 # 最后开放 FTP 相关的防火墙设置,轻量服务器开通防火墙,CVM 设置相关安全组
+
+# 如果在上传文件时,出现 550 permission denied 错误,可以尝试设置:
+write_enable=YES
+anon_mkdir_write_enable=YES
 ```
+
+### coscli
+
+[coscli](https://cloud.tencent.com/document/product/436/63143) 是腾讯云对象存储的客户端命令行工具。基于此，我们可以方便地在本地对对象存储进行操作，通常我们可以利用其发起应用的发布流程。
+
+:::info
+注意在 macos 内，将可执行脚本直接放到 `/usr/local/bin` 目录下(Linux 在 `/usr/bin` 目录下)，就能够直接全局调用
+:::
+
+下面对其常用操作进行记录，方便随时查阅
+
+```bash
+# 将本地图片上传到 cos 指定 bucket 内，调换顺序则可以直接从 cos 上下载文件到本地
+coscli cp ./xxx.png cos://xxx-1300606192/showcase/xxx.png
+
+# 注意需要为 bucket name 加上 cos:// 前缀来查看具体内容
+coscli ls
+coscli cos://xxx-1300606192
+```
+
+在使用 coscli 时，需要注意：
+
+- 在上传或者拉取桶内的文件时，需要先执行 `coscli config show` 来查看当前桶是否已经写入本地配置，如果没有，则执行 `coscli config add -b [bucket name] -r [region]` 进行添加  
 
 
 ## 通用技能
@@ -164,29 +208,6 @@ $ chmod -R 777 /home/xxx
 
 
 ## 常用工具
-
-### coscli
-
-[coscli](https://cloud.tencent.com/document/product/436/63143) 是腾讯云对象存储的客户端命令行工具。基于此，我们可以方便地在本地对对象存储进行操作，通常我们可以利用其发起应用的发布流程。
-
-:::info
-注意在 macos 内，将可执行脚本直接放到 `usr/local/bin` 目录下，就能够直接全局调用
-:::
-
-下面对其常用操作进行记录，方便随时查阅
-
-```bash
-# 将本地图片上传到 cos 指定 bucket 内，调换顺序则可以直接从 cos 上下载文件到本地
-coscli cp ./xxx.png cos://xxx-1300606192/showcase/xxx.png
-
-# 注意需要为 bucket name 加上 cos:// 前缀来查看具体内容
-coscli ls
-coscli cos://xxx-1300606192
-```
-
-在使用 coscli 时，需要注意：
-
-- 在上传或者拉取桶内的文件时，需要先执行 `coscli config show` 来查看当前桶是否已经写入本地配置，如果没有，则执行 `coscli config add -b [bucket name] -r [region]` 进行添加  
 
 ### bash 的 url 工具 -- curl
 

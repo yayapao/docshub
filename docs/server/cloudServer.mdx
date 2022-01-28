@@ -30,7 +30,7 @@ import { HighlightWithText } from '../../src/components/Highlights'
 
 ### 设置 SSH 远程登录
 
-参考内容:
+参考:
 
 - [使用远程登录软件登录 Linux 实例](https://cloud.tencent.com/document/product/1207/44578)
 - [Ubuntu 系统如何使用 root 用户登录实例？](https://cloud.tencent.com/document/product/1207/44569#ubuntu-.E7.B3.BB.E7.BB.9F.E5.A6.82.E4.BD.95.E4.BD.BF.E7.94.A8-root-.E7.94.A8.E6.88.B7.E7.99.BB.E5.BD.95.E5.AE.9E.E4.BE.8B.EF.BC.9F)
@@ -50,6 +50,29 @@ $ sudo vi /etc/ssh/sshd_config
 # 重启 ssh
 $ sudo service ssh restart
 ```
+
+### 搭建 FTP 服务
+
+参考:
+
+- [Linux 云服务器搭建 FTP 服务](https://cloud.tencent.com/document/product/213/10912)
+- [Cyberduck FTP客户端工具](https://cyberduck.io/)
+
+核心步骤:
+
+```
+# 根据腾讯云文档修改安装、启动并且配置 vsftpd 服务之后,需要注意新建 linux 用户时,设置语义化的用户名
+$ useradd xxx
+$ passed xxx
+
+# 很重要的一步,腾讯云文档有误.在 home 目录下,需要以 /home/[用户名] 的形式创建文件夹,并且赋予权限
+# 否则, 客户端 ftp 连接时会出现问题
+$ mkdir /xxx
+$ chmod -R 777 /home/xxx
+
+# 最后开放 FTP 相关的防火墙设置,轻量服务器开通防火墙,CVM 设置相关安全组
+```
+
 
 ## 通用技能
 
@@ -206,15 +229,6 @@ ubuntu 通常内置 `yum` 和 `apt-get`
 
 - `apt-get update`
 - `apt-get install xxx`
-
-### FTP 服务
-
-[Linux 云服务器搭建 FTP 服务](https://cloud.tencent.com/document/product/213/10912)
-
-两个 FTP 客户端工具
-
-- [Cyberduck](https://cyberduck.io/)
-- [FileZilla](https://filezilla-project.org/download.php?platform=osx)
 
 ### 软硬链接
 

@@ -158,12 +158,16 @@ Q1: 在集群模式下，设置 `instance` 数量如果超过机器本身 CPU �
 
 为此，pm2-logrotate 用来进行日志管理，根据配置规则对日志进行合理切割
 
-```shell
+```bash
 # install
-pm2 install pm2-logrotate
+$ pm2 install pm2-logrotate
 
-# 设置一个文件最大为 100M
-pm2 set pm2-logrotate:max_size 100M
+# 设置一个文件最磁盘
+$ pm2 set pm2-logrotate:max_size 50M
+# 设置切割规则
+$ pm2-logrotate:rotateInterval '0 0 0 * * ? '
+# 设置日志保存时间
+pm2 set pm2-logrotate:retain 300
 ```
 
 ## Typeorm

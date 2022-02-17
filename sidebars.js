@@ -95,6 +95,14 @@ const sidebars = {
       items: ['browser/devtools'],
     },
   ],
+  interviewSiderbar: [
+    {
+      type: 'category',
+      label: 'Frontend',
+      collapsed: true,
+      items: ['interview/js', 'interview/frames'],
+    },
+  ],
   librarySiderbar: [
     {
       type: 'category',

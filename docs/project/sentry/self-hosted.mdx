@@ -2,54 +2,75 @@
 id: self_hosted
 title: 私有化部署
 sidebar_label: self hosted
-slug: self_hosted
 ---
 
-在本章节，我们将介绍私有化部署 Sentry 环境准备的两种方式。
+对于开源项目，出于数据安全和功能拓展的考虑，我们一般会选择私有化部署。在本章节，我们将讨论私有化部署 Sentry 的解决方案。
 
-## 官方推荐的开发环境准备
+## 官方私有化方案
 
-通过其[开发者文档](https://develop.sentry.dev/environment/)来查看如何在部署本地开发环境。
+参考[官方推荐私有化部署](https://github.com/getsentry/self-hosted)，它是将 Sentry 依赖的各个服务挂载到 Docker 上，通过 Docker-compose 来统一管理
 
-版本要求：
-- sentry version: 这里基于 sentry-21.6.3 进行介绍
-- OS: MacOS
+系统要求：
+- Docker 19.03.6+ 
+- Compose 1.28.0+
+- 4 CPU Cores
+- 8 GB RAM
+- 20 GB Free Disk Space
 
-### 环境搭建
+部署流程参考官方文档即可。官方推荐的私有化方式能够快速部署上线，但是由于整个服务部署在单机上，无法灵活地阔容，性能瓶颈十分明显。因此在实际生产中，我们并没有直接采纳该方案，而是将其各个服务拆解出来，独立部署
 
-这里记录本地环境搭建的关键步骤：
+## 本地开发
+
+更进一步地，我们希望具备基于源码进行拓展和优化的能力，因此我们需要具备本地开发的能力。接下来我参考[官方文档](https://develop.sentry.dev/environment/)对实际部署流程进行介绍。
+
+### 运行时依赖
+
+源码
 
 - 从 [sentry](https://github.com/getsentry/sentry) 内 clone 项目到本地，这里**建议选择最新的稳定 release 版本**
 
-- 执行 `xcode-select --install` 或者启动 Xcode 更新 Xcode CLI tools，目的是安装 MacOS 的基础开发环境
+MacOS 基础环境
 
+- 执行 `xcode-select --install` 或者启动 Xcode 更新 Xcode CLI tools，目的是安装 MacOS 的基础开发环境
 - 进入 sentry 本地目录，执行 `brew bundle --verbose` 安装在 Brewfile 内列出的各种软件
 
+Python 依赖
+
 - Sentry 依赖 [python wheels](https://pythonwheels.com/)，它包含一些二进制包，需要保证 MacOS 版本较新且本机内安装有 Rust 执行环境
-
 - Sentry 利用 [pyenv](https://github.com/pyenv/pyenv) 来安装和管理 python 版本，执行 `brew install pyenv` 安装一下，之后执行 `make setup-pyenv` 安装 Sentry 依赖环境
-
   - 安装完成之后，执行 `which python` --> 预期出现 `/usr/bin/python`
   - 修改 `bash_profile`，添加 `#pyenv \n eval "$(pyenv init -)" \n export PATH="$HOME/.pyenv/bin:$PATH"` 来指定路径
   - 执行 `eval "$SHELL"` **重启控制台特别关键**
   - 再次执行 `which python` --> 预期出现 `/Users/you/.pyenv/shims/python`，相当于做了一次拦截，将 python 命令托管给 pyenv 后统一处理
-  - 在 sentry 根目录下，执行 `python -m venv .venv` 创建虚拟运行环境
+  - 在 sentry 根目录下，执行 `python -m venv .venv` 创建 python 项目虚拟执行路径
   - `source .venv/bin/activate` 启用运行环境
   - 此时在虚拟环境内执行 `which python` --> 预期出现 `/Users/you/sentry/.venv/bin/python`
 
-- Sentry 依赖 [volta](https://github.com/volta-cli/volta) 来安装和管理 Node.js 版本
+Node.js 依赖
 
+- Sentry 依赖 [volta](https://github.com/volta-cli/volta) 来安装和管理 Node.js 版本
   - 执行 `curl https://get.volta.sh | bash` 来 install volta
   - 执行 `eval "$SHELL"` 来重启控制台，**真的很重要**
   - 修改 `bash_profile`，添加 `export VOLTA_HOME="$HOME/.volta" \n export PATH="$VOLTA_HOME/bin:$PATH"`
 
-- 执行 `make bootstrap` 来安装 sentry 依赖，启动 sentry 依赖服务，可以直接在 Docker Dashboard 内观察
+管理环境变量
 
 - Sentry 依赖 [direnv](https://github.com/direnv/direnv) 来自动激活你的虚拟环境，设置一些必要的环境变量，并且会自动检测你的环境是否可用
   - 执行 `brew install direnv` ，之后在 `.zshrc` 文件末尾添加配置 `eval "$(direnv hook zsh)"`
   - 执行 `eval "$SHELL"` 重启控制台
 
-### 本地运行 Sentry
+
+执行 `make bootstrap` 来启动项目，在 Docker Dashboard 内观察 Sentry 服务的运行情况，理论上会启动：
+
+- `sentry_relay`
+- `sentry_snuba`
+- `sentry_kafka`
+- `sentry_zookeeper`
+- `sentry_postgres`
+- `sentry_redis`
+- `sentry_clickhouse`
+
+### 运行 Sentry
 
 在本地仓库内，重点观察 `Makfile`, `setup.py` 文件，下面介绍运行命令：
 
@@ -102,8 +123,12 @@ function build() {
   # recover node_modules
   rm -rf ./node_modules
   mv ./node_modules_backup ./node_modules
+
+  # other handles...
 }
 ```
+
+最终会在 dist 目录下生成 `requirements.txt` 和 `sentry-[sentry version]-[python version]-none-any.whl` 文件
 
 
 ### TroubleShooting

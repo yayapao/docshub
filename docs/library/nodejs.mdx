@@ -159,6 +159,11 @@ PM2 的集群模式（cluster mode）利用 Node.js 提供的 cluster 来用来�
 
 因此，如果在容器内通过 PM2 来部署 Node.js 项目时，在集群模式下要指定 `instance` 的具体数量
 
+**为什么会以宿主机的 core 来计算呢？**
+
+PM2 的集群模式是基于 Node.js 提供的[集群能力](https://nodejs.org/api/cluster.html#how-it-works)，而 Node.js 通过遍历 `os.cpus()` 来创建子进程，即执行 `child_process.fork()`
+
+在容器内，直接指定 `os.cpus()` 返回的是宿主机的 core 信息，如果需要访问当前容器的资源，需要通过[Linux资源管理之cgroups](https://tech.meituan.com/2015/03/31/cgroups.html)来读取
 
 
 

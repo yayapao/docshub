@@ -4,9 +4,25 @@ title: 私有化部署
 sidebar_label: self hosted
 ---
 
+import { HighlightWithText } from '../../../src/components/Highlights'
+
 对于开源项目，出于数据安全和功能拓展的考虑，我们一般会选择私有化部署。在本章节，我们将讨论私有化部署 Sentry 的解决方案。
 
-## 官方私有化方案
+## TroubleShooting
+
+<HighlightWithText>Q: 在本地创建项目时，发现 `POST /api/0/teams/sentry/sentry/projects/` 报错 `400 invaild platform` ?</HighlightWithText>
+
+查看源码发现程序需要读取 `integration-docs` 目录下的文件，返回静态页面
+
+通过执行 `sentry repair --with-docs` 拉取最新的集成列表，安装在本地的 sentry 内
+
+<HighlightWithText>Q: 上报域名返回大量500?</HighlightWithText>
+
+可能是 relay 服务的不足以处理突然暴增的上报请求，可以尝试扩容。但是扩容后同样可能导致后续事件对列堆积，更好是针对指定应用进行客户端+服务端限流
+
+<!-- -->
+
+## 官方解决方案
 
 参考[官方推荐私有化部署](https://github.com/getsentry/self-hosted)，它是将 Sentry 依赖的各个服务挂载到 Docker 上，通过 Docker-compose 来统一管理
 
@@ -17,11 +33,21 @@ sidebar_label: self hosted
 - 8 GB RAM
 - 20 GB Free Disk Space
 
-部署流程参考官方文档即可。官方推荐的私有化方式能够快速部署上线，但是由于整个服务部署在单机上，无法灵活地阔容，性能瓶颈十分明显。因此在实际生产中，我们并没有直接采纳该方案，而是将其各个服务拆解出来，独立部署
+部署流程参考官方文档即可。官方推荐的私有化方式能够快速部署上线，但是由于整个服务部署在单机上，无法灵活地扩容，性能瓶颈十分明显。因此在实际生产中，我们并没有直接采纳该方案，而是将其各个服务拆解出来，独立部署
+
+## 改进方案
+
+出于系统吞吐量和性能稳定性的考虑，我们将根据官方方案对各个服务进行拆解，独立部署
+
+:::info why this way works?
+因为 sentry 本身基于 redis 和 Kafka 等数据服务来进行事件流的通信和处理，业务服务之间并未直接依赖
+:::
+
+
 
 ## 本地开发
 
-更进一步地，我们希望具备基于源码进行拓展和优化的能力，因此我们需要具备本地开发的能力。接下来我参考[官方文档](https://develop.sentry.dev/environment/)对实际部署流程进行介绍。
+更进一步地，我们希望具备基于源码进行拓展和优化的能力，因此我们需要具备本地开发的能力。接下来我参考[官方文档](https://develop.sentry.dev/environment/)对实际部署流程进行介绍
 
 ### 运行时依赖
 
@@ -131,10 +157,3 @@ function build() {
 最终会在 dist 目录下生成 `requirements.txt` 和 `sentry-[sentry version]-[python version]-none-any.whl` 文件
 
 
-### TroubleShooting
-
-##### Q: 在本地创建项目时，发现 `POST /api/0/teams/sentry/sentry/projects/` 报错 `400 invaild platform` ?
-
-查看源码发现程序需要读取 `integration-docs` 目录下的文件，返回静态页面
-
-通过执行 `sentry repair --with-docs` 拉取最新的集成列表，安装在本地的 sentry 内

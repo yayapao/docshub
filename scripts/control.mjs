@@ -5,15 +5,26 @@ import dayjs from 'dayjs'
 const log = console.log
 const ALERT_MESSAGE = '\nPlease confirm your input!\n'
 const COSPATH = `cos://docs-1300606192/rls`
+const cmds = ['build', 'tag', 'deltag', 'rls', 'help']
 
-const cmds = ['build', 'upload', 'tag', 'deltag', 'rls', 'help']
-let choose = await question('Choose command: ', {
-  choices: cmds,
-})
+const [nodePath, zxPath, scriptPath, ...restData] = process.argv
+
+let choose
+if (!restData || restData.length === 0) {
+  const crt = await question('Choose command: ', {
+    choices: cmds,
+  })
+  choose = crt.split(' ')
+} else {
+  choose = restData
+}
 
 // 支持多参数传递
-const [target, ...rest] = choose.split(' ')
+const [target, ...rest] = choose
 switch (target) {
+  case 'dev':
+    dev(...rest)
+    break
   case 'build':
     build(rest)
     break
@@ -25,9 +36,14 @@ switch (target) {
     break
   case 'rls':
     release(...rest)
+    break
   default:
     log(chalk.red(ALERT_MESSAGE))
     log(`Support command ===> ${cmds.join(' ')}`)
+}
+
+async function dev(values) {
+  await $`pnpm run dev`
 }
 
 // 打包当前项目

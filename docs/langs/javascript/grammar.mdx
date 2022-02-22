@@ -5,24 +5,120 @@ sidebar_label: grammar
 slug: grammar
 ---
 
-## 变量提升
+import {
+  HighlightWithText,
+  HighlightWithCode,
+} from '../../../src/components/Highlights'
 
-理解一个关键概念：**暂存死区**
+## var、let & const
+
+ES5 - ES6 新老声明方式的较量，需要注意用 `var` 声明变量会发生**变量提升**，而 `const/let` 则会**暂存死区**
 
 - `var`声明被置于函数作用域的顶部，但是它们的赋值不是
 - `const`和`let`在块作用域中，会被置于块头部的暂存死区，直至它们被初始化，在这期间，如果变量被访问（比如 typeof ），会直接抛出 ReferenceError 错误
 
 ```javascript
 function test() {
-  console.log(a) // => throws a ReferenceError
   console.log(b) // => undefined
   var b = 100
   console.log(c) // => throws a ReferenceError
-  const c = 100
+|  const c = 100
   let d
   console.log(d) // => undefined
   d = 100
 }
+```
+
+## JS 内的类型及其判断
+
+### ES6 新增数据类型
+
+对 ES5 内的数据类型：`null`、`undefined`、`number`、`string`、`boolean`、`object`，ES6 新增了：`Set`、`Map`、`Symbol`、`BigInt` 来弥补 ES5 的不足
+
+下面我们对其产生背景进行回顾和分析
+
+### 判断数据类型
+
+通常我们更推荐使用如下方式来判断类型
+
+- `typeof a`
+- `Object.prototype.toString.call(a)`
+
+不推荐使用
+
+- `a instanceof Object`，右侧表达式必须为 object，则其对 undefined, null 无能为力，并且对于 Array, Set, Map 类型判断不够精确
+- `a.constructor === String`，问题在于如果重写了右侧的方法，即构造函数，该等式将不再成立，存在较大的系统风险
+
+下面上述方式来判断 JS 内的数据类型：
+
+<HighlightWithCode>Array .vs. Object .vs. Set .vs. Map</HighlightWithCode>
+
+<!-- -->
+
+```js
+/**
+ * Array 判断数组类型推荐直接使用 Array.isArray()
+ */
+const a = new Array()
+Array.isArray(a) // true
+typeof a // 'object'
+a instanceof Array // true
+a instanceof Object // true
+Object.prototype.toString.call(a) // '[object Array]'
+a.constructor === Array // true
+
+/**
+ * Object
+ */
+const a = new Object()
+typeof a // 'object'
+a instanceof Object // true
+Object.prototype.toString.call(a) // '[object Object]'
+a.constructor === Object // true
+
+/**
+ * Set
+ */
+const a = new Set()
+typeof a // 'object'
+a instanceof Set // true
+a instanceof Object // true
+Object.prototype.toString.call(a) // '[object Set]'
+a.constructor === Set // true
+
+/**
+ * Map
+ */
+const a = new Map()
+typeof a // 'object'
+a instanceof Map // true
+a instanceof Object // true
+Object.prototype.toString.call(a) // '[object Map]'
+a.constructor === Map // true
+```
+
+<HighlightWithCode>undefined .vs. null</HighlightWithCode>
+
+<!-- -->
+
+```js
+/**
+ * undefined
+ */
+const a = undefined
+typeof a // 'undefined'
+a instanceof undefined // Uncaught TypeError: Right-hand side of 'instanceof' is not an object
+Object.prototype.toString.call(a) // '[object Undefined]'
+a.constructor === Array // Uncaught TypeError: Cannot read properties of undefined
+
+/**
+ * undefined
+ */
+const a = null
+typeof a // 'object'
+a instanceof null // Uncaught TypeError: Right-hand side of 'instanceof' is not an object
+Object.prototype.toString.call(a) // '[object Null]'
+a.constructor === Array // Uncaught TypeError: Cannot read properties of null
 ```
 
 ## Array
@@ -115,6 +211,8 @@ let arr3 = Array.of("a", 1) -> ["a", 1]
  */
 let pList = Array.from(document.querySelectorAll("p")); ->[p,...]
 let strList = Array.from("123") -> ["1", "2", "3"]
+// 将创建一个 [0,...,9] 的数组
+let list = Array.from({ length: 10 }, (k,v) => v)
 
 /**
  * Array.fill()

@@ -15,13 +15,33 @@ import { HighlightWithText } from '../../src/components/Highlights'
 <!-- -->
 
 ```
-解决思路类似 Q2，通过配置 hosts 来指定 ip
-通过 https://fastly.net.ipaddress.com/ 来查看：
+通过配置 hosts 来指定 ip，减少 CDN 寻址时间
+
+通过 https://fastly.net.ipaddress.com/ 来查看指定域名的 IP 地址：
 1. github.com
 2. github.global.ssl.fastly.net
-的 ip 地址
 
 之后将其添加到 hosts 文件内，最后执行 `sudo /etc/init.d/network restart` 刷新设置
+```
+
+<HighlightWithText>Q: 磁盘被打满的排障思路？</HighlightWithText>
+
+<!-- -->
+
+1. 通过监控查看磁盘周期内的磁盘使用情况，检查是否存在用量陡增，观察时间点是否存在发布事件；
+2. 在指定服务器上查看磁盘占用情况，重点观察日志文件的磁盘占用；
+3. 找到相应文件，执行不同处理；
+
+```shell
+# 展示各磁盘用量，容器上不推荐使用， -h 表示 human readable
+df -h
+
+# 查看指定目录下每个文件夹的占用（层级为1）
+# mac 下为 $`du -d 1 -h ./`
+du --max-depth=1 -h ./
+
+# 查看指定目录的磁盘占用
+du -sh ./
 ```
 
 ## 初始化云服务的基础设施

@@ -13,6 +13,14 @@
 
 /** @type {import('@docusaurus/plugin-content-docs').SidebarsConfig} */
 const repoSiderbarsConfig = {
+  handbookSiderBar: [
+    {
+      type: 'category',
+      label: 'hanbooks',
+      collapsed: false,
+      items: ['repo/my-dev-handbook/docshub', 'repo/my-dev-handbook/annualRings'],
+    },
+  ],
   wpmonitSiderBar: [
     {
       type: 'category',

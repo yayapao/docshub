@@ -1,0 +1,37 @@
+---
+id: docshub
+title: Handbook of DocsHub
+sidebar_label: DocsHub
+---
+
+import {
+  HighlightWithText,
+  HighlightWithCode,
+} from '../../../src/components/Highlights'
+
+:::info
+Handbook of DocsHub!
+:::
+
+## 截断 bolg 简介展示
+
+放置 `<!--truncate-->` 关键字在指定位置即可
+
+## 使用自定义高亮组件
+
+自定义高亮组件放置在 `src/components/Highlights` 内，在 `.mdx` 文件内通过相对路径进行引入
+
+### Text
+
+`HighlightWithText` 高亮普通文本
+
+```tsx
+import {
+  HighlightWithText,
+} from '../../../src/components/Highlights'
+
+<HighlightWithText bgcolor="#f30" style={{ fontSize: '12px' }}>Some text content!</HighlightWithText>
+```
+效果如下：
+
+<HighlightWithText bgcolor="#f30" style={{ fontSize: '12px' }}>Some text content!</HighlightWithText>

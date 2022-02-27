@@ -6,7 +6,7 @@ import ShowcaseCard from './_components/ShowcaseCard'
 import styles from './styles.module.css'
 import { getRepos, getProjects } from './_showcase.config'
 
-const TITLE = 'Genki Dama of Docshub'
+const TITLE = 'Genki Dama 🤛'
 const DESCRIPTION = 'The accumulated learnings is focused on a specific point.'
 
 const repos = getRepos()

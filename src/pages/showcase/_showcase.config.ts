@@ -3,6 +3,15 @@ import { Application, TagType, Tag } from '@site/src/types/showcase'
 export const getRepos: () => Application[] = () => {
   return [
     {
+      key: 'MyDevHandbook',
+      title: 'MyDevHandbook',
+      description: `Development's handbook of mine!`,
+      preview:
+        'https://docs-1300606192.cos.ap-shanghai.myqcloud.com/showcase/wpmonit.jpg',
+      website: '/docs/repo/my-dev-handbook/docshub',
+      tags: ['design'],
+    },
+    {
       key: 'wpmonit',
       title: 'wpmonit',
       description: 'Web performance measure SDK!',

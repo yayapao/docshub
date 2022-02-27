@@ -4,7 +4,7 @@ import clsx from 'clsx'
 import styles from './styles.module.css'
 
 /**
- * 高亮当前文本内容
+ * 高亮当前代码块
  */
 export const HighlightWithCode: React.FC<{ bgcolor: string }> = ({
   children,
@@ -22,6 +22,9 @@ export const HighlightWithCode: React.FC<{ bgcolor: string }> = ({
   </code>
 )
 
+/**
+ * 高亮当前文本
+ */
 export const HighlightWithText: React.FC<{
   bgcolor?: string
   style?: CSSProperties

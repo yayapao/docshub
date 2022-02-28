@@ -46,7 +46,7 @@ const projectSiderbarsConfig = {
       type: 'category',
       label: 'FTE',
       collapsed: false,
-      items: ['project/fte/fte',],
+      items: ['project/fte/fte', 'project/fte/judgement'],
     },
   ],
   wpmSiderBar: [

@@ -37,6 +37,14 @@ const repoSiderbarsConfig = {
       items: ['repo/react-error-catcher/readme', 'repo/react-error-catcher/design'],
     },
   ],
+  lintddSiderBar: [
+    {
+      type: 'category',
+      label: 'lintdd',
+      collapsed: false,
+      items: ['repo/lintdd/readme', 'repo/lintdd/design'],
+    },
+  ],
 }
 
 /** @type {import('@docusaurus/plugin-content-docs').SidebarsConfig} */

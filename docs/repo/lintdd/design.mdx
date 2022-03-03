@@ -1,0 +1,66 @@
+---
+id: design
+title: lintdd Designer
+sidebar_label: design
+---
+
+import { HighlightWithCode } from '../../../src/components/Highlights'
+
+:::caution
+**ESLint's default parser and core rules only support the latest final ECMAScript standard!**
+:::
+
+ESLint 的默认解释器和核心规则仅支持最新稳定的 ECMAScript 标准，这意味着对于 TypeScript 和一些试验性的（浏览器已支持）的特性，它并不能生效。
+
+因此，在使用一些高级语法或者TypeScript（这已经很常见了！）时，我们需要基于 ESLint 来逐一解决。
+
+## ESLint .vs. Prettier
+
+:::info
+“eslint，吾所爱也；prettier，吾亦所爱也”
+:::
+
+[ESLint](https://eslint.org/docs/user-guide/configuring/) 和 [Prettier](https://prettier.io/) 已经成为现代前端项目不可或缺的工具，两者也被绝大多数编辑器所支持。
+
+本章节我们试图弄清楚，他们之间的区别以及如何将两者结合起来使用。
+
+Prettier 是一个 `code formatter`，更多地改善**代码样式**，比如单双引号、分号等，并且它是高度配置化的，开放给用户自定义的内容较少。
+
+相较于 Prettier，ESLint 更多关注**代码语法风格**，比如代码的坏味道、语法错误等，并且它是可以高度定制化的，因此市场上有大量的插件和解释器来定制本地开发。
+
+即使两者在大部分时间是“和平相处”，但是对于同一份代码免不了会有冲突，那么我们如何结合使用 ESLint 和 Prettier 呢？
+
+这里我们直接采纳社区给出的解决方案：
+
+`pnpm add eslint-config-prettier eslint-plugin-prettier prettier -D`
+
+- <HighlightWithCode code="eslint-config-prettier" /> 用来关闭所有不需要和可能有冲突的
+  Prettier 配置
+- <HighlightWithCode code="eslint-plugin-prettier" /> 将 Prettier 注入到 ESLint 内，使用
+  ESLint 进行代码修正和提示
+
+接下来在 `.eslintrc.js` 内配置：
+
+```js
+{
+  "plugins": ["prettier"],
+}
+```
+
+## ESLint .vs. Babel
+
+一般而言，当ES的语法特性发布之后，开发者和浏览器都会尽快支持，但是其规范并不会立即发布，这中间存在一个时间差。针对这种情况，我们往往通过 [Babel](https://babeljs.io/) 来解决。
+
+那么，如果我们在开发过程中使用 ES 的高级的特性，ESLint 并不能很好地工作。
+
+为此，我们参考社区方案来解决：
+
+`pnpm add @babel/eslint-parser @babel/core -D`
+
+- <HighlightWithCode code="@babel/eslint-parser" /> 是一个解释器，它会将由 Babel 转换的 AST 进一步转换成 ESTree（ESLint 能够理解的数据结构）
+
+```js
+module.exports = {
+  parser: '@babel/eslint-parser',
+}
+```

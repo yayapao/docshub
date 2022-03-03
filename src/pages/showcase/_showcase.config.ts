@@ -33,6 +33,16 @@ export const getRepos: () => Application[] = () => {
       website: '/docs/repo/react-error-catcher/readme',
       tags: ['opensource', 'errors'],
     },
+    {
+      key: 'lintdd',
+      title: 'lintdd',
+      description: 'X-lint for frontend!',
+      preview:
+        'https://docs-1300606192.cos.ap-shanghai.myqcloud.com/showcase/wpmonit.jpg',
+      npm: 'https://www.npmjs.com/package/lintdd',
+      website: '/docs/repo/lintdd/readme',
+      tags: ['ESLint'],
+    },
   ]
 }
 
@@ -117,5 +127,10 @@ export const Tags: Record<TagType, Tag> = {
     label: 'Errors',
     description: 'Runtime errors',
     color: '#fc988c',
+  },
+  ESLint: {
+    label: 'ESLint',
+    description: 'ESLint',
+    color: '#f30',
   },
 }

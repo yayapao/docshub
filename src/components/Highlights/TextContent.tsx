@@ -6,10 +6,10 @@ import styles from './styles.module.css'
 /**
  * 高亮当前代码块
  */
-export const HighlightWithCode: React.FC<{ bgcolor: string }> = ({
-  children,
-  bgcolor,
-}) => (
+export const HighlightWithCode: React.FC<{
+  bgcolor: string
+  code?: string
+}> = ({ children, bgcolor, code }) => (
   <code
     style={{
       backgroundColor: bgcolor,
@@ -18,7 +18,7 @@ export const HighlightWithCode: React.FC<{ bgcolor: string }> = ({
       padding: '0.2rem',
     }}
   >
-    {children}
+    {code || children}
   </code>
 )
 

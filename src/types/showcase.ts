@@ -25,3 +25,4 @@ export type TagType =
   | 'personal'
   | 'performance'
   | 'errors'
+  | 'ESLint'

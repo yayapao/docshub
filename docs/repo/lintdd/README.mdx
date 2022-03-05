@@ -1,9 +1,84 @@
 ---
 id: readme
-title: lintdd
+title: ''
 sidebar_label: readme
 slug: readme
 ---
 
-## eslint .vs. prettier
+import { GithubRepoHeader } from '/src/components/Layout/GithubRepoHeader'
 
+<GithubRepoHeader
+  title="lintdd"
+  description="Genki Dama OF Frontend's Lint!"
+  shields={[
+    {
+      link: '#requirements',
+      alt: 'requirements',
+      imgSrc: 'https://img.shields.io/badge/node-%3E8.0.0-brightgreenf',
+    },
+    {
+      link: 'https://github.com/prettier/prettier',
+      alt: 'code style',
+      imgSrc: 'https://img.shields.io/badge/code%20style-prettier-%23ff69b4',
+    },
+  ]}
+  links={[
+    {
+      label: 'Design mind',
+      link: '/docs/repo/lintdd/design',
+    },
+  ]}
+  avatar="https://docs-1300606192.cos.ap-shanghai.myqcloud.com/showcase/lintdd.jpg"
+/>
+
+<!-- -->
+
+## Requirements
+
+- Node.js 8.0.0+
+
+## Installation
+
+Choose your favorite package manager:
+
+```bash
+# pnpm(recomanded)
+pnpm add lintdd -D
+
+# npm
+npm i lintdd -D
+
+# yarn
+yarn add lintdd -D
+```
+
+## Usage
+
+Here's a quick demostration:
+
+**.prettierrc.js**
+
+```js
+const lintddPrettier = require('lintdd/dist/prettier')
+
+module.exports = {
+  ...lintddPrettier,
+}
+```
+
+**.eslintrc.js**
+
+```js
+// define customized options
+const customizedOptions = {
+  rules: {
+    semi: ['error', 'always'],
+  },
+}
+
+module.exports = {
+  // react + ts
+  extends: [require.resolve('lintdd/dist/eslint4React')],
+  ...customizedOptions,
+}
+```

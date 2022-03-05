@@ -26,3 +26,4 @@ export type TagType =
   | 'performance'
   | 'errors'
   | 'ESLint'
+  | 'Prettier'

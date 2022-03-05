@@ -36,12 +36,12 @@ export const getRepos: () => Application[] = () => {
     {
       key: 'lintdd',
       title: 'lintdd',
-      description: 'X-lint for frontend!',
+      description: `Genki Dama OF Frontend's Lint`,
       preview:
-        'https://docs-1300606192.cos.ap-shanghai.myqcloud.com/showcase/wpmonit.jpg',
+        'https://docs-1300606192.cos.ap-shanghai.myqcloud.com/showcase/lintdd.jpg',
       npm: 'https://www.npmjs.com/package/lintdd',
       website: '/docs/repo/lintdd/readme',
-      tags: ['ESLint'],
+      tags: ['ESLint', 'Prettier'],
     },
   ]
 }
@@ -132,5 +132,10 @@ export const Tags: Record<TagType, Tag> = {
     label: 'ESLint',
     description: 'ESLint',
     color: '#f30',
+  },
+  Prettier: {
+    label: 'Prettier',
+    description: 'Prettier',
+    color: '#0f59aa',
   },
 }

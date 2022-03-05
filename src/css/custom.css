@@ -20,6 +20,9 @@
 
   /* highlight */
   --highlight-with-badge: #5C6BC0;
+
+  /* border */
+  --color-border-muted: #373e47;
 }
 
 .docusaurus-highlight-code-line {

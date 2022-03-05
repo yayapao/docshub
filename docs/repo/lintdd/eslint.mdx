@@ -1,0 +1,160 @@
+---
+id: eslint
+title: lintdd ESLint
+sidebar_label: ESLint
+---
+
+import { HighlightWithCode } from '../../../src/components/Highlights'
+
+:::caution
+**ESLint's default parser and core rules only support the latest final ECMAScript standard!**
+
+- 支持 JSX 语法并不等同于支持 React，React 内的语法，默认 ESLint 解释器不能生效；
+- 支持 ES6 语法并不意味着同时支持新的 ES6 全局变量或类型
+:::
+
+ESLint 的默认解释器和核心规则仅支持最新稳定的 ECMAScript 标准（目前就是指 ES5，其 default 也是 ES3/5），你可以通过配置开启更高版本的 ES，**但是，并不包括其实验性的语法，即使已经被各浏览器厂商兼容！**。
+
+因此，在使用一些高级语法或者 TypeScript（这已经很常见了！）时，我们需要基于 ESLint 来逐一解决。
+
+![eslint-overview](/img/repo/eslint-overview.png)
+
+## ESLint .vs. Prettier
+
+:::info
+“eslint，吾所爱也；prettier，吾亦所爱也”
+:::
+
+[ESLint](https://eslint.org/docs/user-guide/configuring/) 和 [Prettier](https://prettier.io/) 已经成为现代前端项目不可或缺的工具，两者也被绝大多数编辑器所支持。
+
+本章节我们试图弄清楚，他们之间的区别以及如何将两者结合起来使用。
+
+Prettier 是一个 `code formatter`，更多地改善**代码风格**，比如单双引号、分号等，并且它是高度配置化的，开放给用户自定义的内容较少。
+
+相较于 Prettier，ESLint 更多关注**语法规范**，比如代码的坏味道、语法错误等，并且它是可以高度定制化的，因此市场上有大量的插件和解释器来定制本地开发。
+
+即使两者在大部分时间是“和平相处”，但是对于同一份代码免不了会有冲突，那么我们如何结合使用 ESLint 和 Prettier 呢？
+
+这里我们直接采纳社区给出的解决方案：
+
+`pnpm add eslint-config-prettier eslint-plugin-prettier prettier -D`
+
+- <HighlightWithCode code="eslint-config-prettier" /> 用来关闭所有不需要和可能有冲突的
+  Prettier 配置
+- <HighlightWithCode code="eslint-plugin-prettier" /> 将 Prettier 注入到 ESLint 内，使用
+  ESLint 进行代码修正和提示
+
+接下来在 `.eslintrc.js` 内配置：
+
+```js
+{
+  "plugins": ["prettier"],
+}
+```
+
+## ESLint .vs. Babel
+
+一般而言，当 ES 的语法提议发布之后，开发者和浏览器都会尽快支持，但是其不会立即生效，这中间存在一个时间差。针对这种情况，我们往往通过 [Babel](https://babeljs.io/) 来解决。
+
+那么，如果我们在开发过程中使用 ES 的高级的特性，ESLint 并不能很好地工作。
+
+为此，我们参考社区方案来解决：
+
+`pnpm add @babel/eslint-parser @babel/core -D`
+
+- <HighlightWithCode code="@babel/eslint-parser" /> 是一个解释器，它会将由 Babel
+  转换的 AST 进一步转换成 ESTree（ESLint 能够理解的数据结构），依赖 @babel/core
+
+```js
+module.exports = {
+  // 使用 @babel/eslint-parser 作为解释器
+  parser: '@babel/eslint-parser',
+  parserOptions: {
+    babelOptions: {
+      presets: [
+        '@babel/preset-env',
+        '@babel/preset-react',
+        '@babel/preset-typescript',
+      ],
+      plugins: [
+        // 装饰器语法
+        ['@babel/plugin-proposal-decorators', { legacy: true }],
+        // 类属性
+        ['@babel/plugin-proposal-class-properties', { loose: true }],
+      ],
+    },
+  },
+}
+```
+
+## ESLint .vs. TypeScript
+
+同理 ES6，ESLint 对 TypeScript 的语法校验也需要插件和解释器支持，目的也是将 TypeScript 语法树转换成 ES 能够作用的 ESTree。
+
+参考社区方案：
+
+`pnpm add @typescript-eslint/eslint-plugin @typescript-eslint/parser -D`
+
+- <HighlightWithCode code="@typescript-eslint/parser" /> 用来将 ts 语法的源码转换成
+  ESTree AST，其中会经历 TS‘s AST 的中间过程。并且两者的侧重点不同，TS's AST 侧重代码类型检测，而
+  ESLint 则面向更加广泛的用例
+- <HighlightWithCode code="@typescript-eslint/eslint-plugin" /> 用来加载 typescript-eslint
+  规则
+
+ESLint 默认仅支持 .js 的模块引入，因此需要通过设置 settings 字段的相关属性来支持其他格式的模块。
+
+`settings` 相当于设置一个在 plugins/options 内设置全局共享数据，每个规则被执行的时候都能够访问到。
+
+并且在 eslint v7.0.0 之前，仅支持 .js 文件的校验，现在可以通过 `overrides` 配置来支持更多类型文件的验证，当 ESLint 发现当前文件能够匹配到 overrides 内的文件类型时，就会选择 overrides 内的配置来执行。
+
+```js
+module.exports = {
+  settings: {
+    // support import modules from TypeScript files in JavaScript files
+    'import/resolver': {
+      node: {
+        extensions: ['.js', '.jsx', '.ts', '.tsx', '.d.ts'],
+      },
+    },
+    'import/parsers': {
+      '@typescript-eslint/parser': ['.ts', '.tsx', '.d.ts'],
+    },
+    'import/extensions': ['.js', '.mjs', '.jsx', '.ts', '.tsx', '.d.ts'],
+    'import/external-module-folders': ['node_modules', 'node_modules/@types'],
+  },
+  overrides: [
+    {
+      files: ['**/*.{ts,tsx}'],
+      parser: '@typescript-eslint/parser',
+      rules: tsEslintConfig,
+      extends: ['prettier', 'plugin:@typescript-eslint/recommended'],
+    },
+  ],
+}
+```
+
+## ESLint .vs. React
+
+现在 React 一般都是结合 TypeScript 使用，这里我们直接对 `.tsx` 类型文件进行校验。
+
+`pnpm add @babel/preset-react eslint-plugin-react eslint-plugin-react-hooks -D`
+
+- <HighlightWithCode code="@babel/preset-react" /> Babel 针对 React 的预设，在 Babel
+  插件内共享
+- <HighlightWithCode code="eslint-plugin-react" /> React 的 lint 规则
+- <HighlightWithCode code="eslint-plugin-react-hooks" /> React Hooks 的 lint 规则
+
+```js
+module.exports = {
+  plugins: ['react', 'react-hooks'],
+  parserOptions: {
+    // 指定附加使用的语言特性
+    ecmaFeatures: {
+      jsx: true,
+    },
+    babelOptions: {
+      presets: ['@babel/preset-react'],
+    },
+  },
+}
+```

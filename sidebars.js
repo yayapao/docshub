@@ -18,7 +18,10 @@ const repoSiderbarsConfig = {
       type: 'category',
       label: 'hanbooks',
       collapsed: false,
-      items: ['repo/my-dev-handbook/docshub', 'repo/my-dev-handbook/annualRings'],
+      items: [
+        'repo/my-dev-handbook/docshub',
+        'repo/my-dev-handbook/annualRings',
+      ],
     },
   ],
   wpmonitSiderBar: [
@@ -34,7 +37,10 @@ const repoSiderbarsConfig = {
       type: 'category',
       label: 'React Error Catcher',
       collapsed: false,
-      items: ['repo/react-error-catcher/readme', 'repo/react-error-catcher/design'],
+      items: [
+        'repo/react-error-catcher/readme',
+        'repo/react-error-catcher/design',
+      ],
     },
   ],
   lintddSiderBar: [
@@ -42,7 +48,7 @@ const repoSiderbarsConfig = {
       type: 'category',
       label: 'lintdd',
       collapsed: false,
-      items: ['repo/lintdd/readme', 'repo/lintdd/design'],
+      items: ['repo/lintdd/readme', 'repo/lintdd/eslint', 'repo/lintdd/husky'],
     },
   ],
 }

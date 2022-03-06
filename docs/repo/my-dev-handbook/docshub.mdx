@@ -93,3 +93,24 @@ import { HighlightWithText } from '../../src/components/Highlights'
 
 // 添加上面的注释后，能够正常展示高亮
 ```
+
+## 搜索
+
+参考 [Search](https://docusaurus.io/docs/search)
+
+这里记录实现过程
+
+### 本地搜索
+
+根据官方提供的搜索库，最终选择 [docusaurus-lunr-search](https://github.com/lelouch77/docusaurus-lunr-search)，因为它是基于 [docsearch.js](https://github.com/algolia/docsearch) 和 [docusaurus-search-local](https://github.com/cmfcmf/docusaurus-search-local) 来实现，个人认为会集两家之长。
+
+安装方法参考官方即可，但是需要注意，其依赖库并未一起打包，需要自行手动安装：
+
+- lunr
+- lunr-languages
+- nodejieba (zh 依赖的中文分词)
+- classnames
+- autocomplete.js
+- hogan.js
+
+由于 `docusaurus-lunr-search` 并不支持开发环境，因此需要在 build 之后，执行 `pnpx http-server ./dist` 来查看最终效果，但是本地搜索并不是最优解，后期需要替换为线上搜索方案。

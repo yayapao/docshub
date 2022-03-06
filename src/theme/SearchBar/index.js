@@ -83,12 +83,16 @@ const Search = props => {
   }
 
   return (
-    <div className="navbar__search" key="search-box">
+    <div
+      className="navbar__search"
+      style={{ marginLeft: '1rem' }}
+      key="search-box"
+    >
       <span
         aria-label="expand searchbar"
         role="button"
-        className={classnames("search-icon", {
-          "search-icon-hidden": props.isSearchBarExpanded
+        className={classnames('search-icon', {
+          'search-icon-hidden': props.isSearchBarExpanded,
         })}
         onClick={toggleSearchIconClick}
         onKeyDown={toggleSearchIconClick}
@@ -100,9 +104,9 @@ const Search = props => {
         placeholder={indexReady ? 'Search' : 'Loading...'}
         aria-label="Search"
         className={classnames(
-          "navbar__search-input",
-          { "search-bar-expanded": props.isSearchBarExpanded },
-          { "search-bar": !props.isSearchBarExpanded }
+          'navbar__search-input',
+          { 'search-bar-expanded': props.isSearchBarExpanded },
+          { 'search-bar': !props.isSearchBarExpanded }
         )}
         onClick={loadAlgolia}
         onMouseOver={loadAlgolia}
@@ -112,7 +116,7 @@ const Search = props => {
         disabled={!indexReady}
       />
     </div>
-  );
+  )
 };
 
 export default Search;

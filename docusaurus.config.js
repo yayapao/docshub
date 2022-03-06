@@ -154,7 +154,12 @@ const config = {
   onBrokenMarkdownLinks: 'warn',
   plugins: [
     require.resolve('docusaurus-plugin-sass'),
-    require.resolve('docusaurus-lunr-search'),
+    [
+      require.resolve('docusaurus-lunr-search'),
+      {
+        languages: ['en', 'zh'], // language codes
+      },
+    ],
   ],
   presets: [
     [

@@ -51,7 +51,7 @@ async function build(values) {
   if (values && values.includes('--analysis')) {
     await $`pnpm run build:ana`
   } else {
-    await $`pnpm run build`
+    await $`pnpx docusaurus build --out-dir dist`
   }
 
   log(chalk.white.bgGreen.bold(`Successfully built at ${Date.now()}`))

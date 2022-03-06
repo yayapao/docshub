@@ -152,7 +152,10 @@ const config = {
   ...metaConfig,
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
-  plugins: [require.resolve('docusaurus-plugin-sass')],
+  plugins: [
+    require.resolve('docusaurus-plugin-sass'),
+    require.resolve('docusaurus-lunr-search'),
+  ],
   presets: [
     [
       '@docusaurus/preset-classic',

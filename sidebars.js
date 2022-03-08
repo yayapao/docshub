@@ -93,14 +93,14 @@ const sidebars = {
         'server/nginx',
         'server/docker',
         'server/db',
-        'server/github'
+        'server/github',
       ],
     },
     {
       type: 'category',
       label: 'Manager',
       collapsed: true,
-      items: ['server/git', 'server/npm'],
+      items: ['server/git'],
     },
   ],
   browserSiderbar: [
@@ -187,7 +187,11 @@ const sidebars = {
       type: 'category',
       label: 'Node.js',
       collapsed: true,
-      items: ['langs/nodejs/concept', 'langs/nodejs/project'],
+      items: [
+        'langs/nodejs/concept',
+        'langs/nodejs/project',
+        'langs/nodejs/npm',
+      ],
     },
     {
       type: 'category',
@@ -220,7 +224,7 @@ const sidebars = {
     },
   ],
   ...repoSiderbarsConfig,
-  ...projectSiderbarsConfig
+  ...projectSiderbarsConfig,
 }
 
 module.exports = sidebars

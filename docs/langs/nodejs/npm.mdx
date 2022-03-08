@@ -66,6 +66,12 @@ package.json 要点
 - `-g` 指定为全局安装的包
 - `--depth 0` 限制输出模块层级
 
+**执行指定路径的脚本**
+
+npm 默认执行根目录下，package.json 内的命令，可以通过配置：
+
+`npm --prefix /path/to/project run build`，其中 /path/to/project 表示指定目录，其目录下必须包含 `package.json`
+
 
 ### npm publish 指定文件（或者指定不发布的文件）
 

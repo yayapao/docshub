@@ -5,13 +5,15 @@ sidebar_label: overview
 slug: fte
 ---
 
-**FTE(Frontend Trustworthy Engineering)** 是我在 2020 年开始提出的一个构想，旨在通过一系列技术手段来确保 web 应用在浏览器运行时内的运行状态是安全、可靠、可感知的。
+**FTE(Frontend Trustworthy Engineering)** 是我在 2020 年开始提出的一个构想，旨在通过一系列技术手段来确保
+- web 应用在浏览器运行时内的运行状态是安全、可靠、可感知的
+- 在开发阶段，团队内能够输出统一标准、高质量的代码产物(于2022-03)
 
 ## 如何理解可信赖
 
 可信赖是应用在运行时的一种状态描述。
 
-## 如何选择指标
+## 如何选择运行时指标
 
 :::info
 Metrics provide insight about how users are experiencing your application.
@@ -20,3 +22,19 @@ Metrics provide insight about how users are experiencing your application.
 指标的选择归根究底是对用户体验的量化。
 
 
+## 如何在开发时介于质量管理
+
+将**开发-发布**过程拆解出其关键的生命周期：
+
+- 创建应用
+  - 统一模版
+  - 统一框架
+- 搭建基础设施
+  - 统一代码规范
+  - 统一开发语言
+- 开发
+- 打包
+  - webpack config
+- 发布
+
+通常来说，我们会在创建应用、搭建基础设施和编译阶段更多地接入应用开发过程，接下来我结合社区的案例，输出前端框架在不同使用场景下的解决方案

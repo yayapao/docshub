@@ -1,0 +1,38 @@
+---
+id: frames
+title: Frame Solutions
+sidebar_label: Frame solutions
+---
+
+目前已支持：
+- React（基于 CRA）
+
+
+## React based on CAR
+
+[CAR](https://create-react-app.dev/) 是 facebook 发布，用于搭建 React 基础应用的脚手架。CRA 足以应付入门 React 应用的开发需求，但是如果希望强定制化，它会显得力不从心：
+- 缺少 *Lint 规范
+- 基础设施几乎为 0
+- 无法方便地扩展 webpack 配置
+
+针对以上问题，我们通过：自定义 `react-scripts` 和 `cra-template` 的方式来**定制编译脚本和初始化模版**，设计亮点在于：
+- 配置化
+- 统一代码规范
+- 统一提交规范
+- 统一使用 TypeScript
+
+### 配置构建过程
+
+我们在开发过程中可能需要样式预编译、配置化地 HTML 模版、使用更高级的语言特性等等场景，CRA 支持通过 `npm run eject` 来暴露其所有编译配置，从而进行修改，**但是这样做之后，会失去 CAR 构建脚本的持续更新能力**，因此不到万不得已，我们并不推荐这样做！
+
+另外，社区推荐使用 [craco](https://github.com/gsoft-inc/craco) 来重写 CRA 的编译时配置。但是这样需要引入相关的依赖，即使在 CRA 内已经被引入。同时对于特定使用场景，需要 craco 相关的依赖包支持或者 craco 本身支持（比如支持 CRA 新版本）。
+
+最终，我们选择 CRA 官方推荐的方式：[Alternatives to Ejecting](https://create-react-app.dev/docs/alternatives-to-ejecting/)
+
+我们通过 fork [create-react-app](https://github.com/facebook/create-react-app)：
+
+- 在本地修改 `packages/react-scripts` 内 `package.json` 的 `name` 属性，比如 `react-scripts-xxx`
+- 将其 `npm publish` （如果是私有库，可以通过 `npm install git+ssh://git@github.com/your-company/react-scripts-fork` 的方式）
+- 在初始化项目时 `create-react-app my-app --scripts-version react-scripts-xxx`，通过 `--scripts-version` 来指定脚本
+
+以上就是发布一个自定义 `react-scripts` 的核心步骤，可以修改 `/packages/react-scripts/init.js` 来验证改动

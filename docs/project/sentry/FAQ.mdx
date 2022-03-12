@@ -1,0 +1,168 @@
+---
+id: faq
+title: FAQ
+sidebar_label: FAQ
+---
+
+import {
+  HighlightWithText,
+  HighlightWithCode,
+} from '/src/components/Highlights'
+
+## Relay Server 400
+
+部署上线之后，发现 sentry 服务的域名产生大量的 400 错误，通过查看 `relay` 日志，我们发现了一些异常，这里我们通过阅读源码对其表现和解决方案进行记录
+
+### Too many envelopes (event_buffer_size reached)
+
+报错信息如下：
+
+```
+[relay_server::endpoints::common] ERROR: error handling request: failed to queue envelope
+caused by: Too many envelopes (event_buffer_size reached)
+```
+
+通过分析 relay 源码，我们发现一些端倪：
+
+`relay-server/src/actors/envelopes.rs`
+
+```rs
+// 如果堆积值超过设置阈值，返回错误和详情
+if self.config.envelope_buffer_size() <= self.active_envelopes {
+  return Err(QueueEnvelopeError::TooManyEnvelopes);
+}
+
+#[derive(Debug, Fail)]
+pub enum QueueEnvelopeError {
+  #[fail(display = "Too many envelopes (event_buffer_size reached)")]
+  TooManyEnvelopes,
+}
+```
+
+`relay-server/src/endpoints/common.rs`
+
+```rs
+// 定义错误信息
+#[derive(Fail, Debug)]
+pub enum BadStoreRequest {
+  #[fail(display = "failed to queue envelope")]
+  QueueFailed(#[cause] QueueEnvelopeError)
+}
+
+impl BadStoreRequest {
+  fn to_outcome(&self) -> Option<Outcome> {
+    Some(match self {
+      BadStoreRequest::QueueFailed(event_error) => match event_error {
+        QueueEnvelopeError::TooManyEnvelopes => Outcome::Invalid(DiscardReason::Internal),
+      },
+    })
+  }
+}
+```
+
+<HighlightWithText text="原因" />{' '}
+
+当 `envelope` 处理对列堆积超过 [Config::event_buffer_size](https://docs.sentry.io/product/relay/options/)(默认为 1000) 时，包含 events, attachments 和 sessionsrelay，会返回 400 错误。
+
+### invalid security report type
+
+报错信息如下：
+
+```
+[relay_server::actors::envelopes] ERROR: failed to extract security report: invalid security report type
+```
+
+我们分析其源码发现：
+
+`relay-server/src/actors/envelopes.rs`
+
+```rs
+// 按照如下顺序从 envelope 内提取事件的 payload，事件仅从一个源内获取：
+// 1. 显式事件，理解为通过 SDK 正常上报的事件；
+// 2. 安全上报项，由浏览器根据安全策略上报；
+// 3. Attachments `__sentry-event` and `__sentry-breadcrumb1/2`
+// 4. 表单数据
+fn extract_event(&self, state: &mut ProcessEnvelopeState) -> Result<(), ProcessingError> {
+  if let Some(mut item) = raw_security_item {
+      relay_log::trace!("processing security report");
+      state.sample_rates = item.take_sample_rates();
+      self.event_from_security_report(item).map_err(|error| {
+          relay_log::error!("failed to extract security report: {}", LogError(&error));
+          error
+      })?
+  }
+}
+
+// 定义错误信息
+#[derive(Debug, Fail)]
+enum ProcessingError {
+  #[fail(display = "invalid security report type")]
+  InvalidSecurityType
+}
+
+fn event_from_security_report(&self, item: Item) -> Result<ExtractedEvent, ProcessingError> {
+    let len = item.len();
+    let mut event = Event::default();
+
+    let data = &item.payload();
+    // 未能通过 payload 推断出其安全策略，直接返回错误
+    let report_type = SecurityReportType::from_json(data)
+        .map_err(ProcessingError::InvalidJson)?
+        .ok_or(ProcessingError::InvalidSecurityType)?;
+
+    let apply_result = match report_type {
+        SecurityReportType::Csp => Csp::apply_to_event(data, &mut event),
+        SecurityReportType::ExpectCt => ExpectCt::apply_to_event(data, &mut event),
+        SecurityReportType::ExpectStaple => ExpectStaple::apply_to_event(data, &mut event),
+        SecurityReportType::Hpkp => Hpkp::apply_to_event(data, &mut event),
+    };
+
+    if let Err(json_error) = apply_result {
+        // logged in extract_event
+        relay_log::configure_scope(|scope| {
+            scope.set_extra("payload", String::from_utf8_lossy(data).into());
+        });
+
+        return Err(ProcessingError::InvalidSecurityReport(json_error));
+    }
+}
+```
+
+`relay-general/src/protocol/security_report.rs`
+
+```rs
+// 根据 paylod 来推断当前安全策略类型，如果没有匹配上，会直接返回错误
+impl SecurityReportType {
+  pub fn from_json(data: &[u8]) -> Result<Option<Self>, serde_json::Error> {
+      #[derive(Deserialize)]
+      #[serde(rename_all = "kebab-case")]
+      struct SecurityReport {
+          csp_report: Option<IgnoredAny>,
+          known_pins: Option<IgnoredAny>,
+          expect_staple_report: Option<IgnoredAny>,
+          expect_ct_report: Option<IgnoredAny>,
+      }
+
+      let helper: SecurityReport = serde_json::from_slice(data)?;
+
+      Ok(if helper.csp_report.is_some() {
+          Some(SecurityReportType::Csp)
+      } else if helper.known_pins.is_some() {
+          Some(SecurityReportType::Hpkp)
+      } else if helper.expect_staple_report.is_some() {
+          Some(SecurityReportType::ExpectStaple)
+      } else if helper.expect_ct_report.is_some() {
+          Some(SecurityReportType::ExpectCt)
+      } else {
+          None
+      })
+  }
+}
+```
+
+### invaild platform
+
+在本地创建项目后，发现 `POST /api/0/teams/sentry/sentry/projects/` 报错 `400 invaild platform`
+
+- 查看源码发现程序需要读取 `integration-docs` 目录下的文件，返回静态页面
+- 通过执行 `sentry repair --with-docs` 拉取最新的集成列表，安装在本地的 sentry 内

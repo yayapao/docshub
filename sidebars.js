@@ -76,9 +76,14 @@ const projectSiderbarsConfig = {
       type: 'category',
       label: 'Sentry',
       collapsed: false,
-      items: ['project/sentry/sentry', 'project/sentry/self_hosted'],
+      items: [
+        'project/sentry/sentry',
+        'project/sentry/self_hosted',
+        'project/sentry/relay',
+        'project/sentry/faq',
+      ],
     },
-  ]
+  ],
 }
 
 /** @type {import('@docusaurus/plugin-content-docs').SidebarsConfig} */

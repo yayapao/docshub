@@ -28,7 +28,8 @@ export const HighlightWithCode: React.FC<{
 export const HighlightWithText: React.FC<{
   bgcolor?: string
   style?: CSSProperties
-}> = ({ children, bgcolor = '#7385e4', style = {} }) => (
+  text?: string
+}> = ({ children, bgcolor = '#7385e4', text, style = {} }) => (
   <span
     style={{
       display: 'inline-block',
@@ -41,7 +42,7 @@ export const HighlightWithText: React.FC<{
       ...style,
     }}
   >
-    {children}
+    {text || children}
   </span>
 )
 

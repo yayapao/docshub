@@ -27,12 +27,17 @@ sidebar_label: Frame solutions
 
 另外，社区推荐使用 [craco](https://github.com/gsoft-inc/craco) 来重写 CRA 的编译时配置。但是这样需要引入相关的依赖，即使在 CRA 内已经被引入。同时对于特定使用场景，需要 craco 相关的依赖包支持或者 craco 本身支持（比如支持 CRA 新版本）。
 
-最终，我们选择 CRA 官方推荐的方式：[Alternatives to Ejecting](https://create-react-app.dev/docs/alternatives-to-ejecting/)
+基于以上考虑，我们选择 CRA 官方推荐的方式：[Alternatives to Ejecting](https://create-react-app.dev/docs/alternatives-to-ejecting/)
 
-我们通过 fork [create-react-app](https://github.com/facebook/create-react-app)：
+我们通过 fork [create-react-app](https://github.com/facebook/create-react-app) 对其源码进行修改，并发布到 npm 上进行引入：
 
 - 在本地修改 `packages/react-scripts` 内 `package.json` 的 `name` 属性，比如 `react-scripts-xxx`
 - 将其 `npm publish` （如果是私有库，可以通过 `npm install git+ssh://git@github.com/your-company/react-scripts-fork` 的方式）
 - 在初始化项目时 `create-react-app my-app --scripts-version react-scripts-xxx`，通过 `--scripts-version` 来指定脚本
 
 以上就是发布一个自定义 `react-scripts` 的核心步骤，可以修改 `/packages/react-scripts/init.js` 来验证改动
+
+
+### 自定义 cra-template
+
+

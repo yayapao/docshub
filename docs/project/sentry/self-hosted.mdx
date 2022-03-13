@@ -8,20 +8,6 @@ import { HighlightWithText } from '../../../src/components/Highlights'
 
 对于开源项目，出于数据安全和功能拓展的考虑，我们一般会选择私有化部署。在本章节，我们将讨论私有化部署 Sentry 的解决方案。
 
-## TroubleShooting
-
-<HighlightWithText>Q: 在本地创建项目时，发现 `POST /api/0/teams/sentry/sentry/projects/` 报错 `400 invaild platform` ?</HighlightWithText>
-
-查看源码发现程序需要读取 `integration-docs` 目录下的文件，返回静态页面
-
-通过执行 `sentry repair --with-docs` 拉取最新的集成列表，安装在本地的 sentry 内
-
-<HighlightWithText>Q: 上报域名返回大量500?</HighlightWithText>
-
-可能是 relay 服务的不足以处理突然暴增的上报请求，可以尝试扩容。但是扩容后同样可能导致后续事件对列堆积，更好是针对指定应用进行客户端+服务端限流
-
-<!-- -->
-
 ## 官方解决方案
 
 参考[官方推荐私有化部署](https://github.com/getsentry/self-hosted)，它是将 Sentry 依赖的各个服务挂载到 Docker 上，通过 Docker-compose 来统一管理
@@ -40,7 +26,7 @@ import { HighlightWithText } from '../../../src/components/Highlights'
 出于系统吞吐量和性能稳定性的考虑，我们将根据官方方案对各个服务进行拆解，独立部署
 
 :::info why this way works?
-因为 sentry 本身基于 redis 和 Kafka 等数据服务来进行事件流的通信和处理，业务服务之间并未直接依赖
+因为 sentry 本身基于 redis、Kafka 和 CK 等数据服务来进行事件流的通信和处理，业务服务之间并未直接依赖
 :::
 
 
@@ -157,3 +143,91 @@ function build() {
 最终会在 dist 目录下生成 `requirements.txt` 和 `sentry-[sentry version]-[python version]-none-any.whl` 文件
 
 
+## Relay Server
+
+:::note
+The Sentry Relay is a service that pushes some functionality from the Sentry SDKs as well as the Sentry server into a proxy process.
+:::
+
+Relay Server 是一个运行在应用和 Sentry.io 之间的独立中间层服务，它被设计能够清洗用户信息和提高响应速度，它主要进行 Event Ingestion 的工作
+
+## 本地开发
+
+[relay](https://github.com/getsentry/relay) 基于 Rust 开发，自己部署时更建议直接拉取其二进制包，这里简单介绍如何进行本地开发/部署
+
+1. 依赖 rust 环境，[安装 rust](https://learnku.com/rust/wikis/29018)
+2. `brew install cmake`，安装 cmake，CMake是一个比 make 更高级的跨平台的安装、编译、配置工具
+3. `brew install java`，安装 java 执行环境
+4. `brew install kafka` 和 `brew install zookeeper` 部署 kafka 服务
+5. `brew install redis` 部署 redis 服务
+
+环境配置相关均可利用 docker 来完成
+
+### Init
+
+观察 `Makefile`，这里梳理本地 run 的流程：
+
+1. `relay-generate` 内依赖 [uap-core](https://github.com/ua-parser/uap-core)，以 submodule 的形式进行引入，因此需要执行 `make setup` 来初始化依赖，
+   - 如果碰到 `pip command not found` 的问题，查看本地的 pip 映射目录，我通过将 Makefile 内的 pip 替换成 pip3 解决
+   - 碰到 `couldn't read relay-general/src/../uap-core/regexes.yaml: No such file or directory` 直接手动文件拷贝到 `/relay-general/uap-core` 目录下即可
+2. Ran `make test` 检查 rust, python 以及 integration 的编译和测试用例情况
+3. Ran `cargo run --all-features -- config init` 初始化 Relay 服务
+4. Ran `cargo run --all-features -- run` 启动本地服务
+
+验证服务是否启动：
+
+- `host:port/api/relay/healthcheck/live/` 查看服务是否存活
+- `host:port/api/relay/healthcheck/ready/` 上行服务权限验证是否正常
+
+
+
+### Config
+
+通过 `relay config init` 创建一个初始配置，之后将配置文件放在 `.relay` 内
+
+通过修改 `.relay/config.yml` 文件可以覆盖默认配置，下面是用来测试本地 sentry devserver 的配置
+
+```yaml
+---
+relay:
+  mode: proxy
+  # upstream: 'https://sentry.io/'
+  upstream: 'http://127.0.0.1:8000/'
+  host: 127.0.0.1
+  port: 7277
+  tls_port: ~
+  tls_identity_path: ~
+  tls_identity_password: ~
+logging:
+  # level: info
+  level: trace
+  enable_backtraces: true
+  format: json
+limits:
+  max_thread_count: 8
+# This should only be specified when compiling Relay as Sentry service
+processing:
+  enabled: true
+  kafka_config:
+    - { name: 'bootstrap.servers', value: '127.0.0.1:9092' }
+    - { name: 'message.max.bytes', value: 2097176 }
+  redis: 'redis://127.0.0.1'
+```
+
+
+
+### Credentials
+
+在 `.relay/credentials.json` 内读取公钥和私钥，用来验证上游服务器，配置 relay 的 `managed` 模式使用
+
+通过也可以将 public key 用来在 sentry web 上注册 relay，用来覆盖默认配置，relay 服务会读取其配置的修改，比如：PII stripping, filtering, rate limiting 等等
+
+### mode
+
+在 Sentry 内，事件的处理是通过事件配置来进行控制的，事件配置来源可以是 project 和 organization，并且 organization 的配置会被 project 继承，realy 会执行一个定时任务来拉取配置，从而根据配置来处理事件
+
+Relay 的模式用来控制 relay 服务获取各个项目的事件配置的方式，支持三种模式：managed, static 和 proxy
+
+- `managed` 表示从 Sentry.io 的主服务内拉取配置，如果拉去不到 project 配置或者权限验证不通过，事件都会被丢弃
+- `static` 表示项目配置需要手动配置，并且只会处理配置的项目，其他没有配置的项目，其事件都不会被处理
+- `proxy` 和 static 模式类似，但是对于未知的项目，它依然会转发事件

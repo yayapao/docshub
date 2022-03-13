@@ -79,7 +79,6 @@ const projectSiderbarsConfig = {
       items: [
         'project/sentry/sentry',
         'project/sentry/self_hosted',
-        'project/sentry/relay',
         'project/sentry/faq',
       ],
     },

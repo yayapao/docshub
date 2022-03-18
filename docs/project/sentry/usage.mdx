@@ -27,6 +27,13 @@ Sentry.init({
 })
 ```
 
-###
 
-## Sentry Web Server
+## SourceMap
+
+Sentry 支持在查看 issues 时通过 SourceMap 来定位源码，我们需要将 `.map` 文件上传到平台，Sentry 支持三种上传方式：
+- 配置 webpack 在构建时上传
+- 通过 SENTRY-CLI 上传
+- 通过 Sentry API 上传
+
+### How to upload?
+

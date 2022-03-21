@@ -7,7 +7,7 @@ specifiers:
   '@docusaurus/preset-classic': ^2.0.0-beta.17
   '@mdx-js/react': ^1.6.21
   '@svgr/webpack': ^5.5.0
-  '@tsconfig/docusaurus': ^1.0.4
+  '@tsconfig/docusaurus': ^1.0.5
   autocomplete.js: ^0.38.1
   classnames: ^2.3.1
   clsx: ^1.1.1
@@ -59,7 +59,7 @@ dependencies:
 
 devDependencies:
   '@docusaurus/module-type-aliases': 2.0.0-beta.17_react-dom@17.0.2+react@17.0.2
-  '@tsconfig/docusaurus': 1.0.4
+  '@tsconfig/docusaurus': 1.0.5
   typescript: 4.5.3
 
 packages:
@@ -4102,8 +4102,8 @@ packages:
     engines: {node: '>=10.13.0'}
     dev: false
 
-  /@tsconfig/docusaurus/1.0.4:
-    resolution: {integrity: sha512-I6sziQAzLrrqj9r6S26c7aOAjfGVXIE7gWdNONPwnpDcHiMRMQut1s1YCi/APem3dOy23tAb2rvHfNtGCaWuUQ==}
+  /@tsconfig/docusaurus/1.0.5:
+    resolution: {integrity: sha512-KM/TuJa9fugo67dTGx+ktIqf3fVc077J6jwHu845Hex4EQf7LABlNonP/mohDKT0cmncdtlYVHHF74xR/YpThg==}
     dev: true
 
   /@types/body-parser/1.19.2:

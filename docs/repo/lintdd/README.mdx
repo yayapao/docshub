@@ -22,12 +22,6 @@ import { GithubRepoHeader } from '/src/components/Layout/GithubRepoHeader'
       imgSrc: 'https://img.shields.io/badge/code%20style-prettier-%23ff69b4',
     },
   ]}
-  links={[
-    {
-      label: 'Design mind',
-      link: '/docs/repo/lintdd/design',
-    },
-  ]}
   avatar="https://docs-1300606192.cos.ap-shanghai.myqcloud.com/showcase/lintdd.jpg"
 />
 
@@ -68,6 +62,12 @@ module.exports = {
 
 **.eslintrc.js**
 
+:::note Supported
+- eslint4React
+- eslint4Vue2
+- eslint4Vue3
+:::
+
 ```js
 // define customized options
 const customizedOptions = {
@@ -77,13 +77,18 @@ const customizedOptions = {
 }
 
 module.exports = {
-  // react + ts
+  // choose what you want
   extends: [require.resolve('lintdd/dist/eslint4React')],
   ...customizedOptions,
 }
 ```
 
 **tsconfig.js**
+
+:::note Supported
+- tsconfig4React
+- tsconfig4Vue3
+:::
 
 ```json
 {

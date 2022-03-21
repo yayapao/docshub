@@ -1,6 +1,6 @@
 ---
 id: husky
-title: lintdd Husky
+title: Use Husky
 sidebar_label: Husky
 ---
 
@@ -70,4 +70,43 @@ if (!commitRE.test(msg)) {
 
 ```
 
-一个规范的 commit 不仅能够帮助我们方便地生成 changelog，同时能够在 review 或者排查问题时提供便利，如果你还在忍受一些杂乱不堪的 commit message，不妨试试从技术手段上对其进行“打击”！
+一个规范的 commit 不仅能够帮助我们方便地生成 changelog，同时能够在 review 或者排查问题时提供便利！
+
+## 结合 lint-staged 使用
+
+[lint-staged](https://github.com/okonet/lint-staged) 是一个能够对 git 暂存区文件执行 shell 任务的工具，通常我们结合 lint 工具和 `pre-commmit` 钩子来使用。
+
+我们在提交代码之前，进行 lint 检测和修正，能够阻止不规范的代码提交到仓库中，但是如果我们每次都对项目内所有文件进行 lint，整个流程会变得无比缓慢。而 lint-staged 通过对每次提交的增量文件进行扫描和修正，能够帮助我们解决上述问题。
+
+:::caution
+`lint-staged` 是本身不具备 format 的能力，你仍然需要安装 ESLint、Prettier 等代码格式化工具。
+:::
+
+首先，我们通过 husky 暴露 pre-commit：
+
+```bash
+pnpx husky add .husky/pre-commit 'pnpm run lint-staged'
+```
+
+在 `package.json` 内配置启动脚本（能够支持手动执行）：
+
+```json
+{
+  "scripts": {
+    "lint-staged": "lint-staged -c ./.husky/lintstagedrc.js"
+  }
+}
+```
+
+在 `./husky` 内创建 lint-staged 的执行配置，这里我们提供一个简单的参考：
+
+```js
+module.exports = {
+  '*.{js,jsx,ts,tsx}': ['eslint --fix', 'prettier --write'],
+  '{!(package)*.json,*.code-snippets,.!(browserslist)*rc}': ['prettier --write--parser json'],
+  'package.json': ['prettier --write'],
+  '*.vue': ['eslint --fix', 'prettier --write', 'stylelint --fix'],
+  '*.{scss,less,styl,html}': ['stylelint --fix', 'prettier --write'],
+  '*.md': ['prettier --write'],
+};
+```

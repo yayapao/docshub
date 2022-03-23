@@ -1,0 +1,135 @@
+---
+id: features
+title: Sentry Features
+sidebar_label: features
+---
+
+本章节我们会从 SDK 配置和 Sentry Web 两方面来解读 Sentry 平台的核心概念。
+
+## SDK Config
+
+这里我们以浏览器端接入为例（其他平台接入配置可以参考[docs-platform](https://docs.sentry.io/platforms/javascript/)）其配置如下：
+
+```javascript
+import * as Sentry from '@sentry/browser'
+import { Integrations } from '@sentry/tracing'
+
+Sentry.init({
+  dsn: 'https://examplePublicKey@o0.ingest.sentry.io/0',
+  release: 'my-project-name@2.3.12',
+  integrations: [new Integrations.BrowserTracing()],
+  tracesSampleRate: 1.0,
+})
+```
+
+## SourceMap
+
+:::note SourceMap
+SourceMap 是构建时的产物，用来映射源文件，定位源码位置。
+:::
+
+Sentry 支持在查看 issues frames 时通过 SourceMap 来定位源码。
+
+### How to upload?
+
+目前 sentry 支持三种上传方式：
+
+- 配置 webpack 在构建时上传
+- 通过 SENTRY-CLI 上传
+- 通过 Sentry API 上传
+
+注意，需要在平台上申请相关 token，同时在 SDK 配置指定 release。
+
+#### 通过 API 接口
+
+参考[Upload a New Project Release File](https://docs.sentry.io/api/releases/upload-a-new-project-release-file/)，这里我们记录基于 python 的上传脚本：
+
+```python3
+from urllib3 import encode_multipart_formdata
+import os
+import requests
+
+
+def upload_source_file_to_sentry(path, url, token):
+    # 获取文件
+    files = os.listdir(path)
+    # 遍历文件，读取文件内容，上传到指定路径
+    for file in files:
+        target_path = path + "/" + file
+        with open(target_path, mode='r', encoding='utf8') as f:
+            file = {
+                "file": (target_path, f.read()),
+                # 很关键，如果不指定会去源地址寻找，不会在 sentry 缓存内寻找
+                "name": "~/js/" + file
+            }
+            encode_data = encode_multipart_formdata(file)
+            file_data = encode_data[0]
+            headers_from_data = {
+                "Content-Type": encode_data[1],
+                "Authorization": "Bearer " + token
+            }
+            res = requests.post(url=url, headers=headers_from_data, data=file_data).json()
+            print(res)
+
+
+if __name__ == '__main__':
+    # 本地文件目录
+    path = "Path/to/sourcemap"
+    url = "[doamin]/api/0/projects/{organization_slug}/{project_slug}/releases/{version}/files/"
+    token = "token"
+    upload_source_file_to_sentry(path, url, token)
+
+```
+
+#### 通过 webpack 插件
+
+```bash
+npm install --save-dev @sentry/webpack-plugin
+```
+
+**修改 webpack 配置**
+
+这里是一个配置的例子，请根据自身 webpack 配置情况合理修改：
+
+```javascript
+const { version } = require('./package')
+const SentryCliPlugin = require('@sentry/webpack-plugin')
+const { CleanWebpackPlugin } = require('clean-webpack-plugin')
+
+module.exports = {
+  // 开启 source-map
+  devtool: 'source-map',
+  configureWebpack: (config) => {
+    // 生产环境上传
+    if (process.env.NODE_ENV === 'production') {
+      config.plugins = [
+        ...config.plugins,
+        new SentryCliPlugin({
+          authToken: 'token',
+          include: './dist',
+          org: 'organization_slug',
+          project: 'project_slug',
+          // 可将其写在环境变量内
+          release: 'release version',
+          ignore: ['node_modules'],
+          // url 必须指定，不然就会去源地址寻找
+          url: 'https://sentry.io/',
+        }),
+      ]
+    }
+  },
+}
+```
+
+同时需要配置 `jsconfig.json` 或者 `tsconfig.json`:
+
+```json
+{
+  "compilerOptions": {
+    // other configs
+    "inlineSourceMap": true,
+    "sourceRoot": "/"
+  }
+}
+```
+

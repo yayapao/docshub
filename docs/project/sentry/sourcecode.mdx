@@ -1,0 +1,31 @@
+---
+id: sourcecode
+title: Sentry Source Code
+sidebar_label: source code
+---
+
+import { HighlightWithText } from '../../../src/components/Highlights'
+
+## SourceMap
+
+### Why cannot find sourcemap?
+
+通过查看源码，我们对找不到 sourcemap 的条件进行记录：
+- abs_path 不存在
+- abs_path 为 `<anonymous>`
+- 平台为 node 并且文件路径不以 `app:` 开头
+
+<HighlightWithText text="populate_source_cache()" />{' '}
+
+```python3
+def populate_source_cache(self, frames):
+  pending_file_list = set()
+  for f in frames:
+    if f.get("abs_path") is None:
+        continue
+    if f["abs_path"] == "<anonymous>":
+        continue
+    if self.data.get("platform") == "node" and not f.get("abs_path").startswith("app:"):
+        continue
+    pending_file_list.add(f["abs_path"])
+```

@@ -9,11 +9,39 @@ import {
   HighlightWithCode,
 } from '/src/components/Highlights'
 
+## Issues
+
+### 信息被 `[Filtered]` 占位
+
+在查看错误字段时，发现信息被 `[Filtered]` 占位，并展示 `Replaced because PII rule "@xxxxxx:filter"`
+
+是由于 sentry 匹配到敏感信息，并对其进行处理。**请确认该信息是否有能够展示！**
+
+用户可以配置 `setting > Security & Privacy > Safe Feilds` 来放开指定敏感字段
+
+### 在 Issues 内无法通过 SourceMap 定位到源码
+
+出现这种问题，我们一般从两个方向进行排查：
+
+1. 上传前置工作是否正确
+2. SourceMap 文件路径能否匹配
+
+针对以上两点，我们需要从以下方面来进行排查：
+
+- SDK 内是否配置 `release`，并配置对应版本，可以在平台内进行验证
+- 是否上传 SourceMap 文件到指定的 release 版本内，可以在平台内 `Setting > Source Maps` 模块进行验证，可以查看是否有上传 Artifacts，能够在指定 release 内找到指定 .map 文件
+- 查看源文件内，`sourceMappingURL` 是否被改写（系统会通过该字段来匹配 source map 文件），一些 CNDs 会更加优化而对静态文件进行处理，比如去掉文件内注释等
+- 确保 SDK 内 `dist` 配置与上传 SourceMap 时配置一致。可以在 Issues 内检查是否存在 `dist` 标签来验证是否在 SDK 配置了该字段，而在 SourceMap 内可以检查右下角是否有一个小椭圆来验证
+- 检查路径（文件名）是否匹配，如果路径中存在动态值，可以使用 `rewriteFrames` 来进行处理
+- 确保 `artifacts` 在错误发生之前下载完成
+
 ## Relay Server 400
 
 部署上线之后，发现 sentry 服务的域名产生大量的 400 错误，通过查看 `relay` 日志，我们发现了一些异常，这里我们通过阅读源码对其表现和解决方案进行记录
 
-### Chrome type=ping
+其他可能触发场景
+
+- 安装浏览器的请求代理插件/扩展，导致会先触发一个 `Type=ping` 的请求，再发起真实请求，此时 ping 请求会返回 400
 
 ### Too many envelopes (event_buffer_size reached)
 

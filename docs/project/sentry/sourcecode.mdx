@@ -10,14 +10,26 @@ import { HighlightWithText } from '../../../src/components/Highlights'
 
 ### Why cannot find sourcemap?
 
-通过查看源码，我们对找不到 sourcemap 的条件进行记录：
-- abs_path 不存在
-- abs_path 为 `<anonymous>`
-- 平台为 node 并且文件路径不以 `app:` 开头
+sentry 会对源文件和 SourceMap 单独进行处理，处理关键步骤在于如何缓存和读取文件内容。其中缓存文件时会使用到 `cache_key`(对应文件内容) 和 `cache_key_meta`(对应文件元信息)，而使用读取内容时会遵循**缓存 - database - internet**的顺序。
+
+本章，我们会对 sentry 加工 frames 的过程进行阅读，并记录不能正确处理的情况，方便对相关问题进行排查。
+
+#### 处理源文件
+
+从 frames 内容中提取出文件地址后：
+
+- `frames.abs_path` 不存在
+- `frames.abs_path` 为 `<anonymous>`
+- 平台为 node 并且源文件路径不以 `app:` 开头
+- `frames.abs_path` 太长导致被省略号占位
+- 未配置 release 或者 release 文件为空的前提下，关闭 `Allow JavaScript Source Fetching` 或者 `frames.abs_path` 不是以 `http:` 或者 `https:` 开头
+- 请求源文件失败
+- 拿到源文件内容后，如果不是 bytes，需要对其进行编码，如果此步骤报错，返回 `FETCH_GENERIC_ERROR` 错误
+- 拿到源文件内容后，如果不是 JavaScript/JSON 文件，则会返回 `FETCH_GENERIC_ERROR` 错误
 
 <HighlightWithText text="populate_source_cache()" />{' '}
 
-```python3
+```python
 def populate_source_cache(self, frames):
   pending_file_list = set()
   for f in frames:
@@ -29,3 +41,62 @@ def populate_source_cache(self, frames):
         continue
     pending_file_list.add(f["abs_path"])
 ```
+
+<HighlightWithText text="fetch_file()" />{' '}
+
+```python
+# url = abs_path
+def fetch_file(url, project=None, release=None, dist=None, allow_scraping=True):
+    if url[-3:] == "...":
+        raise http.CannotFetch({"type": EventError.JS_MISSING_SOURCE, "url": http.expose_url(url)})
+    
+#...
+# 未配置 release 或者没找到 release 的 artifact 会导致 result 为 None
+    if result is None:
+        if not allow_scraping or not url.startswith(("http:", "https:")):
+            error = {"type": EventError.JS_MISSING_SOURCE, "url": http.expose_url(url)}
+            raise http.CannotFetch(error)
+
+#...
+# 请求文件失败
+    if result.status != 200:
+        raise http.CannotFetch(
+            {
+                "type": EventError.FETCH_INVALID_HTTP_CODE,
+                "value": result.status,
+                "url": http.expose_url(url),
+            }
+        )
+#...
+# 编码文件失败，Unable to fetch HTTP resource
+if not isinstance(result.body, bytes):
+    try:
+        result = http.UrlResult(
+            result.url,
+            result.headers,
+            result.body.encode("utf8"),
+            result.status,
+            result.encoding,
+        )
+    except UnicodeEncodeError:
+        error = {
+            "type": EventError.FETCH_INVALID_ENCODING,
+            "value": "utf8",
+            "url": http.expose_url(url),
+        }
+        raise http.CannotFetch(error)
+
+#...
+# 如果不是 JavaScript/json 文件，Unable to fetch HTTP resource
+if urlsplit(url).path.endswith(".js"):
+    body_start = result.body[:20].lstrip()
+    if body_start[:1] == b"<":
+        error = {"type": EventError.JS_INVALID_CONTENT, "url": url}
+        raise http.CannotFetch(error)
+```
+
+#### 处理 SourceMap
+
+处理完源文件，并返回文件结果后：
+
+- 

@@ -6,6 +6,36 @@ sidebar_label: source code
 
 import { HighlightWithText } from '../../../src/components/Highlights'
 
+## Customized OpenAPI
+
+:::note OpenAPI
+自定义 OpenAPI
+:::
+
+**Why need to customized openAPI?**
+
+我们希望基于采集数据做 sentry 尚未完备的分析和探索，因此我们需要提供接口来关联数据、分析数据以及对外提供服务。
+
+为什么直连 clickhouse 进行分析？
+
+- 权限，sentry 通过 API token 来解决 openAPI 的权限问题
+- 架构复杂性，我们并不希望开启一个新的后端服务来做 sentry 内已兼备的工作
+- 性能问题，CK 并不擅长做查询操作，并且 sentry 已经做了大量的工作来保证查询性能
+
+Sentry 的 API 服务是基于 [django](https://www.djangoproject.com/) 实现。这里结合 sentry 对其基本点进行归纳：
+
+- 路由配置位于 `src/sentry/api/urls.py`，遵循 `url(RegExp, View, name)` 的形式进行声明
+- View 通常继承自 `[模块基类] > base.py > view.py`，以 project-event 为例，其位于 `src/sentry/api/endpoints/project_events.py`，类继承自 `ProjectEndpoint` 基类
+
+## Processor
+
+这里以[List a Project's Events](https://docs.sentry.io/api/events/list-a-projects-events/)接口为例进行源码探寻，我们试图弄清楚：
+1. sentry 内 OpenAPI 的组织形式；
+2. 如何自定义 API 并使用其 auth 和数据查询能力；
+
+
+
+
 ## SourceMap
 
 :::note sourcemap

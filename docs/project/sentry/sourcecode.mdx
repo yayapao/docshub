@@ -8,11 +8,26 @@ import { HighlightWithText } from '../../../src/components/Highlights'
 
 ## SourceMap
 
-### Why cannot find sourcemap?
+:::note sourcemap
+保存源码映射关系
+:::
+
+**Why sourcemap?**
+
+在现代开发环境中，在应用上线到生产环境之前，我们往往需要对代码进行各种编译、优化处理，这将导致生产环境的代码不同于开发环境。尤其伴随着工程化的日益成熟，模块化已经是开发的常用方案。但是，处理后的代码会给我们在 debug 或者问题排障时会带来困扰。
+
+因此需要一种机制，既能保证线上的发布流程，同时也能兼顾我们 debug 的需求，[sourcemap](https://docs.google.com/document/d/1U1RGAehQwRypUTovF1KRlpiOFze0b-_2gc6fAH0KY0k/edit?hl=en_US&pli=1&pli=1#heading=h.1ce2c87bpj24)应运而生。
+
+Sentry 基于 sourcemap 提供了快速定位源码的能力。
+
+### sentry processor
 
 sentry 会对源文件和 SourceMap 单独进行处理，处理关键步骤在于如何缓存和读取文件内容。其中缓存文件时会使用到 `cache_key`(对应文件内容) 和 `cache_key_meta`(对应文件元信息)，而使用读取内容时会遵循**缓存 - database - internet**的顺序。
 
-本章，我们会对 sentry 加工 frames 的过程进行阅读，并记录不能正确处理的情况，方便对相关问题进行排查。
+本章，我们会对 sentry 加工 frames 的过程进行阅读，并记录异常处理，以方便对生产问题进行排查。
+
+
+![sourcemap_processor](/img/fte/sourcemap.svg)
 
 #### 处理源文件
 
@@ -49,7 +64,7 @@ def populate_source_cache(self, frames):
 def fetch_file(url, project=None, release=None, dist=None, allow_scraping=True):
     if url[-3:] == "...":
         raise http.CannotFetch({"type": EventError.JS_MISSING_SOURCE, "url": http.expose_url(url)})
-    
+
 #...
 # 未配置 release 或者没找到 release 的 artifact 会导致 result 为 None
     if result is None:
@@ -97,6 +112,42 @@ if urlsplit(url).path.endswith(".js"):
 
 #### 处理 SourceMap
 
-处理完源文件，并返回文件结果后：
+处理完源文件，并返回文件结果后，首先尝试用源文件内容中获取 sourcemap 索引地址，遵循 `header > force_bytes(sourcemap) > sourceMappingURL=` 的寻找顺序，如果找到，会将其 `filename-sourcemap_url` 键值对写入缓存，否则直接返回（不会报错）
 
-- 
+之后，会根据 sourcemap_url 去调用 `fetch_file()` 方法请求指定 sourcemaps。因此在排障时我们可以从以下方面入手：
+
+- 请求源文件内容
+- `sourceMappingURL` 是否解析正确
+- 生成 sourcemap 地址是否正确
+- 请求 sourcemap 文件内容
+
+值得注意的是生产 sourcemap url 的方法：
+
+```python
+_scheme_re = re.compile(r"^([a-zA-Z0-9-+]+://)(.*)$")
+
+
+def non_standard_url_join(base, to_join):
+    """A version of url join that can deal with unknown protocols."""
+    if not to_join:
+        return base
+
+    match = _scheme_re.match(to_join)
+    if match is not None:
+        return to_join
+
+    match = _scheme_re.match(base)
+    if match is not None:
+        original_base_scheme, rest = match.groups()
+        base = "http://" + rest
+    else:
+        original_base_scheme = None
+
+    rv = urljoin(base, to_join)
+    if original_base_scheme is not None:
+        match = _scheme_re.match(rv)
+        if match is not None:
+            return original_base_scheme + match.group(2)
+
+    return rv
+```

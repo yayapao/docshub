@@ -24,14 +24,6 @@ const themeConfig = {
   colorMode: {
     respectPrefersColorScheme: true,
   },
-  // 全局搜索
-  algolia: {
-    appId: 'YE0FY4L3G1',
-    // apiKey: '63462328d9b41ce71ccd849c34bd8753',
-    apiKey: 'eec430ef4b642dbd22259c41960fc079',
-    indexName: 'docshub',
-    // contextualSearch: true,
-  },
   // announcementBar,
   navbar: {
     title: 'Docshub',

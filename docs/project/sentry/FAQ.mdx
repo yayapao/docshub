@@ -198,7 +198,20 @@ impl SecurityReportType {
 
 ### 找不到 `performance` 入口
 
-在本地部署 `v21.6.3` 版本后，发现找不到 performance 的入口
+在本地部署 Sentry 后，发现找不到 performance 模块的入口
+
+- 原因：Sentry v21.6.3 默认不支持 performance 特性，需要手动配置进行开启
+- 解决：在 `~/.sentry/sentry.config.py` 内进行配置
+
+参考[sentry.config.js](https://github.com/getsentry/self-hosted/blob/master/sentry/sentry.conf.example.py)
+
+```python
+############
+# Features #
+############
+
+SENTRY_FEATURES["organizations:performance-view"] = True
+```
 
 ### invaild platform
 

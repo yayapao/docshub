@@ -22,6 +22,91 @@ Sentry.init({
 })
 ```
 
+## Grouping Issues
+
+:::note
+错误事件的聚合
+:::
+
+在本章，我们将会在[grouping-and-fingerprints](https://docs.sentry.io/product/sentry-basics/grouping-and-fingerprints/)的基础上介绍 Sentry 内置聚合规则以及如何自定义聚合规则。
+
+在 Sentry 存在 Issues 和 Event 的概念。Issue 是 Error event 按照一定规则聚合后的产物。
+
+### How to group error events?
+
+现在我们思考一个问题：当一个错误事件被上报到 Sentry，它是根据什么被分配到指定的 Issue 呢？
+
+答案是 **fingerprint**，fingerprint 用来唯一标识错误事件。每个错误都会有按照指定聚合算法生成对应的 fingerprint。
+
+Sentry 内置的聚合算法**会根据错误的堆栈追踪信息来生产 fingerprint**。即错误事件的堆栈信息相同，则此类错误事件属于同一个 issue。
+
+打个比方，我们将运行在端侧的应用看做一个生产错误的工厂，工厂内存在不同的车间生产不同类型的错误，每个车间都通过组织架构和车间名称来标识。每个错误出厂时，都会将车间的标识的印盖在上面，各个车间共同努力，做大做强！而服务端承担营销的任务，将各个错误，按照车间标识来进行存储和销售，最终给到用户。
+
+我们可以在 `Error details > JSON link > fingerprint property` 内查看错误事件的指纹。**注意，如果使用内建的聚合规则会展示 `fingerprint: "{{ default }}"`，否则会展示展示的 fingerprint 值。**
+
+### 内建的聚合算法
+
+理论上，95%的用户都不必自定义聚合规则，因此我们有必要了解 sentry 内建的聚合规则。
+
+Sentry 所有版本的内建聚合规则都按照 `stack trace -> exception -> message` 的顺序进行提取和处理。
+
+#### Grouping by stack trace
+
+当错误事件到达时，Sentry 会从提取其 stack trace 数据。**并且 sentry 仅会处理由 SDK 上报并与应用关联的 stack trace frames。**
+
+原因在于：
+
+1. 有一些平台的 SDK 不会上报堆栈追踪信息；
+2. 如果仅仅是与项目无关的堆栈信息不一致，错误事件仍然会被归为同一类；
+
+Sentry 在堆栈追踪信息内会提取：
+
+- 模块名；
+- 标准化的文件名，比如修订后的 hash 值会被删除掉；
+- 标准化的上下文，即受影响的代码（源码，如果能够匹配 sourcemap）
+
+![group_diff](/img/fte/sentry_group_diff.png)
+
+
+#### Grouping by exception
+
+通过 exception 的 type 和 value 来进行聚合是当 stack trace 找不到时的兜底策略。不可靠！
+
+```
+UnauthorizedException: Unauthorized
+  File "/root/apps/up-server/dist/apps/ars/main.js", line 4174, col 19, in LocalStrategy.validate
+    throw new common_1.UnauthorizedException();
+```
+
+#### Fallback Grouping
+
+如果以上都不能奏效时，Sentry 将尝试使用不带任何参数的 message。如果这不可用，将使用完整的 message 属性来进行聚合。
+
+
+### How to customized Grouping?
+
+#### Merge Issues
+
+merge issues 是 Sentry 提供最易操作的自定义聚合能力，它用来处理：
+1. 多个 issues 类似；
+2. 用户希望减少 issue noise，来更加专注于其他 issue；
+
+merge issues 属于事后的人工干预，仅会影响已处理的错误事件以及将来上报具有相同 fingerprint 的错误事件。
+
+**注意，Sentry 也不会根据 merge issues 来推断新的聚合规则，仅当新的错误事件拥有和当前 merged issues 相同的 fingerprint 才会被自动聚合。**
+
+#### Fingerprint Rules
+
+
+
+## A Simple Internel Intergation
+
+:::note
+基于 Sentry 创建内部集成
+:::
+
+在本章，我们会介绍如何在 Sentry 内创建一个内部集成，来自定义工作流程。
+
 ## SourceMap
 
 :::note SourceMap
@@ -34,57 +119,32 @@ Sentry 支持在查看 issues frames 时通过 SourceMap 来定位源码。
 
 目前 sentry 支持三种上传方式：
 
+- 通过 Sentry API 上传
 - 配置 webpack 在构建时上传
 - 通过 SENTRY-CLI 上传
-- 通过 Sentry API 上传
 
 注意，需要在平台上申请相关 token，同时在 SDK 配置指定 release。
 
 #### 通过 API 接口
 
-参考[Upload a New Project Release File](https://docs.sentry.io/api/releases/upload-a-new-project-release-file/)，这里我们记录基于 python 的上传脚本：
-
-```python3
-from urllib3 import encode_multipart_formdata
-import os
-import requests
-
-
-def upload_source_file_to_sentry(path, url, token):
-    # 获取文件
-    files = os.listdir(path)
-    # 遍历文件，读取文件内容，上传到指定路径
-    for file in files:
-        target_path = path + "/" + file
-        with open(target_path, mode='r', encoding='utf8') as f:
-            file = {
-                "file": (target_path, f.read()),
-                # 很关键，如果不指定会去源地址寻找，不会在 sentry 缓存内寻找
-                "name": "~/js/" + file
-            }
-            encode_data = encode_multipart_formdata(file)
-            file_data = encode_data[0]
-            headers_from_data = {
-                "Content-Type": encode_data[1],
-                "Authorization": "Bearer " + token
-            }
-            res = requests.post(url=url, headers=headers_from_data, data=file_data).json()
-            print(res)
-
-
-if __name__ == '__main__':
-    # 本地文件目录
-    path = "Path/to/sourcemap"
-    url = "[doamin]/api/0/projects/{organization_slug}/{project_slug}/releases/{version}/files/"
-    token = "token"
-    upload_source_file_to_sentry(path, url, token)
-
-```
+参考[Upload a New Project Release File](https://docs.sentry.io/api/releases/upload-a-new-project-release-file/)的上传接口，这里我们编写了 [上传工具](./codeFrames/upload_source_file.py)
 
 #### 通过 webpack 插件
 
 ```bash
 npm install --save-dev @sentry/webpack-plugin
+```
+
+配置 `jsconfig.json` 或者 `tsconfig.json`:
+
+```json
+{
+  "compilerOptions": {
+    // other configs
+    "inlineSourceMap": true,
+    "sourceRoot": "/"
+  }
+}
 ```
 
 **修改 webpack 配置**
@@ -120,16 +180,3 @@ module.exports = {
   },
 }
 ```
-
-同时需要配置 `jsconfig.json` 或者 `tsconfig.json`:
-
-```json
-{
-  "compilerOptions": {
-    // other configs
-    "inlineSourceMap": true,
-    "sourceRoot": "/"
-  }
-}
-```
-

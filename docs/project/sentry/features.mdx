@@ -4,6 +4,8 @@ title: Sentry Features
 sidebar_label: features
 ---
 
+import { HighlightWithCode } from '../../../src/components/Highlights'
+
 本章节我们会从 SDK 配置和 Sentry Web 两方面来解读 Sentry 平台的核心概念。
 
 ## SDK Config
@@ -28,27 +30,34 @@ Sentry.init({
 错误事件的聚合
 :::
 
-在本章，我们将会在[grouping-and-fingerprints](https://docs.sentry.io/product/sentry-basics/grouping-and-fingerprints/)的基础上介绍 Sentry 内置聚合规则以及如何自定义聚合规则。
+在本章，我们将会在[Issue Grouping](https://docs.sentry.io/product/data-management-settings/event-grouping/#grouping-by-stack-trace)的基础上介绍 Sentry 内置聚合规则以及如何自定义聚合规则。
 
-在 Sentry 存在 Issues 和 Event 的概念。Issue 是 Error event 按照一定规则聚合后的产物。
+开始之前，我们需要明晰：Sentry 内同时存在 Issues 和 Event 的概念。Issue 是 Error event 按照一定规则聚合后的产物。
+
+现在，我们不妨思考一下：
+- 数亿的错误事件是如何被分门别类放到不同的 issue 内？
+- 如何设计核心方案以支持用户自定义能力？
 
 ### How to group error events?
 
-现在我们思考一个问题：当一个错误事件被上报到 Sentry，它是根据什么被分配到指定的 Issue 呢？
+Sentry 内聚合逻辑的核心在于 <HighlightWithCode bgcolor="#ef613e">fingerprint</HighlightWithCode>。
 
-答案是 **fingerprint**，fingerprint 用来唯一标识错误事件。每个错误都会有按照指定聚合算法生成对应的 fingerprint。
+每个错误都会有按照指定聚合算法生成对应的 fingerprint，Sentry 根据 fingerprint 生成对应的 `Group Hash Code`，并以此来对错误事件进行归类。即相同的 `Group Hash Code` 被归为同一个 `issue`。
 
-Sentry 内置的聚合算法**会根据错误的堆栈追踪信息来生产 fingerprint**。即错误事件的堆栈信息相同，则此类错误事件属于同一个 issue。
+我们可以在 `Error details > JSON link > fingerprint property` 内查看置顶错误事件的指纹。
 
-打个比方，我们将运行在端侧的应用看做一个生产错误的工厂，工厂内存在不同的车间生产不同类型的错误，每个车间都通过组织架构和车间名称来标识。每个错误出厂时，都会将车间的标识的印盖在上面，各个车间共同努力，做大做强！而服务端承担营销的任务，将各个错误，按照车间标识来进行存储和销售，最终给到用户。
+**注意，如果使用内建的聚合规则会展示 `fingerprint: "{{ default }}"`，否则会展示展示的 fingerprint 值。**
 
-我们可以在 `Error details > JSON link > fingerprint property` 内查看错误事件的指纹。**注意，如果使用内建的聚合规则会展示 `fingerprint: "{{ default }}"`，否则会展示展示的 fingerprint 值。**
+### Built-in Grouping Algorithms
 
-### 内建的聚合算法
+相信不少用户都有同样的困扰，明明在页面上展示的错误信息值不一样，为什么会被归纳到同一个 issue 呢？
 
-理论上，95%的用户都不必自定义聚合规则，因此我们有必要了解 sentry 内建的聚合规则。
+答案是：Sentry 内置的聚合算法**会根据错误的堆栈追踪信息来生产 fingerprint**。即错误事件的堆栈信息相同，则此类错误事件属于同一个 issue。
 
-Sentry 所有版本的内建聚合规则都按照 `stack trace -> exception -> message` 的顺序进行提取和处理。
+:::caution
+- 所有的聚合策略，均遵循 `stack trace -> exception -> message` 的次序进行处理，一旦 group hash code 生成，不会继续执行剩下的逻辑
+- 仅有 `stack trace` 生成的 group hash code 是可靠的
+:::
 
 #### Grouping by stack trace
 
@@ -65,39 +74,142 @@ Sentry 在堆栈追踪信息内会提取：
 - 标准化的文件名，比如修订后的 hash 值会被删除掉；
 - 标准化的上下文，即受影响的代码（源码，如果能够匹配 sourcemap）
 
-![group_diff](/img/fte/sentry_group_diff.png)
+这里我们创建一个方法，在相同的方法内，抛出不同的错误信息：
 
+```js
+// 抛出一个Error, value 为当前时间
+function sendSentry() {
+  throw new Error(new Date().toLocaleString())
+}
+```
+
+在 Sentry 返回结果：
+
+![group_diff](/img/fte/sentry/sentry_group_diff.png)
+
+根据上图结果我们可以得出：**使用默认的内建聚合规则，在 stack trace 相同的情况下会被聚合到同一个 issue，即使他们的 exception/message 并不相同。**
+
+我们继续在 issue details 页面展开 `EVENT GROUPING INFORMATION` 来对比同一个 issue 内不同 event 的聚合细节，如下所示：
+
+![group_info](/img/fte/sentry/group_information.png)
+
+我们不难发现：**在该 issue 内的错误拥有相同的 `group hash code`，实际上 Sentry 最终也是根据它来确定 event 归属！**
 
 #### Grouping by exception
 
-通过 exception 的 type 和 value 来进行聚合是当 stack trace 找不到时的兜底策略。不可靠！
+当 stack trace 无法找到时，Sentry 会使用 exception 的 `type` 和 `value` 字段进行兜底，此时聚合不可靠！
+
+异常信息如下所示：
 
 ```
-UnauthorizedException: Unauthorized
-  File "/root/apps/up-server/dist/apps/ars/main.js", line 4174, col 19, in LocalStrategy.validate
-    throw new common_1.UnauthorizedException();
+Error: 2022/4/21 18:04:06
+  at Error: 2022(/4/21 18:4:6)
+  at sendSentry(/main.d1f2e7dbd07e024bf014.hot-update.js:27:11)
+  at dispatchDiscreteEvent(/static/js/bundle.js:27074:7)
 ```
+
+如上所示，type 也就是 exception name，即 Error；value 则为人类可读的描述，即 2022/4/21 18:04:06
 
 #### Fallback Grouping
 
 如果以上都不能奏效时，Sentry 将尝试使用不带任何参数的 message。如果这不可用，将使用完整的 message 属性来进行聚合。
 
-
 ### How to customized Grouping?
+
+实际上，Sentry 内建的聚合规则能够满足我们 80% 以上的使用场景，但是对于或多或少的错误事件我们需要拆分或者聚合来更正确地分析数据，因此我们也迫切需要自定义聚合规则的能力。所幸，Sentry 提供了不同的方案，来帮助用户更科学地归纳错误事件。
+
+- `Merge Issues` 合并已存在 issue
+- `Fingerprint Rules` 应用所有新入的错误事件，决定生成 `group hash code` 的规则
+- `Stack Trace Rules` 应用所有新入的错误事件，决定生成 `group hash code` 的 stack trace
+
+对于 `Fingerprint Rules` 和 `Stack Trace Rules` 都遵循统一的匹配规则，即：
+
+- 不同行形成**或**的关系
+- 统一行不同规则形成**与**的关系
 
 #### Merge Issues
 
 merge issues 是 Sentry 提供最易操作的自定义聚合能力，它用来处理：
+
 1. 多个 issues 类似；
-2. 用户希望减少 issue noise，来更加专注于其他 issue；
+2. 用户希望减少 issue noise，使 issues 面板更加整洁，方便专注于某一类 issue；
 
-merge issues 属于事后的人工干预，仅会影响已处理的错误事件以及将来上报具有相同 fingerprint 的错误事件。
+`merge issues` 属于事后的人工干预，仅会影响已处理的错误事件以及将来上报的相同的错误事件。其操作方法很简单，在 issues 面板选择不同的 issue 进行合并即可，这里不再赘述。
 
-**注意，Sentry 也不会根据 merge issues 来推断新的聚合规则，仅当新的错误事件拥有和当前 merged issues 相同的 fingerprint 才会被自动聚合。**
+:::caution
+**Sentry 不会根据 merge issues 来推断新的聚合规则，仅当新的错误事件拥有和当前 merged issues 相同的 fingerprint 并生产同样的 group hash code 才会被自动聚合**
+:::
 
 #### Fingerprint Rules
 
+Sentry 支持通过配置 `[Project] > Settings > Issue Grouping > FINGERPRINT RULES` 在服务端根据自定义聚合规则。
 
+**注意，配置 fingerprint rules 会覆盖默认的聚合规则**
+
+finterprint rules 遵循如下模式：
+
+```
+# partten
+matcher:glob -> fingerprint, values title=""
+```
+
+比如，我们配置了一条规则 `error.type:ReferenceError -> Not-found-error, {{ transaction }}`，它表示匹配所有 type 为 ReferenceError 的错误事件，对其聚合并赋值 fingerprint 为 Not-found-error，同时，使用 {{ transaction }} 进行通配，达到按照不同 transaction 进行聚合的目的
+
+在了解基本规则之后，我们希望在对上文的例子进行拆分，即按照不同的 exception 值来对错误事件进行聚合，并在 issue 上自定义标题展示。
+
+首先，我们在项目内配置了一条 fingerprint rule，如下：
+
+```
+error.type:Error -> error, {{ error.value }} title="Error from value={{ error.value }}"
+```
+
+当我们在客户端再次触发错误时，我们观察到结果如下所示：
+
+![fingerprint-rules](/img/fte/sentry/fingerprint_rules.png)
+
+据此我们可以分析：
+
+1. 根据内建算法对错误事件进行聚合，这些错误拥有相同的堆栈信息和 `group hash code`
+2. 当配置如上 `FINGERPRINT RULES` 之后，会对所有 `error.type=Error` 的错误按照 `error.value` 进行分类，且标题展示 `Error from value={{ error.value }}`
+3. 根据自定义规则，其 `fingerprint values` 根据 exception 的值而发生变化，导致其 `group hash code` 不尽相同，最终被聚合到不同的 issue
+
+#### Stack Trace Rules
+
+基于 `stack trace` 第一可靠的原则，Sentry 为我们提供在生成 `group hash code` 之前处理 `stack trace` 的能力，它被看作是聚合规则的增强措施。
+
+思路就是在聚合之前，允许我们按照规则修改 `stack trace` 来影响最终聚合结果。
+
+同样，我们可以在 `[Project] > Settings > Issue Grouping > Stack Trace Rules` 内配置相应规则。其 pattern 如下：
+
+```
+# Enhancement Rules
+matcher-name:expression other-matcher:expression ... action1 action2 ...
+```
+
+定义规则支持的标志符：
+
+- `+`: 设置标记
+- `-`: 清除标记
+- `^`: 应用当前 frame 到栈顶的所有 frame
+- `v`: 应当当前 frame 到栈底所有的 frame
+- `app`: 在应用内标记/清除标记指定 frame
+- `group`: 聚合时添加/清除指定 frame
+
+我们通过使用标志符的组合来达到不同的效果，如下我们列举了一组例子帮助理解：
+
+```
+# frame 内绝对路径命中 **/node_modules/** 规则的，聚合时都不会参与计算
+stack.abs_path:**/node_modules/** -group
+
+# 标记所有 node_modules 目录下的所有代码为不再应用中
+stack.abs_path:**/node_modules/** -app
+
+# native 平台允许的最大帧为 3（从栈顶向下数）
+family:native max-frames=3
+
+# 命中 function 为 fetchSavedSearches 的下面所有帧都不会被纳入聚合计算
+stack.function:fetchSavedSearches v-group
+```
 
 ## A Simple Internel Intergation
 

@@ -82,7 +82,7 @@ if (!commitRE.test(msg)) {
 `lint-staged` 是本身不具备 format 的能力，你仍然需要安装 ESLint、Prettier 等代码格式化工具。
 :::
 
-首先，我们通过 husky 暴露 pre-commit：
+首先，我们通过 husky 暴露 pre-commit，并为其钩子配置执行脚本：
 
 ```bash
 pnpx husky add .husky/pre-commit 'pnpm run lint-staged'
@@ -93,7 +93,7 @@ pnpx husky add .husky/pre-commit 'pnpm run lint-staged'
 ```json
 {
   "scripts": {
-    "lint-staged": "lint-staged -c ./.husky/lintstagedrc.js"
+    "lint-staged": "lint-staged -c ./.husky/lintstagedrc.cjs"
   }
 }
 ```
@@ -110,3 +110,7 @@ module.exports = {
   '*.md': ['prettier --write'],
 };
 ```
+
+### 匹配策略
+
+`lint-staged`

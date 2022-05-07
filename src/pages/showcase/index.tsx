@@ -10,7 +10,7 @@ const TITLE = 'Genki Dama 🤛'
 const DESCRIPTION = 'The accumulated learnings is focused on a specific point.'
 
 const repos = getRepos()
-const projects = getProjects()
+const groupProjects = getProjects()
 
 function ShowcaseHeader() {
   return (
@@ -25,19 +25,26 @@ function ShowcaseCards() {
   return (
     <main>
       <section className="margin-top--lg margin-bottom--xl">
-        <div className="container">
-          <div
-            className={clsx('margin-bottom--md', styles.showcaseFavoriteHeader)}
-          >
-            <h2>FTE(Frontend Trustworthy Engineering)</h2>
-          </div>
-          <ul className={styles.showcaseList}>
-            {projects &&
-              projects.map((u) => {
-                return <ShowcaseCard key={u.key} application={u} />
-              })}
-          </ul>
-        </div>
+        {groupProjects.map(({ title, projects }) => {
+          return (
+            <div className="container">
+              <div
+                className={clsx(
+                  'margin-bottom--md',
+                  styles.showcaseFavoriteHeader
+                )}
+              >
+                <h2>{title}</h2>
+              </div>
+              <ul className={styles.showcaseList}>
+                {projects &&
+                  projects.map((u) => {
+                    return <ShowcaseCard key={u.key} application={u} />
+                  })}
+              </ul>
+            </div>
+          )
+        })}
       </section>
       <section className="margin-top--lg margin-bottom--xl">
         <div className="container margin-top--lg">

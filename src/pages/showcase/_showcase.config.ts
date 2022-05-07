@@ -1,5 +1,58 @@
 import { Application, TagType, Tag } from '@site/src/types/showcase'
 
+const fteProjects: Application[] = [
+  {
+    key: 'fte',
+    title: 'FTE',
+    description: 'Frontend trustworthy engineering!',
+    preview:
+      'https://docs-1300606192.cos.ap-shanghai.myqcloud.com/showcase/fte.jpg',
+    website: '/docs/project/fte/fte',
+    isCore: true,
+    tags: ['core'],
+  },
+  {
+    key: 'wpm',
+    title: 'wpm',
+    description: 'Web performance measure!',
+    preview:
+      'https://docs-1300606192.cos.ap-shanghai.myqcloud.com/showcase/wpm.jpeg',
+    website: '/docs/project/wpm/wpm',
+    tags: ['performance', 'design'],
+  },
+  {
+    key: 'sentry',
+    title: 'sentry',
+    description: 'Focusing on error reporting!',
+    preview:
+      'https://docs-1300606192.cos.ap-shanghai.myqcloud.com/showcase/sentry.jpg',
+    website: '/docs/project/sentry/sentry',
+    tags: ['errors', 'performance'],
+  },
+]
+
+const ftcProject: Application[] = [
+  {
+    key: 'ftc',
+    title: 'FTC',
+    description: 'Frontend toolkit chain!',
+    preview:
+      'https://docs-1300606192.cos.ap-shanghai.myqcloud.com/showcase/fte.jpg',
+    website: '/docs/project/frontend_toolkit_chain/ftc',
+    isCore: true,
+    tags: ['core'],
+  },
+  {
+    key: 'joylint',
+    title: 'joylint',
+    description: `Genki Dama OF Frontend's Lint tool chain!`,
+    preview:
+      'https://docs-1300606192.cos.ap-shanghai.myqcloud.com/showcase/lintdd.jpg',
+    website: '/docs/project/frontend_toolkit_chain/joylint/README',
+    tags: ['ESLint', 'Prettier'],
+  },
+]
+
 export const getRepos: () => Application[] = () => {
   return [
     {
@@ -33,48 +86,21 @@ export const getRepos: () => Application[] = () => {
       website: '/docs/repo/react-error-catcher/readme',
       tags: ['opensource', 'errors'],
     },
-    {
-      key: 'joylint',
-      title: 'joylint',
-      description: `Genki Dama OF Frontend's Lint tool chain!`,
-      preview:
-        'https://docs-1300606192.cos.ap-shanghai.myqcloud.com/showcase/lintdd.jpg',
-      npm: 'https://www.npmjs.com/package/joylint',
-      website: '/docs/repo/joylint/readme',
-      tags: ['ESLint', 'Prettier'],
-    },
   ]
 }
 
-export const getProjects: () => Application[] = () => {
+export const getProjects: () => {
+  title: string
+  projects: Application[]
+}[] = () => {
   return [
     {
-      key: 'fte',
-      title: 'FTE',
-      description: 'Frontend trustworthy engineering!',
-      preview:
-        'https://docs-1300606192.cos.ap-shanghai.myqcloud.com/showcase/fte.jpg',
-      website: '/docs/project/fte/fte',
-      isCore: true,
-      tags: ['core'],
+      title: 'FTE 🐼 Frontend Trustworthy Engineering',
+      projects: fteProjects,
     },
     {
-      key: 'wpm',
-      title: 'wpm',
-      description: 'Web performance measure!',
-      preview:
-        'https://docs-1300606192.cos.ap-shanghai.myqcloud.com/showcase/wpm.jpeg',
-      website: '/docs/project/wpm/wpm',
-      tags: ['performance', 'design'],
-    },
-    {
-      key: 'sentry',
-      title: 'sentry',
-      description: 'Focusing on error reporting!',
-      preview:
-        'https://docs-1300606192.cos.ap-shanghai.myqcloud.com/showcase/sentry.jpg',
-      website: '/docs/project/sentry/sentry',
-      tags: ['errors', 'performance'],
+      title: 'FTC 🐙 Frontend Toolkit Chain',
+      projects: ftcProject,
     },
   ]
 }

@@ -43,18 +43,6 @@ const repoSiderbarsConfig = {
       ],
     },
   ],
-  joylintSiderBar: [
-    {
-      type: 'category',
-      label: 'joylint',
-      collapsed: false,
-      items: [
-        'repo/joylint/readme',
-        'repo/joylint/eslint',
-        'repo/joylint/husky',
-      ],
-    },
-  ],
 }
 
 /** @type {import('@docusaurus/plugin-content-docs').SidebarsConfig} */
@@ -87,6 +75,26 @@ const projectSiderbarsConfig = {
         'project/sentry/features',
         'project/sentry/sourcecode',
         'project/sentry/faq',
+      ],
+    },
+  ],
+  ftcSiderBar: [
+    {
+      type: 'category',
+      label: 'FTC',
+      collapsed: false,
+      items: ['project/frontend_toolkit_chain/ftc'],
+    },
+  ],
+  joylintSiderBar: [
+    {
+      type: 'category',
+      label: 'joylint',
+      collapsed: false,
+      items: [
+        'project/frontend_toolkit_chain/joylint/readme',
+        'project/frontend_toolkit_chain/joylint/eslint',
+        'project/frontend_toolkit_chain/joylint/husky',
       ],
     },
   ],

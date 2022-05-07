@@ -1,8 +1,7 @@
 ---
 id: readme
 title: ''
-sidebar_label: readme
-slug: readme
+sidebar_label: Getting Stared
 ---
 
 import { GithubRepoHeader } from '/src/components/Layout/GithubRepoHeader'
@@ -27,11 +26,17 @@ import { GithubRepoHeader } from '/src/components/Layout/GithubRepoHeader'
 
 <!-- -->
 
-## Requirements
+Joylint is the simplest way to enable lint-power for your project. Once installed, this:
 
-- Node.js 8.0.0+
+- 👍 **Enable ESLint, Prettier, Stylelint, husky and lint-staged.**
+- 🥰 **Includes powerful shortcodes** to execute on your dev process. It's based on husky and lint-staged.
+
 
 ## Installation
+
+### Requirements
+
+- Node.js 8.0.0+
 
 Choose your favorite package manager:
 
@@ -47,6 +52,20 @@ yarn add joylint -D
 ```
 
 ## Usage
+
+Once you have installed joylint in your project. You can exec `pnpx joylint` to get some info. You will need to
+
+```bash
+# Install Eslint, Prettier and Stylelint for your project.
+pnpx joylint lint
+
+# Install husky and lint-staged for your project.
+# Generate executable scripts in .joylint directory.
+# Default to enable commit-msg and pre-commmit githooks.
+pnpx joylint husky
+```
+
+### config *rc.js
 
 Here's a quick demostration:
 
@@ -64,41 +83,53 @@ module.exports = {
 
 :::note Supported
 - eslint4React
-- eslint4Vue2
 - eslint4Vue3
+- eslint4Vue2
+- eslint4TS
 :::
 
 ```js
-// define customized options
-const customizedOptions = {
-  rules: {
-    semi: ['error', 'always'],
-  },
-}
+// customized options
+const customizedOptions = {}
 
 module.exports = {
-  // choose what you want
   extends: [require.resolve('joylint/dist/eslint4React')],
   ...customizedOptions,
 }
 ```
 
-**tsconfig.js**
+**stylelintrc.js**
+
+```js
+// customized options
+const customizedOptions = {
+  ignoreFiles: ['index.html'],
+}
+
+module.exports = {
+  extends: [require.resolve('joylint/dist/stylelint')],
+  ...customizedOptions,
+}
+```
+
+**tsconfig.json**
 
 :::note Supported
 - tsconfig4React
 - tsconfig4Vue3
 :::
 
+It's highly recommmanded to refer to its content.
+
 ```json
 {
-  "extends": "./node_modules/joylint/dist/reference/tsconfig4React",
+  "extends": "./node_modules/joylint/dist/reference/tsconfig4React.json",
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src", "configs/**/*"]
+  "include": ["src", "types/**/*", "configs/**/*", "vite.config.ts"],
 }
 ```

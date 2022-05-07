@@ -48,7 +48,7 @@ const ftcProject: Application[] = [
     description: `Genki Dama OF Frontend's Lint tool chain!`,
     preview:
       'https://docs-1300606192.cos.ap-shanghai.myqcloud.com/showcase/lintdd.jpg',
-    website: '/docs/project/frontend_toolkit_chain/joylint/README',
+    website: '/docs/project/frontend_toolkit_chain/joylint',
     tags: ['ESLint', 'Prettier'],
   },
 ]

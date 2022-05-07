@@ -34,13 +34,13 @@ export const getRepos: () => Application[] = () => {
       tags: ['opensource', 'errors'],
     },
     {
-      key: 'lintdd',
-      title: 'lintdd',
-      description: `Genki Dama OF Frontend's Lint`,
+      key: 'joylint',
+      title: 'joylint',
+      description: `Genki Dama OF Frontend's Lint tool chain!`,
       preview:
         'https://docs-1300606192.cos.ap-shanghai.myqcloud.com/showcase/lintdd.jpg',
-      npm: 'https://www.npmjs.com/package/lintdd',
-      website: '/docs/repo/lintdd/readme',
+      npm: 'https://www.npmjs.com/package/joylint',
+      website: '/docs/repo/joylint/readme',
       tags: ['ESLint', 'Prettier'],
     },
   ]

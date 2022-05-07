@@ -8,7 +8,7 @@ slug: readme
 import { GithubRepoHeader } from '/src/components/Layout/GithubRepoHeader'
 
 <GithubRepoHeader
-  title="lintdd"
+  title="joylint"
   description="Genki Dama OF Frontend's Lint!"
   shields={[
     {
@@ -37,13 +37,13 @@ Choose your favorite package manager:
 
 ```bash
 # pnpm(recomanded)
-pnpm add lintdd -D
+pnpm add joylint -D
 
 # npm
-npm i lintdd -D
+npm i joylint -D
 
 # yarn
-yarn add lintdd -D
+yarn add joylint -D
 ```
 
 ## Usage
@@ -53,10 +53,10 @@ Here's a quick demostration:
 **.prettierrc.js**
 
 ```js
-const lintddPrettier = require('lintdd/dist/prettier')
+const joylintPrettier = require('joylint/dist/prettier')
 
 module.exports = {
-  ...lintddPrettier,
+  ...joylintPrettier,
 }
 ```
 
@@ -78,7 +78,7 @@ const customizedOptions = {
 
 module.exports = {
   // choose what you want
-  extends: [require.resolve('lintdd/dist/eslint4React')],
+  extends: [require.resolve('joylint/dist/eslint4React')],
   ...customizedOptions,
 }
 ```
@@ -92,7 +92,7 @@ module.exports = {
 
 ```json
 {
-  "extends": "./node_modules/lintdd/dist/reference/tsconfig4React",
+  "extends": "./node_modules/joylint/dist/reference/tsconfig4React",
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {

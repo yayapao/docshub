@@ -43,12 +43,16 @@ const repoSiderbarsConfig = {
       ],
     },
   ],
-  lintddSiderBar: [
+  joylintSiderBar: [
     {
       type: 'category',
-      label: 'lintdd',
+      label: 'joylint',
       collapsed: false,
-      items: ['repo/lintdd/readme', 'repo/lintdd/eslint', 'repo/lintdd/husky'],
+      items: [
+        'repo/joylint/readme',
+        'repo/joylint/eslint',
+        'repo/joylint/husky',
+      ],
     },
   ],
 }

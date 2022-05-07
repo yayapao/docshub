@@ -21,7 +21,7 @@ export const GithubRepoHeader: React.FC<GithubRepoHeaderProps> = (props) => {
       </blockquote>
       <p>
         {avatar && (
-          <img src={avatar} alt="lintdd" style={{ height: '160px' }} />
+          <img src={avatar} alt="joylint" style={{ height: '160px' }} />
         )}
       </p>
       <p className={styles.headerLinks}>

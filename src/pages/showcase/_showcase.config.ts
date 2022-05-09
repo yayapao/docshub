@@ -38,7 +38,7 @@ const ftcProject: Application[] = [
     description: 'Frontend toolkit chain!',
     preview:
       'https://docs-1300606192.cos.ap-shanghai.myqcloud.com/showcase/fte.jpg',
-    website: '/docs/project/frontend_toolkit_chain/ftc',
+    website: '/docs/project/frontend-toolkit-chain/ftc',
     isCore: true,
     tags: ['core'],
   },
@@ -47,9 +47,18 @@ const ftcProject: Application[] = [
     title: 'joylint',
     description: `Genki Dama OF Frontend's Lint tool chain!`,
     preview:
-      'https://docs-1300606192.cos.ap-shanghai.myqcloud.com/showcase/lintdd.jpg',
-    website: '/docs/project/frontend_toolkit_chain/joylint',
+      'https://docs-1300606192.cos.ap-shanghai.myqcloud.com/showcase/joylint.jpg',
+    website: '/docs/project/frontend-toolkit-chain/joylint',
     tags: ['ESLint', 'Prettier'],
+  },
+  {
+    key: 'joycra',
+    title: 'joycra',
+    description: `Enjoy Creating React App!`,
+    preview:
+      'https://docs-1300606192.cos.ap-shanghai.myqcloud.com/showcase/joycra.jpg',
+    website: '/docs/project/frontend-toolkit-chain/joycra',
+    tags: ['core'],
   },
 ]
 

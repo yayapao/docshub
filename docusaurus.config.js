@@ -121,7 +121,7 @@ const themeConfig = {
         'aria-label': 'showcase',
       },
       {
-        href: 'https://github.com/Y-lonelY',
+        href: 'https://github.com/YaYaPao',
         className: 'header-github-link',
         position: 'right',
         'aria-label': 'GitHub repository',

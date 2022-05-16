@@ -1,14 +1,27 @@
 ---
 id: axios
-title: Axios
+title: ''
 sidebar_label: axios
 ---
+
+import { DocsHeader } from '/src/components/Layout/DocsHeader'
+
+<DocsHeader
+  title="Axios"
+  description="Promise based HTTP client for the browser and node.js!"
+  github="https://github.com/axios/axios"
+  npm="https://www.npmjs.com/package/axios"
+  tags={['promise', 'XMLHttpRequests']}
+  links={[
+    { label: 'Getting Started', link: 'https://axios-http.com/docs/intro' },
+  ]}
+/>
+
+<!-- -->
 
 :::note Axios
 [Axios](https://github.com/axios/axios)is a promise based HTTP client for the browser and node.js.
 :::
-
-
 
 核心思想利用`set`数据结构，维护一个 pending set，里面存放 key(通过 url.config 拼接)和 value(取消改请求的 cacel 方法)
 

@@ -6,7 +6,7 @@ const lightCodeTheme = require('prism-react-renderer/themes/github')
 const darkCodeTheme = require('prism-react-renderer/themes/dracula')
 
 const customFields = {
-  githubUrl: 'https://github.com/Y-lonelY',
+  githubUrl: 'https://github.com/YaYaPao',
 }
 
 // 顶栏公告信息
@@ -98,7 +98,19 @@ const themeConfig = {
           {
             label: 'CSS3',
             to: '/docs/langs/css3/concept',
-            activeBaseRegex: '/docs/langs/html5',
+            activeBaseRegex: '/docs/langs/css3',
+          },
+        ],
+      },
+      {
+        label: 'Toolkit',
+        position: 'left',
+        items: [
+          {
+            label: 'Node.js Packages',
+            to: '/docs/toolkit/node-packages/zx',
+            // 设置高亮
+            activeBaseRegex: '/docs/toolkit/node-packages',
           },
         ],
       },

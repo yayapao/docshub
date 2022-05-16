@@ -11,6 +11,7 @@
 
 // @ts-check
 const projectSiderbarsConfig = require('./configs/sidebars/projects')
+const toolkitSiderbarsConfig = require('./configs/sidebars/toolkit')
 /** @type {import('@docusaurus/plugin-content-docs').SidebarsConfig} */
 const repoSiderbarsConfig = {
   handbookSiderBar: [
@@ -44,8 +45,6 @@ const repoSiderbarsConfig = {
     },
   ],
 }
-
-
 
 /** @type {import('@docusaurus/plugin-content-docs').SidebarsConfig} */
 const sidebars = {
@@ -189,6 +188,7 @@ const sidebars = {
       items: ['langs/css3/concept', 'langs/css3/project'],
     },
   ],
+  ...toolkitSiderbarsConfig,
   ...repoSiderbarsConfig,
   ...projectSiderbarsConfig,
 }

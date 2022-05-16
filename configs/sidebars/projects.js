@@ -58,10 +58,7 @@ const ftc = {
       type: 'category',
       label: 'joycra',
       collapsed: false,
-      items: [
-        'project/frontend-toolkit-chain/joycra/readme',
-        'project/frontend-toolkit-chain/joycra/packages',
-      ],
+      items: ['project/frontend-toolkit-chain/joycra/readme'],
     },
   ],
 }

@@ -5,6 +5,7 @@ sidebar_label: axios
 ---
 
 import { DocsHeader } from '/src/components/Layout/DocsHeader'
+import { HighlightWithText } from '/src/components/Highlights'
 
 <DocsHeader
   title="Axios"
@@ -19,11 +20,11 @@ import { DocsHeader } from '/src/components/Layout/DocsHeader'
 
 <!-- -->
 
-:::note Axios
-[Axios](https://github.com/axios/axios)is a promise based HTTP client for the browser and node.js.
-:::
+我们将实现以下特性：
 
-核心思想利用`set`数据结构，维护一个 pending set，里面存放 key(通过 url.config 拼接)和 value(取消改请求的 cacel 方法)
+**取消重复请求** 核心思想利用`set`数据结构，维护一个 pending set，里面存放 key(由 `method` + `path` + `query` + `body` 组成)和 value(取消改请求的 cacel 方法)。注意，`cancel` 是浏览器的行为，服务器仍会收到相关请求，只是浏览器不会继续对 canceled 的请求进行处理。
+
+**取消 body size 限制** 用来解决请求包体过大，导致发出请求失败的问题
 
 ```js
 import axios from 'axios'
@@ -38,7 +39,7 @@ let source = CancelToken.source()
 
 // axios 实例
 let service = axios.create({
-  //   baseURL: "/service/",
+  baseURL: '/api',
   timeout: 60000,
   headers: {},
   withCredentials: true,
@@ -117,26 +118,18 @@ service.interceptors.response.use(
  * config.params 用来接受查询参数
  */
 async function get(url, config = {}) {
-  try {
-    const response = await service.get(url, config)
-    // 返回服务器传值
-    return response.data
-  } catch (e) {
-    throw e
-  }
+  const response = await service.get(url, config)
+  // 返回服务器传值
+  return response.data
 }
 
 /**
  * params 用来接收查询参数
  */
 async function post(url, params, config = {}) {
-  try {
-    const response = await service.post(url, params, config)
-    // 返回服务器传值
-    return response.data
-  } catch (e) {
-    throw e
-  }
+  const response = await service.post(url, params, config)
+  // 返回服务器传值
+  return response.data
 }
 
 export { get, post }

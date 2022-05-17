@@ -15,6 +15,10 @@ import { HighlightWithText } from '/src/components/Highlights'
   tags={['promise', 'XMLHttpRequests']}
   links={[
     { label: 'Getting Started', link: 'https://axios-http.com/docs/intro' },
+    {
+      label: 'Axios default maxBodyLength = 10MB, no way to override',
+      link: 'https://github.com/yakovkhalinsky/backblaze-b2/issues/45',
+    },
   ]}
 />
 
@@ -27,42 +31,34 @@ import { HighlightWithText } from '/src/components/Highlights'
 **取消 body size 限制** 用来解决请求包体过大，导致发出请求失败的问题
 
 ```js
-import axios from 'axios'
-import { message } from 'ant-design-vue'
+import Axios from 'axios'
+import type { AxiosRequestConfig } from 'axios'
 
-// 声明一个 Map 用于存储每个请求的标识 和 取消函数
 const pending = new Map()
-
-// 通过工厂方法创建 canceltoken，用于取消用户请求
-let CancelToken = axios.CancelToken
-let source = CancelToken.source()
-
-// axios 实例
-let service = axios.create({
+const service = Axios.create({
   baseURL: '/api',
-  timeout: 60000,
-  headers: {},
-  withCredentials: true,
+  timeout: 1000 * 60 * 2,
+  headers: { 'X-Requested-With': 'XMLHttpRequest' },
 })
 
-const addPending = (config) => {
+const addPending = (config: AxiosRequestConfig) => {
   const url = [
     config.method,
     config.url,
     JSON.stringify(config.params),
     JSON.stringify(config.data),
   ].join('&')
-  config.cancelToken =
+  const crt = config
+  crt.cancelToken =
     config.cancelToken ||
-    new axios.CancelToken((cancel) => {
+    new Axios.CancelToken((cancel) => {
       if (!pending.has(url)) {
-        // 如果 pending 中不存在当前请求，则添加进去
         pending.set(url, cancel)
       }
     })
 }
 
-const removePending = (config) => {
+const removePending = (config: AxiosRequestConfig) => {
   const url = [
     config.method,
     config.url,
@@ -77,60 +73,94 @@ const removePending = (config) => {
   }
 }
 
+// 清除所有的请求
 export const clearPending = () => {
-  for (const [url, cancel] of pending) {
+  pending.forEach(([url, cancel]) => {
     cancel(url)
-  }
+  })
   pending.clear()
 }
 
 // 设置请求拦截器
 service.interceptors.request.use(
   (config) => {
+    const crt = config as any
     removePending(config) // 在请求开始前，对之前的请求做检查取消操作
     addPending(config) // 将当前请求添加到 pending 中
-    // fix: Error: Request body larger than maxBodyLength limit
-    config['maxContentLength'] = Infinity
-    config['maxBodyLength'] = Infinity
-    return config
+    return crt
   },
   (error) => {
     return Promise.reject(error)
-  }
+  },
 )
 
-// 设置响应拦截器
+// 设置响应拦截器，这里拦截网络请求本身的错误
 service.interceptors.response.use(
   (response) => {
-    removePending(response.config) // 在请求结束后，移除本次请求
+    removePending(response.config)
+    if (response && response.data) {
+      const { code, message } = response.data
+    }
     return response
   },
   (error) => {
-    if (axios.isCancel(error)) {
+    // 如果是 cancel 引起的错误，则再次进行尝试
+    if (Axios.isCancel(error)) {
       // 再次尝试 cancel
       console.error(error.message)
     }
     return Promise.reject(error)
-  }
+  },
 )
 
-/**
- * config.params 用来接受查询参数
- */
-async function get(url, config = {}) {
-  const response = await service.get(url, config)
-  // 返回服务器传值
-  return response.data
+export const get = async (
+  url: string,
+  params: any,
+  config: AxiosRequestConfig = {},
+): Promise<any> => {
+  const res = await service.get(url, {
+    params,
+    ...config,
+  })
+  return res.data || {}
 }
 
-/**
- * params 用来接收查询参数
- */
-async function post(url, params, config = {}) {
-  const response = await service.post(url, params, config)
-  // 返回服务器传值
-  return response.data
+export const post = async (
+  url: string,
+  body: any,
+  config: AxiosRequestConfig = {},
+): Promise<any> => {
+  const res = await service.post(url, body, config)
+  return res.data || {}
 }
 
-export { get, post }
+export const del = async (
+  url: string,
+  params: any,
+  config: AxiosRequestConfig = {},
+): Promise<any> => {
+  const res = await service.delete(url, {
+    params,
+    ...config,
+  })
+  return res.data || {}
+}
+
+export const patch = async (
+  url: string,
+  body: any,
+  config: AxiosRequestConfig = {},
+): Promise<any> => {
+  const res = await service.patch(url, body, config)
+  return res.data || {}
+}
+
+export const put = async (
+  url: string,
+  body: any,
+  config: AxiosRequestConfig = {},
+): Promise<any> => {
+  const res = await service.put(url, body, config)
+  return res.data || {}
+}
 ```

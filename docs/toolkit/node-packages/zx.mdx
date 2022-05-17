@@ -4,9 +4,19 @@ title: zx
 sidebar_label: zx
 ---
 
-:::note zx
-[zx](https://github.com/google/zx) 是一个 Google 的 util 脚本工具，基于 Node.js 的 child_process 对 shell 进行封装，能以接近 ES6 的语法来编写 bash 脚本
-:::
+import { DocsHeader } from '/src/components/Layout/DocsHeader'
+import { HighlightWithCode } from '/src/components/Highlights'
+
+<DocsHeader
+  title="zx"
+  description="A tool for writing better scripts!"
+  github="https://github.com/google/zx"
+  npm="https://www.npmjs.com/package/zx"
+  tags={['shell']}
+  links={[]}
+/>
+
+<!-- -->
 
 我们通常在 `.mjs` 文件对编写 zx 脚本，它具备如下特性：
 
@@ -14,7 +24,7 @@ sidebar_label: zx
 - 能够转换 [bash 命令](https://github.com/google/zx#functions)
 - 内置编写脚本的[常用依赖](https://github.com/google/zx#packages)
 
-这里我们直接以一个例子开始：
+这里提供一个快速入门例子：
 
 ```js
 #!/usr/bin/env zx

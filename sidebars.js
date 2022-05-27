@@ -185,7 +185,7 @@ const sidebars = {
       type: 'category',
       label: 'CSS3',
       collapsed: true,
-      items: ['langs/css3/concept', 'langs/css3/project'],
+      items: ['langs/css3/concept', 'langs/css3/layout', 'langs/css3/text'],
     },
   ],
   ...toolkitSiderbarsConfig,

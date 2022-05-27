@@ -1,0 +1,21 @@
+.stickyContainer {
+  overflow-y: auto;
+  overflow-x: hidden;
+  height: 160px;
+  width: 100%;
+  border: 2px solid var(--ifm-font-color-base);
+}
+
+.stickyHeader {
+  height: 26px;
+  line-height: 26px;
+  color: #fff;
+  position: sticky;
+  top: 0;
+}
+
+.stickyContent {
+  height: 140px;
+  line-height: 140px;
+  text-align: center;
+}

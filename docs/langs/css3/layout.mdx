@@ -1,17 +1,37 @@
 ---
-id: project
-title: Style Project EXP
-sidebar_label: project
-slug: project
+id: layout
+title: CSS Layout
+sidebar_label: CSS Layout
 ---
 
-## 布局方式
+import StickyPositionCase from '/src/docase/css/sticky'
 
-布局方式一般有：标准流（行内元素，块级元素），浮动，定位（position，z-index），flex 布局，display:inline-block
+:::note layout
+布局方式包含：
+- 标准流，默认布局方式
+- 浮动
+- 定位
+- flex
+- grid
+:::
 
-默认为标准流布局方式
+## sticky
 
-### flex 布局
+`sticky` 是一种定位方式，当元素跨越特定阈值之前未**相对定位**，之后为**固定定位**。
+
+使用 `sticky` 需要注意：
+- 必须指定元素 `top`, `bottom`, `left`, `right` 中任一属性，作为阈值
+- sticky positioned element 根据正常文档流进行定位，即其偏移值不会影响其他元素位置
+- 相对其最近的 **block-level and scrolling ancestor** 元素进行定位，即**最近的具有滚动机制的块级元素**
+- sticky positioned element 会相互覆盖，相同 z-index 的情况下，后面的元素覆盖前面的元素
+
+[![sticky](/img/css/can_i_use_sticky.png)](https://caniuse.com/?search=sticky)
+
+<StickyPositionCase />
+
+<!-- -->
+
+## flex 布局
 
 可以通过 `display: flex` 为任何一个容器指定 Flex 布局，设为 Flex 布局之后，子元素的 `float,clear,vertical-align` 属性将失效
 

@@ -1,3 +1,5 @@
+const ftcPrefix = 'project/frontend-toolkit-chain/'
+
 const fte = {
   fteSiderBar: [
     {
@@ -38,7 +40,7 @@ const ftc = {
       type: 'category',
       label: 'FTC',
       collapsed: false,
-      items: ['project/frontend-toolkit-chain/ftc'],
+      items: [`${ftcPrefix}ftc`],
     },
   ],
   joylintSiderBar: [
@@ -47,9 +49,9 @@ const ftc = {
       label: 'joylint',
       collapsed: false,
       items: [
-        'project/frontend-toolkit-chain/joylint/readme',
-        'project/frontend-toolkit-chain/joylint/eslint',
-        'project/frontend-toolkit-chain/joylint/husky',
+        `${ftcPrefix}joylint/readme`,
+        `${ftcPrefix}joylint/eslint`,
+        `${ftcPrefix}joylint/husky`,
       ],
     },
   ],
@@ -58,7 +60,7 @@ const ftc = {
       type: 'category',
       label: 'joycra',
       collapsed: false,
-      items: ['project/frontend-toolkit-chain/joycra/readme'],
+      items: [`${ftcPrefix}joycra/readme`, `${ftcPrefix}joycra/cli`],
     },
   ],
 }

@@ -5,19 +5,20 @@ sidebar_label: CSS Layout
 ---
 
 import StickyPositionCase from '/src/docase/css/sticky'
+import FlexLayoutCase from '/src/docase/css/flex'
 
 :::note layout
 布局方式包含：
 - 标准流，默认布局方式
-- 浮动
-- 定位
-- flex
+- 浮动 `float`
+- 定位 `position`
+- Flex 弹性盒子 `flex`
 - grid
 :::
 
 ## sticky
 
-`sticky` 是一种定位方式，当元素跨越特定阈值之前未**相对定位**，之后为**固定定位**。
+`sticky` 是一种定位方式，当元素跨越特定阈值之前为**相对定位**，之后为**固定定位**。
 
 使用 `sticky` 需要注意：
 - 必须指定元素 `top`, `bottom`, `left`, `right` 中任一属性，作为阈值
@@ -35,74 +36,67 @@ import StickyPositionCase from '/src/docase/css/sticky'
 
 <!-- -->
 
-## flex 布局
+## CSS 弹性盒子布局
 
-可以通过 `display: flex` 为任何一个容器指定 Flex 布局，设为 Flex 布局之后，子元素的 `float,clear,vertical-align` 属性将失效
+通过设置父元素 `display: flex`，将容器声明为弹性盒子，其子元素成为**弹性子项（flex items）**
 
-#### 容器属性
+使用弹性盒子布局的优势在于：
+- 弹性子项能够在任何方向上进行排布
+- 弹性子项的尺寸可以在弹性盒子内灵活控制，即伸缩性好
+- 方便地控制弹性子项对齐方式
 
-即父元素属性
+:::caution 使用注意事项
+- 弹性子项的 `float,clear,vertical-align` 属性将失效
+- 弹性子项宽度优先级 `flex > width` 
+:::
+
+### 弹性盒子属性
+
+弹性盒子属性用来控制弹性子项的布局和对齐方式
 
 ```css
 .flex-box {
   display: flex;
-  /**
-   * flex-direction 用来约定 items 的排列方式
-   * row 水平方向，起点在左端
-   * row-reverse 水平方向，起点在右端
-   * column 垂直方向，起点在上沿
-   * column-reverse 垂直方向，起点在下沿
-   */
-  flex-direction: row;
-
-  /**
-   * flex-wrap 定义当一条轴线上排列不下时，如何换行
-   * nowrap 默认，不换行
-   * wrap 换行，第一行在上方
-   * wrap-reverse 换行，第一行在下方，即后面的换行元素在之前元素的上方
-   */
+  flex-direction: row,
   flex-wrap: nowrap;
-
-  /**
-   * justify-content 定义了项目在主轴上的对齐方式
-   * flex-start 主轴起始位置至结束位置
-   * flex-end 主轴结束位置至起始位置
-   * center 居中
-   * space-between 两端对齐，项目之间等距分隔
-   * space-around 项目两侧间隔相等
-   */
-  justify-content: flex-start;
-
-  /**
-   * align-items 定义在交叉轴上的对齐方式
-   * stretch（默认值）：如果项目未设置高度或设为auto，将占满整个容器的高度
-   * center：交叉轴的中点对齐，即垂直居中
-   * flex-start：交叉轴的起点对齐
-   * flex-end：交叉轴的终点对齐
-   */
-  align-items: stretch;
+  justify-content: space-around;
+  align-items: center;
 }
 ```
 
-#### 项目属性
+### 弹性子项属性
 
-即子元素的属性
+弹性子项属性用来控制子元素的占用空间
 
 ```css
 .flex-item {
-  /**
-   * order 属性定义项目的排列顺序
-   * 数值越小，排列越靠前，默认为 0
-   */
-  order: 1;
-
-  /**
-   * flex-grow 属性定义项目的放大比例
-   * 默认为0，0 表示即使存在剩余空间，也不放大
-   */
-  flex-grow: 1;
+  flex: '1 1 200px',
+  
+  /** 定义弹性子项的顺序，越小越靠前**/
+  order: 1
 }
 ```
+
+一般而言，控制元素宽度可以通过设置 `width` 属性。设想这样一个场景：两个资源以 1:2 来分配父元素的空间，同时需要留白。如果使用 `width` 来控制的话：
+
+- 如果使用 pixel，需要计算（大概率会使用 `calc`，它将会消耗大量性能）出占据的像素值，当父元素变化时，子元素无法顺畅地做出响应
+- 如果设置百分比，不但需要计算，同时会存在像素值不够精准的问题
+
+在 Flex 弹性盒子内，我们可以使用 `flex-grow`、`flex-shrink` 和 `flex-basis` 来更加优雅地达到目的
+
+- `flex-grow` 用来告诉弹性子项如何分配剩余空间的**相对比例**，默认值为 `0`，表示使用元素原始空间
+- `flex-shrink` 用来指示当弹性子项占据空间之和大于父容器空间之和时，其缩放比例
+- `flex-basis` 表示弹性子项在主轴方向上的初始大小，会影响剩余空间的计算。**如果不使用 box-sizing 改变盒模型的话，其值就决定了 content-box 的尺寸**
+
+上诉三个值可以合并简写为 `flex`
+
+**剩余空间 = 父容器空间 - 子元素占据空间之和**，通过父元素的 `flex-direction` 来指示是以 `width` 还是 `height` 作为基准。
+
+
+<FlexLayoutCase />
+
+<!-- -->
+
 
 ### grid 布局
 

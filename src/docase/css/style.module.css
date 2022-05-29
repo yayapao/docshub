@@ -20,3 +20,25 @@
   text-align: center;
   font-size: 2rem;
 }
+.flexContainer {
+  height: 160px;
+  width: 100%;
+  border: 2px solid var(--ifm-font-color-base);
+}
+
+.flexPanel {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  align-items: center;
+  height: 60px;
+  margin-top: 50px;
+  background-color: #eee;
+}
+
+.flexItem {
+  height: 40px;
+  line-height: 40px;
+  text-align: center;
+  font-size: 12px;
+}

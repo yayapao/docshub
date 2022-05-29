@@ -22,12 +22,12 @@ const StickyPositionCase = () => {
       {stickyList.map((item, index) => {
         return (
           <>
-            <span
+            <div
               className={style.stickyHeader}
               style={{ backgroundColor: item.color }}
             >
               {item.title}
-            </span>
+            </div>
             <section className={style.stickyContent}>{index}</section>
           </>
         )

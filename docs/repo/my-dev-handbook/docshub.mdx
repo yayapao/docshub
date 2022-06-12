@@ -8,6 +8,7 @@ import {
   HighlightWithText,
   HighlightWithCode,
 } from '/src/components/Highlights'
+import ColorPalette from '/src/components/ColorPalette'
 
 :::info
 Handbook of DocsHub!
@@ -15,15 +16,38 @@ Handbook of DocsHub!
 
 ## 设计
 
-珍藏色号：
+**珍藏色号**
 
-- <HighlightWithText bgcolor="#ef613e">#ef613e</HighlightWithText>
-- <HighlightWithText bgcolor="#7385e4">#7385e4</HighlightWithText>
-
+<ColorPalette
+  colors={[
+    {
+      color: '#ef613e',
+      label: 'vlone orange',
+    },
+    {
+      color: '#7385e4',
+      label: 'docshub blue',
+    },
+    {
+      color: '#00bf8a',
+      label: 'shence green',
+    },
+    {
+      color: '#1890ff',
+      label: 'ant blue',
+    },
+  ]}
+/>
 
 ## 截断 bolg 简介展示
 
 放置 `<!--truncate-->` 关键字在指定位置即可
+
+## 新增一个 showcase
+
+1. 编辑 `src/pages/showcase/_showcase.config.ts` 配置 **tag** 和 **repo/project** 相关属性
+2. 在 `docs/project/` 目录下添加相应的文件
+3. 编辑 `configs/sidebars/projects.js` 侧边栏配置
 
 ## 使用自定义高亮组件
 
@@ -34,15 +58,17 @@ Handbook of DocsHub!
 `HighlightWithText` 高亮普通文本
 
 ```tsx
-import {
-  HighlightWithText,
-} from '/src/components/Highlights'
-
-<HighlightWithText bgcolor="#ef613e" style={{ fontSize: '12px' }}>Some text content!</HighlightWithText>
+import { HighlightWithText } from '/src/components/Highlights'
+;<HighlightWithText bgcolor="#ef613e" style={{ fontSize: '12px' }}>
+  Some text content!
+</HighlightWithText>
 ```
+
 效果如下：
 
-<HighlightWithText bgcolor="#ef613e" style={{ fontSize: '12px' }}>Some text content!</HighlightWithText>
+<HighlightWithText bgcolor="#ef613e" style={{ fontSize: '12px' }}>
+  Some text content!
+</HighlightWithText>
 
 <!-- -->
 
@@ -51,18 +77,16 @@ import {
 `HighlightWithCode` 高亮代码块，行内元素
 
 ```tsx
-import {
-  HighlightWithCode,
-} from '/src/components/Highlights'
-
-<HighlightWithCode bgcolor="#ef613e">Some code content!</HighlightWithCode>
+import { HighlightWithCode } from '/src/components/Highlights'
+;<HighlightWithCode bgcolor="#ef613e">Some code content!</HighlightWithCode>
 ```
+
 效果如下：
 
 <HighlightWithCode bgcolor="#ef613e">Some code content!</HighlightWithCode>
 
-
 <!-- -->
+
 ## Q&A
 
 ### 使用 `@docusaurus/plugin-ideal-image`
@@ -96,9 +120,7 @@ import { HighlightWithText } from '../../src/components/Highlights'
 
 ## 搜索
 
-参考 [Search](https://docusaurus.io/docs/search)
-
-这里记录实现过程
+参考 [Search](https://docusaurus.io/docs/search)，这里记录实现过程
 
 ### 本地搜索
 

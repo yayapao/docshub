@@ -1,0 +1,29 @@
+.colorContainer {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  align-items: center;
+  list-style: none;
+  padding: 0;
+  margin: 1rem;
+}
+
+.colorItem {
+  text-align: center;
+  width: 25%;
+  margin-top: 0!important;
+  padding: 1rem;
+}
+
+.colorLabel {
+  display: block;
+  font-weight: bold;
+  font-size: .875rem;
+}
+
+.label {
+  display: block;
+  font-weight: bold;
+  font-size: .675rem;
+}

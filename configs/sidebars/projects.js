@@ -43,6 +43,22 @@ const ftc = {
       items: [`${ftcPrefix}ftc`],
     },
   ],
+  joycraSiderBar: [
+    {
+      type: 'category',
+      label: 'joycra',
+      collapsed: false,
+      items: [`${ftcPrefix}joycra/readme`, `${ftcPrefix}joycra/cli`],
+    },
+  ],
+  joyutilsSiderBar: [
+    {
+      type: 'category',
+      label: 'joyutils',
+      collapsed: false,
+      items: [`${ftcPrefix}joyutils/readme`],
+    },
+  ],
   joylintSiderBar: [
     {
       type: 'category',
@@ -53,14 +69,6 @@ const ftc = {
         `${ftcPrefix}joylint/eslint`,
         `${ftcPrefix}joylint/husky`,
       ],
-    },
-  ],
-  joycraSiderBar: [
-    {
-      type: 'category',
-      label: 'joycra',
-      collapsed: false,
-      items: [`${ftcPrefix}joycra/readme`, `${ftcPrefix}joycra/cli`],
     },
   ],
 }

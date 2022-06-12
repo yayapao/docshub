@@ -27,3 +27,4 @@ export type TagType =
   | 'errors'
   | 'ESLint'
   | 'Prettier'
+  | 'React'

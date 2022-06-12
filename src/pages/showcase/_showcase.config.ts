@@ -1,12 +1,11 @@
 import { Application, TagType, Tag } from '@site/src/types/showcase'
-
+const imgPath = 'https://docs-1300606192.cos.ap-shanghai.myqcloud.com/showcase'
 const fteProjects: Application[] = [
   {
     key: 'fte',
     title: 'FTE',
     description: 'Frontend trustworthy engineering!',
-    preview:
-      'https://docs-1300606192.cos.ap-shanghai.myqcloud.com/showcase/fte.jpg',
+    preview: `${imgPath}/fte.jpg`,
     website: '/docs/project/fte/fte',
     isCore: true,
     tags: ['core'],
@@ -15,8 +14,7 @@ const fteProjects: Application[] = [
     key: 'wpm',
     title: 'wpm',
     description: 'Web performance measure!',
-    preview:
-      'https://docs-1300606192.cos.ap-shanghai.myqcloud.com/showcase/wpm.jpeg',
+    preview: `${imgPath}/wpm.jpeg`,
     website: '/docs/project/wpm/wpm',
     tags: ['performance', 'design'],
   },
@@ -24,8 +22,7 @@ const fteProjects: Application[] = [
     key: 'sentry',
     title: 'sentry',
     description: 'Focusing on error reporting!',
-    preview:
-      'https://docs-1300606192.cos.ap-shanghai.myqcloud.com/showcase/sentry.jpg',
+    preview: `${imgPath}/sentry.jpg`,
     website: '/docs/project/sentry/sentry',
     tags: ['errors', 'performance'],
   },
@@ -36,29 +33,36 @@ const ftcProject: Application[] = [
     key: 'ftc',
     title: 'FTC',
     description: 'Frontend toolkit chain!',
-    preview:
-      'https://docs-1300606192.cos.ap-shanghai.myqcloud.com/showcase/fte.jpg',
+    preview: `${imgPath}/ftc.jpg`,
     website: '/docs/project/frontend-toolkit-chain/ftc',
     isCore: true,
     tags: ['core'],
   },
   {
-    key: 'joylint',
-    title: 'joylint',
-    description: `Genki Dama OF Frontend's Lint tool chain!`,
-    preview:
-      'https://docs-1300606192.cos.ap-shanghai.myqcloud.com/showcase/joylint.jpg',
-    website: '/docs/project/frontend-toolkit-chain/joylint',
-    tags: ['ESLint', 'Prettier'],
-  },
-  {
     key: 'joycra',
     title: 'joycra',
     description: `Enjoy Creating React App!`,
-    preview:
-      'https://docs-1300606192.cos.ap-shanghai.myqcloud.com/showcase/joycra.jpg',
+    preview: `${imgPath}/joycra.jpg`,
+    github: 'https://github.com/YaYaPao/joycra',
     website: '/docs/project/frontend-toolkit-chain/joycra',
-    tags: ['core'],
+    tags: ['design', 'React'],
+  },
+  {
+    key: 'joyutils',
+    title: 'joyutils',
+    description: `Every developer should have their own utils!`,
+    preview: `${imgPath}/joyutils.jpg`,
+    github: 'https://github.com/YaYaPao/joydev/tree/main/packages/joyutils',
+    website: '/docs/project/frontend-toolkit-chain/joyutils',
+    tags: ['personal'],
+  },
+  {
+    key: 'joylint',
+    title: 'joylint',
+    description: `Genki Dama OF Frontend's Lint tool chain!`,
+    preview: `${imgPath}/joylint.jpg`,
+    website: '/docs/project/frontend-toolkit-chain/joylint',
+    tags: ['ESLint', 'Prettier'],
   },
 ]
 
@@ -68,8 +72,7 @@ export const getRepos: () => Application[] = () => {
       key: 'MyDevHandbook',
       title: 'MyDevHandbook',
       description: `Development's handbook of mine!`,
-      preview:
-        'https://docs-1300606192.cos.ap-shanghai.myqcloud.com/showcase/wpmonit.jpg',
+      preview: `/img/logo.png`,
       website: '/docs/repo/my-dev-handbook/docshub',
       tags: ['design'],
     },
@@ -77,9 +80,8 @@ export const getRepos: () => Application[] = () => {
       key: 'wpmonit',
       title: 'wpmonit',
       description: 'Web performance measure SDK!',
-      preview:
-        'https://docs-1300606192.cos.ap-shanghai.myqcloud.com/showcase/wpmonit.jpg',
-      github: 'https://github.com/Y-lonelY/wpmonit',
+      preview: `${imgPath}/wpmonit.jpg`,
+      github: 'https://github.com/YaYaPao/wpmonit',
       npm: 'https://www.npmjs.com/package/wpmonit',
       website: '/docs/repo/wpmonit/readme',
       tags: ['opensource', 'performance'],
@@ -88,9 +90,8 @@ export const getRepos: () => Application[] = () => {
       key: 'reactErrorCatcher',
       title: 'React Error Catcher',
       description: 'Powerful error catcher in React!',
-      preview:
-        'https://docs-1300606192.cos.ap-shanghai.myqcloud.com/showcase/react-error-catcher.jpg',
-      github: 'https://github.com/Y-lonelY/react-error-catcher',
+      preview: `${imgPath}/react-error-catcher.jpg`,
+      github: 'https://github.com/YaYaPao/react-error-catcher',
       npm: 'https://www.npmjs.com/package/react-error-catcher',
       website: '/docs/repo/react-error-catcher/readme',
       tags: ['opensource', 'errors'],
@@ -172,5 +173,10 @@ export const Tags: Record<TagType, Tag> = {
     label: 'Prettier',
     description: 'Prettier',
     color: '#0f59aa',
+  },
+  React: {
+    label: 'React',
+    description: 'A JavaScript library for building user interfaces',
+    color: '#61dafb',
   },
 }

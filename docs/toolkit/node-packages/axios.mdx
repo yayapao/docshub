@@ -85,8 +85,12 @@ export const clearPending = () => {
 service.interceptors.request.use(
   (config) => {
     const crt = config as any
-    removePending(config) // 在请求开始前，对之前的请求做检查取消操作
-    addPending(config) // 将当前请求添加到 pending 中
+    // 在请求开始前，对之前的请求做检查取消操作
+    removePending(config)
+    addPending(config)
+    // fix: Error: Request body larger than maxBodyLength limit
+    config['maxContentLength'] = Infinity
+    config['maxBodyLength'] = Infinity
     return crt
   },
   (error) => {

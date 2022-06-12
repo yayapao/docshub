@@ -44,7 +44,9 @@ export const DocsHeader: React.FC<DocsHeaderProps> = (props) => {
           <div className={styles.TagContainer}>
             <span className={styles.divider}>|</span>
             {tags.map((item) => (
-              <span className={styles.docsTag}>{item}</span>
+              <span className={styles.docsTag} key={item}>
+                {item}
+              </span>
             ))}
           </div>
         )}
@@ -54,10 +56,8 @@ export const DocsHeader: React.FC<DocsHeaderProps> = (props) => {
           <strong className={styles.releatedTitle}>🧿 Related links</strong>
           <div className={styles.headerLinks}>
             {links.map(({ link, label }, index) => (
-              <strong className={styles.docsReleatedLink}>
-                <a href={link} key={index}>
-                  {label}
-                </a>
+              <strong className={styles.docsReleatedLink} key={index}>
+                <a href={link}>{label}</a>
               </strong>
             ))}
           </div>

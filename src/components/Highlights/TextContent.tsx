@@ -7,20 +7,23 @@ import styles from './styles.module.css'
  * 高亮当前代码块
  */
 export const HighlightWithCode: React.FC<{
-  bgcolor: string
+  bgcolor?: string
   code?: string
-}> = ({ children, bgcolor, code }) => (
-  <code
-    style={{
-      backgroundColor: bgcolor,
-      borderRadius: '2px',
-      color: '#fff',
-      padding: '0.2rem',
-    }}
-  >
-    {code || children}
-  </code>
-)
+}> = ({ children, bgcolor = 'var(--ifm-color-primary)', code }) => {
+  return (
+    <code
+      style={{
+        backgroundColor: bgcolor,
+        color: '#fff',
+        borderRadius: '2px',
+        padding: '0.2rem',
+        fontSize: '.75rem',
+      }}
+    >
+      {code || children}
+    </code>
+  )
+}
 
 /**
  * 高亮当前文本
@@ -29,22 +32,25 @@ export const HighlightWithText: React.FC<{
   bgcolor?: string
   style?: CSSProperties
   text?: string
-}> = ({ children, bgcolor = '#7385e4', text, style = {} }) => (
-  <span
-    style={{
-      display: 'inline-block',
-      backgroundColor: bgcolor,
-      borderRadius: '2px',
-      color: '#fff',
-      padding: '.2rem .3rem',
-      wordSpacing: '1.5px',
-      marginBottom: 'var(--ifm-leading)',
-      ...style,
-    }}
-  >
-    {text || children}
-  </span>
-)
+}> = ({ children, bgcolor = '#7385e4', text, style = {} }) => {
+  return (
+    <span
+      style={{
+        display: 'inline-block',
+        backgroundColor: bgcolor,
+        borderRadius: '2px',
+        color: '#fff',
+        padding: '.2rem .3rem',
+        wordSpacing: '1.5px',
+        marginBottom: 'var(--ifm-leading)',
+        ...style,
+      }}
+    >
+      {text || children}
+    </span>
+  )
+}
+
 
 /**
  * 右上角添加小红点

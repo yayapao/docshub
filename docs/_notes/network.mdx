@@ -19,9 +19,42 @@ sidebar_label: Network
 - UDP 无连接服务，不可靠、不保序
 - TCP 面向连接服务，保证数据可靠、保序
 
-传输层提供的服务是 进程到进程，将应用层的传递数据切分成 报文段，并添加 请求头，到达对端后，解析报文段以 流 的形式传递给应用层
+传输层提供的服务是 进程到进程（port - port），将应用层的传递数据切分成 报文段，并添加 请求头，到达对端后，解析报文段以 流 的形式传递给应用层
 
 复用/解复用，源端的应用进程都用一个传输层实体（比如 TCP 实例）进行发送，在对端，都通过一个 传输层实体进行进程分配，即解复用
+
+### TCP
+
+数据表字端
+- socket
+- source ip
+- source port
+- target ip
+- target port
+- pid
+
+TCP socket 由 source ip + source port + target ip + target port 决定，进而找到对应的应用进程。
+
+### UDP
+
+"尽力而为"
+- 乱序
+- 丢包
+
+数据表字端
+- socket
+- source ip
+- source port
+- pid
+
+UDP socket 由报文段内的 target ip + target port 决定，与本身的 ip, port 无关，到达对端后解析报文段找到 socket 进而找到对应的应用进程。
+
+UDP 报文段
+头部 - 8个字节 - 32比特
+- 源端口号
+- 目标端口号
+- 长度，包含头部
+- 校验和，判断该报文段是否可用 （C/S 各端都计算校验和后进行比对）
 
 
 ## 网络基础

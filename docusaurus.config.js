@@ -129,7 +129,7 @@ const themeConfig = {
     ],
   },
   footer: {
-    style: 'dark',
+    // style: 'dark',
     copyright: `Copyright © ${new Date().getFullYear()} 粤ICP备20070108号`,
   },
   // code block highlight

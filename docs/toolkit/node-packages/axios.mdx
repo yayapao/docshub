@@ -26,9 +26,17 @@ import { HighlightWithText } from '/src/components/Highlights'
 
 我们将实现以下特性：
 
-**取消重复请求** 核心思想利用`set`数据结构，维护一个 pending set，里面存放 key(由 `method` + `path` + `query` + `body` 组成)和 value(取消改请求的 cacel 方法)。注意，`cancel` 是浏览器的行为，服务器仍会收到相关请求，只是浏览器不会继续对 canceled 的请求进行处理。
+**取消重复请求** 
 
-**取消 body size 限制** 用来解决请求包体过大，导致发出请求失败的问题
+:::caution
+注意，`cancel` 是浏览器的行为，服务器仍会收到相关请求，只是浏览器不会继续对 canceled 的请求进行处理
+:::
+
+核心思想利用`set`数据结构，维护一个 pending set，里面存放 key(由 `method` + `path` + `query` + `body` 组成)和 value(取消改请求的 cacel 方法)
+
+**取消 body size 限制** 
+
+用来解决请求包体过大，导致发出请求失败的问题
 
 ```js
 import Axios from 'axios'

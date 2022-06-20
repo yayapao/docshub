@@ -10,12 +10,14 @@ import {
   HighlightWithCode,
 } from '../../../src/components/Highlights'
 
-## var、let & const
+## var、let、const
 
-ES5 - ES6 新老声明方式的较量，需要注意用 `var` 声明变量会发生**变量提升**，而 `const/let` 则会**暂存死区**
+:::caution
+用 `var` 声明变量会发生**变量提升**，而 `const/let` 则会进入**暂存死区**
+:::
 
-- `var`声明被置于函数作用域的顶部，但是它们的赋值不是
-- `const`和`let`在块作用域中，会被置于块头部的暂存死区，直至它们被初始化，在这期间，如果变量被访问（比如 typeof ），会直接抛出 ReferenceError 错误
+- `var` 声明被置于函数作用域的顶部，但是它们的赋值不是
+- `const` 和 `let` 在块作用域中，会被置于块头部的暂存死区，直至它们被初始化，在这期间，如果变量被访问（比如 typeof ），会直接抛出 ReferenceError 错误
 
 ```javascript
 function test() {
@@ -33,7 +35,9 @@ function test() {
 
 ### ES6 新增数据类型
 
-对 ES5 内的数据类型：`null`、`undefined`、`number`、`string`、`boolean`、`object`，ES6 新增了：`Set`、`Map`、`Symbol`、`BigInt` 来弥补 ES5 的不足
+对 ES5 内的数据类型：`null`、`undefined`、`number`、`string`、`boolean`、`object`
+
+ES6 新增了：`Set`、`Map`、`Symbol`、`BigInt` 来弥补 ES5 的不足
 
 下面我们对其产生背景进行回顾和分析
 
@@ -219,45 +223,6 @@ let list = Array.from({ length: 10 }, (k,v) => v)
  * 通过指定值来填充一个数组，原数组会被重新赋值，但是保持其数组长度不变
  */
 arr2.fill(1) -> [1, 1, 1]
-```
-
-### 数组常用的操作方法
-
-```javascript
-/**
- * 通过索引访问数组
- * 在 JavaScript 中，以数字开头的属性不能用点号引用，必须用方括号
- * 下面的方法以 arr2 最为初始化对象
- */
-let arr2 = ["a", "b", "c"]
-arr2[arr2.length - 1] -> "c"
-
-/**
- * 删除元素
- * pop() 删除最后一个元素，返回被删除元素的值，直接修改原数组
- * shift() 删除第一个元素，返回被删除元素的值，直接修改原数组
- * splice(start, nums) 来删除指定位置的元素，返回删除元素的数组，直接修改原数组
- */
-arr2.pop() -> "c"
-arr2.shift() -> "a"
-// indexOf() 获取指定元素位置，返回一个Int类型
-const index = arr.indexOf("a") -> 0
-// 示从 index 开始，向后删除 1 个元素
-arr2.splice(index, 1) -> ["a"]
-
-/**
- * 添加元素
- * push() 在数组最后位置添加元素，返回添加元素后的数组长度，直接修改原数组
- * unshift() 在数组第一项前添加元素，返回添加元素后的数组长度，直接修改原数组
- */
-arr2.push("d") -> 4
-arr2.unshift("d") -> 4
-
-/**
- * 截取数组
- * 如果是从数组开始位置进行截取，可以直接重新复制length来实现截取，返回新的数组长度，直接修改原数组
- */
-arr2.length = 1 -> 1
 ```
 
 使用 `arr1.push.apply(arr1, arr2)` 来合并数组，可以减少内存消耗，`arr1.concat(arr2)` 会创建一个新的数组并消耗内存

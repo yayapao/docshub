@@ -13,6 +13,22 @@ import { HighlightWithText } from '/src/components/Highlights'
 
 ## Troubleshooting
 
+<HighlightWithText>Q: 执行脚本时，`usr/bin/env: bad interpreter: No such file or directory`？</HighlightWithText>
+
+<!-- -->
+
+当发布一个 package 后，准备执行脚本，发现报错 `usr/bin/env: bad interpreter: No such file or directory`.
+
+原因：脚本文件的 shell 声明错误
+
+```js
+// error declare
+#!usr/bin/env node
+
+// correct declare
+#!/usr/bin/env node
+```
+
 
 <HighlightWithText>Q: 安装 pm2 时，npm install 卡在 sill install loadIdealTree？</HighlightWithText>
 

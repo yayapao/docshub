@@ -5,79 +5,6 @@ sidebar_label: project
 slug: project
 ---
 
-## 常用正则
-
-第一个"（" 换行，第二个"）"为空，`String(this.value).replace(/（/,'<br>').replace(/）/, '')`
-
-数字千分：`number.toString().replace(/(\d)(?=(?:\d{3})+$)/g, '$1,')`
-
-清除 span 标签: `str.replace(/<span.*?>|<\/span>/ig,"");`
-
-清除空格：`str.replace(/\s+/g, '')`
-
-清除换行：`str.replace(/[\r\n]/g, '')`
-
-## 前端复制
-
-复制的本质就是数据的存取，前端实现复制功能的思路：
-
-- [x] M1: 利用 `document.execCommand('copy')` 执行复制到剪切板的操作
-- [x] M2: 利用 `window.sesstionStorage` 进行前端缓存
-
-**M1**
-
-span, div 等标签的点击复制，通过动态插入、获取 input 元素内容，结合 `document.execCommand('copy')` 实现内容复制
-
-```js
-onClick={(e) => {
-    if (document.execCommand('copy')) {
-      // 创建一个input标签用于承接内容
-      const input = document.createElement('input')
-      input.setAttribute('value', ips.join(' ').trim())
-      document.body.appendChild(input)
-      // 选中input，使其获得页面焦点
-      input.select()
-      // 执行复制命令，返回复制是否成功
-      const res = document.execCommand('copy')
-      input.remove()
-      res && message.success('复制到剪贴板', 2)
-    }
-}}
-```
-
-**M2**
-
-通过事件触发，将数据转换为字符串后进行存取
-
-```js
-function copy() {
-  try {
-    window.sessionStorage.setItem('plcCopyTemp', JSON.stringify(current))
-    message.success('复制成功', 1, () => {
-      // statements
-    })
-  } catch (e) {
-    message.error(`复制失败${String(e.message)}`, 1, () => {
-      // catch error handle
-    })
-  }
-  Ï
-}
-```
-
-## 函数节流与防抖
-
-underscore 函数节流
-
-1. 通过判断两次调用函数的时间戳，根据时间间隔来判断是否执行
-2. 设置定时器，如果当前缓存存在该定时器，则不执行函数；否则执行该函数并设置新的定时器
-
-```javascript
-// `{trailing: false}` 禁用最后一次执行
-// `{leading: false}` 禁用第一次执行
-var throttled = _.throttle(updatePosition, 100, { trailing: false })
-```
-
 ## setTimeout
 
 `setTimeout` 是异步执行函数，但是其并不是真正的异步操作
@@ -211,38 +138,6 @@ Object.prototype.toString.call(arr) -> "[object Array]"
 arr instanceof Array -> true
 ```
 
-## 数组去重
-
-最直接的方法就是利用循环来进行比较，如果没有，则将其添加至新数组，最终将新数组返回
-
-```javascript
-/**
- * 利用 hash 进行去重，时间性能表现良好，但是不够简洁
- * 因为有些数据本身是不能排序的，所以不能对其进行比较查找
- * 如果数据本身很难比较，即使采用折半查找，要比较的次数也是非常多的
- * 哈希并不查找数据本身，而是先将数据映射为一个哈希值
- */
-_mergeArray = function(arr) {
-  var res = [],
-      hash = {};
-  for (var i = 0, elem;
-      (elem = arr[i]) != null; i++) {
-        // 如果hash对象内没有此属性，则返回undefined，此时将此属性值写入数组，并将其映射为一个哈希值
-      if (!hash[elem]) {
-          res.push(elem);
-          hash[elem] = true;
-      }
-  }
-  return res;
-}
-
-/**
- * 利用 ES6 set 数据结构和三点运算符
- * 时间性能表现不错，而且足够简洁
- */
-let arr = [...new Set([1, 1, 3, 4])] -> [1, 3, 4]
-```
-
 ## 等待多个异步请求
 
 即同时发出 n 个异步请求，但是需要它们都执行完毕再进行下一步处理
@@ -279,42 +174,4 @@ async function getDateRange() {
     }
   }
 }
-```
-
-## 全屏切换
-
-用代码实现类似 F11 效果
-
-```javascript
-  //切换全屏效果
-  toggleFullScreen = function(element) {
-    //判断是否为全屏模式
-    if (!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement)) {
-      //进入全屏模式，分别为W3C标准，谷歌，火狐，IE
-      if (element.requestFullscreen) {
-          element.requestFullscreen();
-      } else if (element.mozRequestFullScreen) {
-          element.mozRequestFullScreen();
-      } else if (element.webkitRequestFullscreen) {
-          element.webkitRequestFullscreen();
-      } else if (element.msRequestFullscreen) {
-          element.msRequestFullscreen();
-      }
-    } else {
-      //退出全屏模式
-      if (document.exitFullscreen) {
-          document.exitFullscreen();
-      } else if (document.mozCancelFullScreen) {
-          document.mozCancelFullScreen();
-      } else if (document.webkitExitFullscreen) {
-          document.webkitExitFullscreen();
-      } else if (document.msExitFullscreen) {
-          document.msExitFullscreen();
-      }
-    }
-  },
-  troggleScreen = function() {
-      //document.documentElement 为整个页面的元素
-      toggleFullScreen(document.documentElement);
-  },
 ```

@@ -65,6 +65,16 @@ MacOS 下 `vim /usr/local/etc/redis.conf`
 1. 执行 `ln -f /usr/local/Cellar/redis/6.0.10/homebrew.mxcl.redis.plist ~/Library/LaunchAgents` 建立软连接，加入到 launchd 进程，当用户登录系统后会自动执行
 2. 执行 `launchctl load ~/Library/LaunchAgents/homebrew.mxcl.redis.plist` 加载任务
 
+<!-- -->
+
+### 基于 `redis-cli` 排障
+
+在 ubuntu 上通过 `sudo apt install redis-tools` 安装 redis-cli, 安装完成后，通过 `redis-cli --version` 查看安装是否成功
+
+- 连接 redis: `redis-cli -h [hots] -p [port] -a [auth/password]`
+- 查看内存占用: `redis-cli [connnection params] info memory`
+- 查看不同数据库内最大 key 等统计信息: `redis-cli [connection params] -n [db index] --bigkeys`
+
 ### 批量删除 redis key
 
 在 terminal 内执行 `redis-cli -h 127.0.0.1 -p 6379 keys "bull:q_perf:*" | xargs -r -t redis-cli -h 127.0.0.1 -p 6379 del`

@@ -9,6 +9,7 @@ import styles from './styles.module.css'
 export const HighlightWithCode: React.FC<{
   bgcolor?: string
   code?: string
+  children
 }> = ({ children, bgcolor = 'var(--ifm-color-primary)', code }) => {
   return (
     <code
@@ -32,17 +33,21 @@ export const HighlightWithText: React.FC<{
   bgcolor?: string
   style?: CSSProperties
   text?: string
+  children
 }> = ({ children, bgcolor = '#7385e4', text, style = {} }) => {
   return (
     <span
       style={{
         display: 'inline-block',
         backgroundColor: bgcolor,
-        borderRadius: '2px',
+        borderRadius: '3px',
         color: '#fff',
-        padding: '.2rem .3rem',
+        padding: '.2rem .5rem',
+        letterSpacing: '1.5px',
         wordSpacing: '1.5px',
         marginBottom: 'var(--ifm-leading)',
+        fontSize: '.675rem',
+        fontWeight: 500,
         ...style,
       }}
     >

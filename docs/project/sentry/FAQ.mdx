@@ -35,19 +35,22 @@ import {
 - 检查路径（文件名）是否匹配，如果路径中存在动态值，可以使用 `rewriteFrames` 来进行处理
 - 确保 `artifacts` 在错误发生之前下载完成
 
-## Relay Server 400
+## Relay response 400
 
 部署上线之后，发现 sentry 服务的域名产生大量的 400 错误，通过查看 `relay` 日志，我们发现了一些异常，这里我们通过阅读源码对其表现和解决方案进行记录
 
-其他可能触发场景
+Relay 返回400的场景
 
-- 安装浏览器的请求代理插件/扩展，导致会先触发一个 `Type=ping` 的请求，再发起真实请求，此时 ping 请求会返回 400
+- 🐛 Too many envelopes (event_buffer_size reached)
+- 🐛 invalid security report type
+- 一些浏览器请求代理插件/扩展，会先触发一个 `Type=ping` 的请求，再发起真实请求，此时 ping 请求会返回 400
+- 在 relay 的 envelope 接口内上报了自定义的字段，导致 relay 无法解析，详见[fix(server): Accept and forward unknown envelope items](https://github.com/getsentry/relay/pull/1246)
 
 ### Too many envelopes (event_buffer_size reached)
 
-报错信息如下：
+如果我们在服务上发现了大量的 400 状态码，通常是由该原因导致
 
-```
+```rust
 [relay_server::endpoints::common] ERROR: error handling request: failed to queue envelope
 caused by: Too many envelopes (event_buffer_size reached)
 ```
@@ -56,8 +59,8 @@ caused by: Too many envelopes (event_buffer_size reached)
 
 `relay-server/src/actors/envelopes.rs`
 
-```rs
-// 如果堆积值超过设置阈值，返回错误和详情
+```rust
+// 如果缓冲区内堆积值超过设置阈值，返回错误和详情
 if self.config.envelope_buffer_size() <= self.active_envelopes {
   return Err(QueueEnvelopeError::TooManyEnvelopes);
 }
@@ -90,9 +93,9 @@ impl BadStoreRequest {
 }
 ```
 
-<HighlightWithText text="原因" />{' '}
+<HighlightWithText text="错误原因" />{' '}
 
-当 `envelope` 处理对列堆积超过 [Config::event_buffer_size](https://docs.sentry.io/product/relay/options/)(默认为 1000) 时，包含 events, attachments 和 sessionsrelay，会返回 400 错误。
+当 `envelope` 处理对列堆积超过 [Config::event_buffer_size](https://docs.sentry.io/product/relay/options/)(默认为 1000) 时，会返回 400 错误。请求包含所有类型的 events、attachments 和 sessionsrelay。
 
 ### invalid security report type
 
@@ -190,7 +193,7 @@ impl SecurityReportType {
 }
 ```
 
-<HighlightWithText text="原因" />{' '}
+<HighlightWithText text="错误原因" />{' '}
 
 浏览器通过安全策略上报的数据未能被 sentry 识别。
 

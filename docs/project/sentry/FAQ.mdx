@@ -105,7 +105,10 @@ impl BadStoreRequest {
 [relay_server::actors::envelopes] ERROR: failed to extract security report: invalid security report type
 ```
 
-我们分析其源码发现：
+该问题相关 issues:
+- [Rejected CSP reports from Firefox latest due to missing effective-directive payload](https://github.com/getsentry/sentry/issues/31433)
+
+我们对其源码进行分析后发现：
 
 `relay-server/src/actors/envelopes.rs`
 

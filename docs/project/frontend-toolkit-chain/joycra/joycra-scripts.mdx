@@ -1,0 +1,44 @@
+---
+id: joycra-scripts
+title: ''
+sidebar_label: joycra-scripts
+---
+
+import { DocsHeader } from '/src/components/Layout/DocsHeader'
+import { HighlightWithText } from '/src/components/Highlights'
+
+<DocsHeader
+  title="joycra-scripts"
+  description="Command line for creating Joy React App!"
+  github="https://github.com/YaYaPao/joycra/tree/main/packages/joycra-scripts"
+  npm="https://www.npmjs.com/package/joycra-scripts"
+  tags={['React App']}
+  links={[
+    {
+      label: 'create-react-app',
+      link: 'https://github.com/facebook/create-react-app/tree/main/packages/create-react-app'
+    }
+  ]}
+/>
+
+<!-- -->
+
+我们在开发时对 `create-react-app` 的设计思路进行研究。考虑到目前的受众，JOYCRA 不再支持 `--template` 和 `--scripts-version` 的定制化功能，同时我们将 template 文件放在 joycra-scripts 包内，不再需要远程拉取。
+
+因为我们试图实现一个能够解决问题且足够优雅的 cli，而不是“大一统”。
+
+## 集成思路
+
+对于 Joycra 来说，我们实际上是由 Joycra “母体”项目和 joycra-scripts cli 项目组成，我会将日常开发中技术沉淀和社区内的前沿技术逐步引入到 Joycra 内。
+
+同时，在 joycra-scripts 内，通过 `migrate + template.json` 的模式，我们会按照指定规则从“母体”项目中生成模版，放到 `template` 目录下，在发布时，会将 template 文件一起上传。
+
+## 测试流程
+
+尽管我们使用 pnpm 的 monorepo 方式来动态管理，但是实际表现却并不尽如人意。因此，我们将本地文件打包到 npm 全部包目录下，再直接执行 `joycra-scripts` 来进行本地测试。
+
+同时，我们可以直接在 npm 目录下修改文件，来减少开发流程。
+
+
+
+

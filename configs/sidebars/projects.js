@@ -48,7 +48,7 @@ const ftc = {
       type: 'category',
       label: 'joycra',
       collapsed: false,
-      items: [`${ftcPrefix}joycra/readme`, `${ftcPrefix}joycra/cli`],
+      items: [`${ftcPrefix}joycra/readme`, `${ftcPrefix}joycra/joycra-scripts`],
     },
   ],
   joyutilsSiderBar: [

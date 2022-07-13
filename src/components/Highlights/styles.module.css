@@ -114,11 +114,24 @@
   flex-grow: 0;
   line-height: 1rem;
   text-align: center;
-  background-color: #5C6BC0;
+  background-color: var(--ifm-color-primary);
   color: #fff;
   margin-right: .4rem;
   border-radius: 3px;
   font-size: 12px;
   position: relative;
   bottom: 2px;
+}
+
+.resolvedTag {
+  background-color: var(--ifm-color-primary);
+  color: #fff;
+  width: 126px;
+  height: 26px;
+  line-height: 26px;
+  border-radius: 8px;
+  text-align: center;
+  font-size: .675rem;
+  font-weight: bold;
+  font-family: roboto;
 }

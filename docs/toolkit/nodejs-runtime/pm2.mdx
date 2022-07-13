@@ -1,0 +1,126 @@
+---
+id: pm2
+title: ''
+sidebar_label: pm2
+---
+
+import { DocsHeader } from '/src/components/Layout/DocsHeader'
+import { HighlightWithCode } from '/src/components/Highlights/TextContent'
+import { ResolvedTag } from '/src/components/Highlights/CustomizedTag'
+
+<DocsHeader
+  title="pm2"
+  description="Advanced, production process manager for Node.js. It can keep your application online 24/7"
+  github="https://github.com/Unitech/pm2"
+  npm="https://www.npmjs.com/package/pm2"
+  tags={['Node.js']}
+  links={[{
+    label: 'NODE_APP_INSTANCE',
+    link: 'https://pm2.keymetrics.io/docs/usage/environment/'
+  }]}
+/>
+
+<!-- -->
+
+PM2 是 Node.js 的进程管理器，在后台运行，扮演者 Daemon（守护进程） 的角色，能够保证你的 Node.js 应用始终在线。
+
+**为什么需要使用 pm2 来管理 Node.js 应用呢？**
+
+我们来看看 PM2 实际解决的生产问题：
+
+- 自动拉起服务，保持服务始终在线（服务异常退出）
+- 错误日志采集
+- 应用状态监控
+- 限制应用内存消耗（服务内存泄漏）
+- 同时管理多个 Node.js 应用
+
+对于 PM2 的使用，参考[Quick Start](https://pm2.keymetrics.io/docs/usage/quick-start/)，我们重点对其在生产中的问题进行分析和记录。
+
+## Cluster mode
+
+:::tip
+用来最大化使用 CPU 资源
+:::
+
+Node.js 本身异步 IO 是基于线程池（thread pool）实现的，因此 Node.js 运行时内会看到多个 thread，但是实际执行 javascript 的部分是单线程，所以只能利用到单核 CPU 的资源，无法有效利用多核 CPU，容易造成一个 CPU 很忙，但是其他 CPU 很闲的情况！
+
+PM2 的集群模式（cluster mode）利用 Node.js 提供的 cluster 来用来解决多核 CPU 的利用率问题。Node.js 提供的集群模式能够让应用的子进程共享服务端口。但是在实际使用过程中，我们碰到了一些问题：
+
+### 在集群模式下，设置 `instance` 数量如果超过机器本身 CPU 核数，重启服务后只有部分实例被重启
+
+我们在一个 _2.3 GHz 四核 Intel Core i5_ 的机器下，设置 start 参数为 `{ exec_mode: 'cluster', instances: '16' }`，之后执行 start 命令:
+
+![pm2_start](/img/package/nodejs/pm2_start.png)
+
+此时，各个服务正常，之后我们执行 `pm2 restart upserver_lifer` 看看会发生什么
+
+![restart](/img/package/nodejs/pm2_start_1.png)
+
+发现 id 为 19 和 23 的服务被重启了两次，在实际访问过程中的具体表现就是会有 1/8 的概率（假设各个服务访问概率相等）访问到这两个服务，接着我们执行 `pm2 reload upserver_lifer`
+
+![reload](/img/package/nodejs/pm2_start_2.png)
+
+分歧更加扩大，更致命的是 id 为 18 的子进程没有重启，这意味着 1/16 的概率我们会访问到旧的服务，不管怎样，各个进程间的不一致会造成程序的错误执行和返回，在生产上是不被允许的
+
+<ResolvedTag />
+
+<!-- -->
+
+本质是由于设置的实例数大于机器本身，因此可以将参数设置为 `{instance: 'max'}` 或者小于主机的 CPU 核数来解决此问题
+
+### 在容器内通过 PM2 部署服务时，设置 `{ instance: 'max' }` 后，内存占用过高？
+
+先说结论：**PM2 会以容器的宿主机核心数为基准，而不是该容器实例被分配的资源核心数**
+
+即如果容器配置为 4core 8G，宿主机为 64core 256G，程序在容器内用以上配置跑起来之后，实际上会启64个实例，平均一个实例占用 80mb 内存，总内存会占到容器的 50% 左右
+
+因此，如果在容器内通过 PM2 来部署 Node.js 项目时，在集群模式下要指定 `instance` 的具体数量
+
+### 为什么会以宿主机的 core 来计算呢?
+
+PM2 的集群模式是基于 Node.js 提供的[集群能力](https://nodejs.org/api/cluster.html#how-it-works)，而 Node.js 通过遍历 `os.cpus()` 来创建子进程，即执行 `child_process.fork()`
+
+在容器内，直接指定 `os.cpus()` 返回的是宿主机的 core 信息，如果需要访问当前容器的资源，需要通过[Linux资源管理之cgroups](https://tech.meituan.com/2015/03/31/cgroups.html)来读取
+
+### 如何判断主线程？
+
+通常，当我们开启集群模式后，会在多个线程下执行任务，通常情况下是不会产生问题的，但是当我们执行一些定时脚本任务时，实际上只希望当前任务被执行一次。
+
+此时，我们需要可以通过 pm2 提供的接口来判断主线程，即：
+
+```js
+if (process.env.NODE_APP_INSTANCE === '0') {
+  this.autoExecuteTeamEventsTask()
+}
+```
+
+
+## pm2 IN Production
+
+通过配置 [CLI completion](https://pm2.keymetrics.io/docs/usage/auto-completion/) 安装自动补全插件
+
+PM2 在使用公有云时，可能没有 CLI 的权限，此时参考[Using PM2 on Cloud Providers](https://pm2.keymetrics.io/docs/usage/use-pm2-with-cloud-providers/)，将 pm2 安装为项目依赖并在 package.json 内修改启动脚本
+
+
+### pm2-logrotate
+
+[pm2-logrotate](https://github.com/keymetrics/pm2-logrotate) 用来扩展 pm2 的日志管理功能
+
+原生日志功能的设计缺陷：
+
+- 没有日志分割功能，一个应用会产生两个日志文件，
+- 无法自动清理，日积月累后日志文件会增大，增加排查难度，一些“陈年日志”，已经失去价值，但是仍然占据磁盘空间
+
+为此，pm2-logrotate 用来进行日志管理，根据配置规则对日志进行合理切割
+
+```bash
+# install
+$ pm2 install pm2-logrotate
+
+# 设置日志文件最大size
+$ pm2 set pm2-logrotate:max_size 100M
+# 设置切割周期，参考 node-schedule 配置规则
+$ pm2-logrotate:rotateInterval '0 0 0 * * ? '
+# 设置日志保存时间
+pm2 set pm2-logrotate:retain 300
+```

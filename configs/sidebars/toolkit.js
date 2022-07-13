@@ -5,7 +5,11 @@ const nodejsPackages = {
       type: 'category',
       label: 'Node.js Packages',
       collapsed: false,
-      items: [`${nodejsPrefix}/zx`, `${nodejsPrefix}/axios`],
+      items: [
+        `${nodejsPrefix}/zx`,
+        `${nodejsPrefix}/pm2`,
+        `${nodejsPrefix}/axios`,
+      ],
     },
   ],
 }

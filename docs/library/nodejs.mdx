@@ -73,63 +73,7 @@ const data = await crt.getRawMany()
 
 简单来说，puppeteer 就是一个在 Node.js runtime 内的浏览器组件库，提供浏览器内核和系统的底层支持
 
-### Ubuntu 依赖及字体安装
 
-参考 [https://developers.google.com/web/tools/puppeteer/troubleshooting#chrome_headless_doesnt_launch_on_unix](https://developers.google.com/web/tools/puppeteer/troubleshooting) 了解在 docker 或者真实 Lunix 环境下，我们需要安装的依赖
-
-但是在利用 puppeteer 进行截图服务时，发现截图字体是楷体，字体本身和标点符号效果不好
-
-![pp-before](/img/package/nodejs/pp-snapshot-1.png)
-
-因此我们希望能够采用字体 [Material 推荐的 Roboto](https://material-ui.com/zh/components/typography/#general) 和微软雅黑来对页面进行样式上的调整，最终呈现效果如下图：
-
-![pp-after](/img/package/nodejs/pp-snapshot-2.png)
-
-相关配置参考：
-
-- `fc-list` 查看以安装的字体
-- `fc-list :lang=zh` 查看中文字体依赖
-- `fc-cache -f -v` 刷新字体缓存
-
-```shell
-# 下载相关依赖和字体依赖
-RUN apt-get update && \
-    apt-get install -yq --no-install-recommends ca-certificates fonts-liberation libappindicator3-1 libasound2 libatk-bridge2.0-0 libatk1.0-0 libc6 libcairo2 \
-    libcups2 libdbus-1-3 libexpat1 libfontconfig1 libgbm1 libgcc1 libglib2.0-0 libgtk-3-0 libnspr4 libnss3 libpango-1.0-0 libpangocairo-1.0-0 libstdc++6 libx11-6 \
-    libx11-xcb1 libxcb1 libxcomposite1 libxcursor1 libxdamage1 libxext6 libxfixes3 libxi6 libxrandr2 libxrender1 libxss1 libxtst6 lsb-release \
-    xdg-utils xfonts-utils fonts-roboto;
-
-# 下载对应字体
-# mkfontscale 控制字体旋转缩放
-# mkfontdir 创建雅黑字体的fonts.dir文件，它用来控制字体粗斜体产生
-# fc-cache 建立字体缓存信息，也就是让系统认识雅黑
-RUN wget -P /tmp/ https://iyoyo.oss-cn-hangzhou.aliyuncs.com/mirror/fonts/msyh.ttf  && \
-    wget -P /tmp/ https://iyoyo.oss-cn-hangzhou.aliyuncs.com/mirror/fonts/msyhbd.ttf && \
-    wget -P /tmp/ https://iyoyo.oss-cn-hangzhou.aliyuncs.com/mirror/fonts/msyhl.ttf &&\
-    mkdir /usr/share/fonts/winFont && \
-    cp /tmp/*.ttf /usr/share/fonts/winFont/ && \
-    chmod 755 -R /usr/share/fonts/winFont/*.ttf && \
-    cd /usr/share/fonts/winFont/ && \
-    mkfontscale && mkfontdir && fc-cache -f -v;
-
-# 关键一步：删除系统默认字体，中文字体会按照 fontconfig 的顺序进行加载
-RUN apt-get purge -y fonts-arphic-ukai fonts-arphic-uming && fc-cache -f -v;
-```
-
-### 性能优化
-
-关于内存共享，Chrome 默认使用 /dev/shm 共享内存，但是 docker 默认 /dev/shm 只有 64MB（通过会在容器内发布应用），在不够用的情况下，解决方案：
-
-- 启用 docker 时添加启动参数 `--shm-size=1gb` 来增大 /dev/shm 的共享内存
-- 启动 Chrome 时添加参数 `-disable-dev-shm-usage` 来禁止使用共享内存
-
-一些性能优化思路：
-
-- 尽量使用同一个浏览器实例，实现缓存公用
-- 拦截不必要的资源
-- 有效控制同时打开 tab 的数量
-- 一个 Chrome 实例打开久了难免会产生内存泄漏，可以通过定时器任务来定时重启 Chrome 实例
-- 关闭没必要的配置：`-no-sandbox,--disable-extensions`
 
 ## multer
 

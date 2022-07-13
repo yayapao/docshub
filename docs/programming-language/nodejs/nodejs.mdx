@@ -1,0 +1,64 @@
+---
+id: nodejs
+title: Nice to meet Node.js
+sidebar_label: Nice to meet Node.js
+---
+
+:::note what's Node.js?
+Node.js is an open-source and cross-platform JavaScript runtime environment built on Chrome's V8 engine
+:::
+
+在这里，我们先给 Node.js 下一个定义：Node.js 是一个基于 Chrome V8 引擎的 JavaScript 运行时。所谓运行时，可以将其想象成一个执行环境，里面包含了运行代码所需的编译器和操作系统的底层支持。
+
+- Node.js 底层基于 C++ 实现，但是其语法遵循 ECMAScript 规范，这为 Node.js 提供了灵活的语法支持
+- Node.js 基于 V8 引擎，为其运行提供了更高效率的实现，例如非阻塞 IO 和事件驱动等
+
+在开始之前，我们先进行一些知识储备：
+
+**回调**
+
+回调在 Node.js 中被大量使用，其本质是一个高阶函数，即接受一个可执行函数作为参数，并返回一个函数，比如
+
+```javascript
+const fs = require('fs')
+
+// 完成 app.json 文件读取后，执行回调内容
+fs.readFile('app.json', function (err, data) {
+  if (err) return
+  // do something
+})
+```
+
+**CPU 执行**
+
+在任务完成之前，CPU 在任何情况下都不会暂停或者停止执行，即 CPU 如何执行和同步或者异步、阻塞还是非阻塞没有必然联系
+
+操作系统保证 CPU 始终出于执行中状态，这是通过系统调度来实现的，具体一点就是通过在不同进程/线程内切换实现的
+
+**并发和并行**
+
+并发和并行分别对应计算机的两种需求
+
+并行(Parallel)：希望计算机做更多的事情（处理多个队列）
+
+并发(Concurrent)：希望计算机更快地执行任务（让队列迅速被消费）
+
+Node.js 通过单线程 + 事件机制实现并发，不同于 Java 通过多线程实现并发
+
+**同步和异步**
+
+同步/异步描述的是进程/线程的调用方式，注意这里需要区别于阻塞/非阻塞
+
+调用返回指：内核进程将数据复制到用户进程，即在 Linux 环境下，用户进程没法直接访问内核空间，需要内核通过 copy_to_user 来将数据复制到用户进程中
+
+同步指的是，当进程 / 线程发起调用，直到等待调用返回后，才会执行下一步操作。在这个过程中，CPU 会保持执行，只是切到另一个进程/线程，等待调用返回后，再切回来继续执行
+
+异步则是指当进程 / 线程发起调用时，会继续执行，等到调用返回时再以某种方式通知调用者
+
+**阻塞和非阻塞**
+
+当你在 Node.js 进程内执行一段新增的 JavaScript 代码时，需要等待非 JavaScript 操作执行完毕，此时就是处于阻塞状态
+
+而当你不需要等待非 JavaScript 操作执行完毕，就可以执行新增的 JavaScript 代码时，此时就是处于非阻塞状态
+
+因此，阻塞和非阻塞是执行代码的状态

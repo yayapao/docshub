@@ -1,11 +1,11 @@
-const npmPrefix = 'toolkit/node-packages'
+const nodejsPrefix = 'toolkit/nodejs-runtime'
 const nodejsPackages = {
   npSiderBar: [
     {
       type: 'category',
       label: 'Node.js Packages',
       collapsed: false,
-      items: [`${npmPrefix}/zx`, `${npmPrefix}/axios`],
+      items: [`${nodejsPrefix}/zx`, `${nodejsPrefix}/axios`],
     },
   ],
 }

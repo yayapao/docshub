@@ -3,12 +3,13 @@ const nodejsPackages = {
   npSiderBar: [
     {
       type: 'category',
-      label: 'Node.js Packages',
+      label: 'Node.js Runtime',
       collapsed: false,
       items: [
         `${nodejsPrefix}/zx`,
         `${nodejsPrefix}/pm2`,
         `${nodejsPrefix}/axios`,
+        `${nodejsPrefix}/puppeteer`,
       ],
     },
   ],

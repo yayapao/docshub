@@ -11,7 +11,8 @@
 
 // @ts-check
 const projectSiderbarsConfig = require('./configs/sidebars/projects')
-const toolkitSiderbarsConfig = require('./configs/sidebars/toolkit')
+// const toolkitSiderbarsConfig = require('./configs/sidebars/toolkit')
+const nodejsProgrammingSidebarConfig = require('./configs/sidebars/programming-nodejs')
 /** @type {import('@docusaurus/plugin-content-docs').SidebarsConfig} */
 const repoSiderbarsConfig = {
   handbookSiderBar: [
@@ -150,16 +151,6 @@ const sidebars = {
     },
     {
       type: 'category',
-      label: 'Node.js',
-      collapsed: true,
-      items: [
-        'langs/nodejs/concept',
-        'langs/nodejs/project',
-        'langs/nodejs/npm',
-      ],
-    },
-    {
-      type: 'category',
       label: 'Python3',
       collapsed: true,
       items: ['langs/python/concept', 'langs/python/grammar'],
@@ -188,7 +179,8 @@ const sidebars = {
       items: ['langs/css3/concept', 'langs/css3/layout', 'langs/css3/text'],
     },
   ],
-  ...toolkitSiderbarsConfig,
+  // programming language
+  ...nodejsProgrammingSidebarConfig,
   ...repoSiderbarsConfig,
   ...projectSiderbarsConfig,
 }

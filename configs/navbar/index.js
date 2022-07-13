@@ -30,7 +30,7 @@ const navbarConfig = {
       ],
     },
     {
-      label: 'Language',
+      label: 'Programming',
       position: 'left',
       items: [
         {
@@ -45,8 +45,8 @@ const navbarConfig = {
         },
         {
           label: 'Node.js',
-          to: '/docs/langs/nodejs/concept',
-          activeBaseRegex: '/docs/langs/nodejs',
+          to: '/docs/programming-language/nodejs/entry',
+          activeBaseRegex: '/docs/programming-language/nodejs',
         },
         {
           label: 'Python3',
@@ -77,7 +77,6 @@ const navbarConfig = {
         {
           label: 'Node.js Runtime',
           to: '/docs/toolkit/nodejs-runtime/zx',
-          // 设置高亮
           activeBaseRegex: '/docs/toolkit/nodejs-runtime',
         },
         {

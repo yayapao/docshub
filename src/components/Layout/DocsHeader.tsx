@@ -57,7 +57,9 @@ export const DocsHeader: React.FC<DocsHeaderProps> = (props) => {
           <div className={styles.headerLinks}>
             {links.map(({ link, label }, index) => (
               <strong className={styles.docsReleatedLink} key={index}>
-                <a href={link}>{label}</a>
+                <a href={link} target="_blank">
+                  {label}
+                </a>
               </strong>
             ))}
           </div>

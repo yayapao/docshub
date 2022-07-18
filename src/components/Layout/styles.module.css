@@ -65,6 +65,7 @@
 }
 
 .linkContainer .headerLinks {
+  display: block;
   margin-top: 0.5rem;
   padding-left: 1rem;
   font-size: 0.875rem;

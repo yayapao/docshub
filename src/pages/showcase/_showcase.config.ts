@@ -22,7 +22,7 @@ const fteProjects: Application[] = [
     key: 'sentry',
     title: 'sentry',
     description: 'Focusing on error reporting!',
-    preview: `${imgPath}/sentry.jpg`,
+    preview: `/assets/showcase/sentry.svg`,
     website: '/docs/project/sentry/sentry',
     tags: ['errors', 'performance'],
   },

@@ -134,6 +134,19 @@ function build() {
 最终会在 dist 目录下生成 `requirements.txt` 和 `sentry-[sentry version]-[python version]-none-any.whl` 文件
 
 
+## 基于 API 进行二次开发
+
+### FAQ
+
+#### 如何统计每个 team 的日均 events?
+
+根据 Sentry API Docs 我们无法直接获取每个 team 的数据统计，因此我们需要：
+1. 获取指定 team 的 projects，见[list-a-teams-projects](https://docs.sentry.io/api/teams/list-a-teams-projects/)
+2. 根据 [query-discover-events-in-table-format](https://docs.sentry.io/api/discover/query-discover-events-in-table-format/) 获取该 project 的聚合数据，**注意，API 内 project 模块提供的是未聚合的详情数据**
+3. 根据 team 聚合每个 project 数据，得到结果
+
+我们通过接口获取的 `events = transactions + errors + csp + default`，**并不包含 sessions** 数据计量
+
 ## Relay Server
 
 :::note

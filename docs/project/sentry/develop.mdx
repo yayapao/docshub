@@ -6,133 +6,11 @@ sidebar_label: development
 
 import { HighlightWithText } from '../../../src/components/Highlights'
 
-:::note 目的
-我们希望基于源码对服务进行拓展和优化，按照 运行时环境 + 源码 + 配置 + 执行脚本 的思路进行。
+:::caution 前置准备
+具体环境配置、依赖安装和本地运行参考[self-hosted](./self_hosted#环境准备)
 :::
 
-## 前置准备
-
-参考[官方文档](https://develop.sentry.dev/environment/)对本地开发流程进行介绍。
-
-**系统要求：**
-
-- Docker 19.03.6+ 
-- Compose 1.28.0+
-- 4 CPU Cores
-- 8 GB RAM
-- 20 GB Free Disk Space
-- MacOS
-
-**安装必要软件：**
-
-- 将 [sentry 源码](https://github.com/getsentry/sentry) clone 项目到本地，这里**建议选择最新的稳定 release 版本。**
-- 执行 `xcode-select --install` 或者启动 Xcode 更新 Xcode CLI tools，目的是安装 MacOS 的基础开发环境
-- 进入 sentry 本地目录，执行 `brew bundle --verbose` 安装在 Brewfile 内列出的各种软件
-
-## 运行时环境
-
-Sentry 后端服务是 Python3 + django，前端是 tsx + React + bootstrapUI，通过 **python wheels** 进行打包。
-
-### Python 运行时环境
-
-Sentry 依赖 [python wheels](https://pythonwheels.com/) 进行打包，它包含一些二进制包，需要保证 MacOS 版本较新且**本机内安装有 Rust 执行环境**
-
-Sentry 利用 [pyenv](https://github.com/pyenv/pyenv) 来安装和管理 python 版本，执行 `brew install pyenv` 安装一下，之后执行 `make setup-pyenv` 安装 Sentry 依赖环境
-  - 安装完成之后，执行 `which python` --> 预期出现 `/usr/bin/python`
-  - 接着修改 `bash_profile`，添加 `#pyenv \n eval "$(pyenv init -)" \n export PATH="$HOME/.pyenv/bin:$PATH"` 来指定路径
-  - 执行 `eval "$SHELL"` **重启控制台特别关键**
-  - 再次执行 `which python` --> 预期出现 `/Users/you/.pyenv/shims/python`
-
-在 sentry 根目录下，执行 `python -m venv .venv` 创建 python 项目虚拟执行路径
-  - `source .venv/bin/activate` 启用运行环境
-  - 此时在虚拟环境内执行 `which python` --> 预期出现 `/Users/you/sentry/.venv/bin/python`
-
-pyenv 相当于做了一次拦截，将 python 的执行命令托管给 pyenv 进行统一处理，如果不配置，则项目无法启动。
-
-### NodeJs 运行时
-
-Sentry 依赖 [volta](https://github.com/volta-cli/volta) 来安装和管理 Node.js 版本
-  - 执行 `curl https://get.volta.sh | bash` 来 install volta
-  - 执行 `eval "$SHELL"` 来重启控制台，**真的很重要**
-  - 修改 `bash_profile`，添加 `export VOLTA_HOME="$HOME/.volta" \n export PATH="$VOLTA_HOME/bin:$PATH"`
-
-### 管理环境变量
-
-Sentry 依赖 [direnv](https://github.com/direnv/direnv) 来自动激活你的虚拟环境，设置一些必要的环境变量，并且会自动检测你的环境是否可用
-  - 执行 `brew install direnv` ，之后在 `.zshrc` 文件末尾添加配置 `eval "$(direnv hook zsh)"`
-  - 执行 `eval "$SHELL"` 重启控制台
-
-
-执行 `make bootstrap` 来启动项目的依赖服务，在 Docker Dashboard 内观察 Sentry 服务的运行情况，理论上会启动：
-
-- `sentry_relay`
-- `sentry_snuba`
-- `sentry_kafka`
-- `sentry_zookeeper`
-- `sentry_postgres`
-- `sentry_redis`
-- `sentry_clickhouse`
-
-## 启动项目
-
-在本地仓库内，重点观察 `Makfile`, `setup.py` 文件，下面介绍运行命令：
-
-- 执行 `make bootstrap` 在 docker 内启动服务
-- 执行 `sentry help` 查看相关命令
-
-:::caution --workers
-如果需要走通 sentry 上报的全部流程(即启动所有服务)，需要执行 `sentry devserver --workers`
-:::
-
-### 打包构建
-
-这里我们参考源仓库的 `/docker/builder.*` 文件来查看构建流程，基于此，我们开发了一个构建脚本：
-
-```bash
-function build() {
-  set -e
-
-  if [[ ! -f setup.py ]]; then
-      >&2 echo "Cannot find setup.py, make sure you have mounted your source dir to /workspace"
-      exit 1
-  fi
-
-  # fe env
-  cd ./js
-  yarn install --frozen-lockfile --production --quiet
-
-  # fe package
-  cd ../
-  mv ./node_modules ./node_modules_backup
-  rm -rf ./dist
-  mkdir ./node_modules
-  echo "Populating node_modules cache..."
-  cp -R ./js/node_modules/* ./node_modules/
-
-  # py env
-  pip3 install pkginfo==1.5.0.1
-  pip3 install wheel
-
-  # py package
-  export YARN_CACHE_FOLDER="$(mktemp -d)"
-  python setup.py bdist_wheel --build-number 0
-  rm -r "$YARN_CACHE_FOLDER"
-  pkginfo -f requires_dist --single --sequence-delim=! dist/*.whl | tr ! \\n > dist/requirements.txt
-
-  # output dist.tar.gz
-  tar -zcvf dist.tar.gz ./dist/*
-  rm dist.tar.gz
-
-  # recover node_modules
-  rm -rf ./node_modules
-  mv ./node_modules_backup ./node_modules
-
-  # other handles...
-}
-```
-
-最终会在 dist 目录下生成 `requirements.txt` 和 `sentry-[sentry version]-[python version]-none-any.whl` 文件
-
+我们希望基于源码对服务进行拓展和优化，将按照 **运行时环境 + 源码 + 配置 + 执行脚本** 的思路进行。
 
 ## 基于 API 进行二次开发
 
@@ -147,15 +25,14 @@ function build() {
 
 我们通过接口获取的 `events = transactions + errors + csp + default`，**并不包含 sessions** 数据计量
 
+
+
 ## Relay Server
 
-:::note
-The Sentry Relay is a service that pushes some functionality from the Sentry SDKs as well as the Sentry server into a proxy process.
-:::
+[relay](https://github.com/getsentry/relay) 基于 Rust 开发，自己部署时更建议直接拉取其二进制包，这里介绍如何进行本地开发/部署。
 
-Relay Server 是一个运行在应用和 Sentry.io 之间的独立中间层服务，它被设计能够清洗用户信息和提高响应速度，它主要进行 Event Ingestion 的工作。
 
-[relay](https://github.com/getsentry/relay) 基于 Rust 开发，自己部署时更建议直接拉取其二进制包，这里简单介绍如何进行本地开发/部署
+### 环境准备
 
 1. 依赖 rust 环境，[安装 rust](https://learnku.com/rust/wikis/29018)
 2. `brew install cmake`，安装 cmake，CMake是一个比 make 更高级的跨平台的安装、编译、配置工具
@@ -163,27 +40,30 @@ Relay Server 是一个运行在应用和 Sentry.io 之间的独立中间层服�
 4. `brew install kafka` 和 `brew install zookeeper` 部署 kafka 服务
 5. `brew install redis` 部署 redis 服务
 
-环境配置相关均可利用 docker 来完成
+环境配置相关均可利用 docker 来完成，如果在本地跑过 Sentry 服务，则有些服务已经具备！
 
-### Init
+### 初始化
 
 观察 `Makefile`，这里梳理本地 run 的流程：
 
-1. `relay-generate` 内依赖 [uap-core](https://github.com/ua-parser/uap-core)，以 submodule 的形式进行引入，因此需要执行 `make setup` 来初始化依赖，
+`relay-generate` 内依赖 [uap-core](https://github.com/ua-parser/uap-core)，以 submodule 的形式进行引入，因此需要执行 `make setup` 来初始化依赖，
    - 如果碰到 `pip command not found` 的问题，查看本地的 pip 映射目录，我通过将 Makefile 内的 pip 替换成 pip3 解决
    - 碰到 `couldn't read relay-general/src/../uap-core/regexes.yaml: No such file or directory` 直接手动文件拷贝到 `/relay-general/uap-core` 目录下即可
-2. Ran `make test` 检查 rust, python 以及 integration 的编译和测试用例情况
-3. Ran `cargo run --all-features -- config init` 初始化 Relay 服务
-4. Ran `cargo run --all-features -- run` 启动本地服务
 
-验证服务是否启动：
+执行 `make test` 检查 rust, python 以及 integration 的编译和测试用例情况
+
+执行 `cargo run --all-features -- config init` 初始化 Relay 服务
+
+执行 `cargo run --all-features -- run` 启动本地服务
+
+验证服务是否启动:
 
 - `host:port/api/relay/healthcheck/live/` 查看服务是否存活
 - `host:port/api/relay/healthcheck/ready/` 上行服务权限验证是否正常
 
+执行 `relay --help` 来查看 relay 服务
 
-
-### Config
+### 生成配置文件
 
 通过 `relay config init` 创建一个初始配置，之后将配置文件放在 `.relay` 内
 
@@ -197,9 +77,6 @@ relay:
   upstream: 'http://127.0.0.1:8000/'
   host: 127.0.0.1
   port: 7277
-  tls_port: ~
-  tls_identity_path: ~
-  tls_identity_password: ~
 logging:
   # level: info
   level: trace
@@ -216,13 +93,19 @@ processing:
   redis: 'redis://127.0.0.1'
 ```
 
+之后，执行 `relay --config [config dir path]` 来启动服务，并指定配置目录路径，配置目录包括：
+- **config.yml**
+- **credentials.json**
 
-
-### Credentials
+### 创建证书
 
 在 `.relay/credentials.json` 内读取公钥和私钥，用来验证上游服务器，配置 relay 的 `managed` 模式使用
 
-通过也可以将 public key 用来在 sentry web 上注册 relay，用来覆盖默认配置，relay 服务会读取其配置的修改，比如：PII stripping, filtering, rate limiting 等等
+通过也可以将 public key 用来在 sentry web 上注册 relay，用来覆盖默认配置，relay 服务会读取 Sentry 相关配置，比如：PII stripping, filtering, rate limiting 等等
+
+相关命令： 
+- `relay credentials generate` 创建证书，证书会在 relay 的工作目录下
+- `relay credentials show` 展示证书
 
 ### mode
 

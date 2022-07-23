@@ -1,11 +1,13 @@
 #!/usr/bin/env zx
 
 import dayjs from 'dayjs'
+import path from 'node:path'
+import serverConfig from '/usr/local/etc/docshub/config.mjs'
 
 const log = console.log
 const ALERT_MESSAGE = '\nPlease confirm your input!\n'
 const COSPATH = `cos://docs-1300606192/rls`
-const cmds = ['build', 'tag', 'deltag', 'rls', 'help']
+const cmds = ['build', 'upload', 'tag', 'deltag', 'rls', 'help']
 
 const [nodePath, zxPath, scriptPath, ...restData] = process.argv
 
@@ -23,10 +25,13 @@ if (!restData || restData.length === 0) {
 const [target, ...rest] = choose
 switch (target) {
   case 'dev':
-    dev(...rest)
+    tarFiles(...rest)
     break
   case 'build':
     build(rest)
+    break
+  case 'upload':
+    upload(rest)
     break
   case 'tag':
     tag(...rest)
@@ -53,8 +58,37 @@ async function build(values) {
   } else {
     await $`pnpx docusaurus build --out-dir dist`
   }
+}
 
-  log(chalk.white.bgGreen.bold(`Successfully built at ${Date.now()}`))
+// tar files
+async function tarFiles(name) {
+  let dt = dayjs().format('YYYYMMDD')
+  if (!!name) {
+    dt = `${name}-${dt}`
+  }
+  const cwd = process.cwd()
+  const targetPath = path.resolve(path.join(cwd, `./dist/dist-${dt}.tar.gz`))
+
+  await $`rm -rf dist-*.tar.gz`
+  await $`tar -czvf ${targetPath} ./dist`
+  return targetPath
+}
+
+/**
+ * 上传文件至服务器，默认直接上传到服务器
+ * @param {*} values
+ *
+ */
+async function upload(values) {
+  const st = dayjs().unix()
+  const { user, host, path } = serverConfig
+  const serverPath = `${user}@${host}:${path}`
+  const pwdPath = `/usr/local/etc/docshub.conf`
+  await build()
+  const distPath = await tarFiles()
+  await $`sshpass -f ${pwdPath} scp ${distPath} ${serverPath}`
+  const cs = dayjs().unix() - st
+  log(chalk.bgGreen.white(`\nCost total ${cs}ms.\n`))
 }
 
 // 生成 tag，并推送到 git

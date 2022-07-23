@@ -46,7 +46,9 @@ du -sh ./
 
 ## 初始化云服务的基础设施
 
-这里以腾讯云 ubuntu 20.04 TLS 为例进行记录
+环境
+- 腾讯云 ubuntu 20.04 TLS
+- MacOS
 
 ### 设置 SSH 远程登录
 
@@ -63,12 +65,51 @@ du -sh ./
 $ sudo passwd root
 >>> passwd: password updated successfully
 
-# 修改 ssh 服务端配置,将 PermitRootLogin、PasswordAuthentication 置为 yes,之后进行保存
-# 修改 ssh timeout 时间, 设置 ClientAliveInterval(单位秒) 和 ClientAliveCountMax, timeout = ClientAliveInterval * ClientAliveCountMax
+# 修改 ssh 服务端配置
+# - 将 PermitRootLogin、PasswordAuthentication 置为 yes,之后进行保存
+#
+# 修改 ssh timeout 时间, 
+# - 设置 ClientAliveInterval(单位秒) 和 ClientAliveCountMax
+# - timeout = ClientAliveInterval * ClientAliveCountMax
 $ sudo vi /etc/ssh/sshd_config 
 
 # 重启 ssh
 $ sudo service ssh restart
+```
+
+#### 在客户端通过 SSH 自动登录服务器
+
+我们可以利用 SSH 密钥建立信任关系来对本地机器进行授权。简单描述就是在客户端生成公钥/私钥，然后将公钥给到服务器指定位置，之后数据传输都会经过公钥加密，并且在客户端被私钥解密。
+
+具体操作如下：
+
+```bash
+# 客户端生成密钥
+# 指定文件生成路径，通常位于 ～/.ssh/ 目录下
+ssh-keygen -t rsa
+
+# 建立服务器和客户端的信任关系
+# 将 id_rsa.pub 内容拷贝到服务器 ~/.ssh/authorized_keys 文件内，
+# 如果没有 authorized_keys，则自行创建！
+```
+
+在 MacOS 通过 `brew install sshs` 添加 [Ternimal user interface for SSH](https://github.com/quantumsheep/sshs)
+
+之后配置 `~/.ssh/config` 文件，添加服务器信息，执行 `sshs` 选择指定服务器，即可完成登录。
+
+#### 基于 `scp` 进行文件拷贝
+
+scp 是 secure copy 的缩写，是 lunix 系统下基于 SSH 协议进行安全数据拷贝的命令，常用命令形式：
+
+```bash
+# 将本地文件拷贝至服务器
+scp [file path] root@host:[server dir path]
+```
+
+但是直接使用 `scp` 会需要命令行交互来输入密码，在编写脚本时没有优势，社区通过 `sshpass` 来解决（brew 出于对 SSH 的尊重并没有 public 版本），参考 [Installing SSHPASS](https://gist.github.com/arunoda/7790979) 来安装 sshpass 之后，我们可以通过如下来执行命令：
+
+```bash
+sshpass -p [password] scp [file path] root@host:[server dir path]
 ```
 
 ### 搭建 FTP 服务

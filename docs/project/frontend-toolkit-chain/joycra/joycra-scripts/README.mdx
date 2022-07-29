@@ -1,0 +1,75 @@
+---
+id: readme
+title: ''
+sidebar_label: README
+---
+
+import { DocsHeader } from '/src/components/Layout/DocsHeader'
+import { HighlightWithText } from '/src/components/Highlights'
+
+<DocsHeader
+  title="joycra-scripts"
+  description="Command line for creating Joy React App!"
+  github="https://github.com/YaYaPao/joycra/tree/main/packages/joycra-scripts"
+  npm="https://www.npmjs.com/package/joycra-scripts"
+  tags={['React App']}
+  links={[
+    {
+      label: 'create-react-app',
+      link: 'https://github.com/facebook/create-react-app/tree/main/packages/create-react-app',
+    },
+    {
+      label: 'vite',
+      link: 'https://github.com/vitejs/vite',
+    },
+  ]}
+/>
+
+<!-- -->
+
+joycra-scripts is a cli to create **Morden + React + TypeScript + Vite + Mui** app:
+- 👍 **Healthy devchains**: Integrate TypeScript、joylint、Vite, etc.
+- 🥰 **Easy to use**: Enable routes config, Echarts, Mui&Yui
+
+## Installation
+
+### Requirements
+
+- Node.js 14.0.0+
+
+Choose your favorite package manager:
+
+```bash
+# yarn(recomanded)
+yarn global add joycra-scripts
+
+# npm
+npm i -g joycra-scripts
+
+# pnpm
+pnpm i -g joycra-scripts
+```
+
+## Usage
+
+Once you have installed joylint in your project. You can exec `joycra-scripts --help` to get help informations.
+
+**Create a JOY App**
+
+```bash
+joycra-scripts [your awesome app]
+# or just do as it guides
+joycra-scripts
+```
+
+**Check Environment values**
+
+```bash
+joycra-scripts --info
+```
+
+**Print joycra-scripts version**
+
+```bash
+joycra-scripts --version
+```

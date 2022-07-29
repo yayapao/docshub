@@ -3,33 +3,72 @@ id: practice
 title: Practice
 ---
 
-## 计算函数执行时间
+## Process
 
-一般来说，我们可以通过 `console.time(label) && console.timeEnd(label)` 来进行计算，但是在 nodejs 中，存在问题：即 label 必须是唯一的，如果一个接口被多次调用，则会产生不必要的警告
+## 用 `process.hrtime.bigint()` 来计算时间间隔
 
-因此，在 nodejs 内提供了 [process.hrtime.bigint()](https://nodejs.org/api/process.html#process_process_hrtime_bigint) 来进行更精确的测量，它能够提供当前高精度的实时时间，通过差值计算方法的执行时间
+:::caution why not console.time
+们可以通过 `console.time(label) && console.timeEnd(label)` 启动计时器来跟踪某一操作的占用时长，**label 必须是唯一的且能够被转换为 String 类型**。在 Node.js 中，如果一个接口被多次调用，则会产生不必要的警告。
+:::
 
-注意
+因此，在 nodejs 内提供了 [process.hrtime.bigint()](https://nodejs.org/api/process.html#process_process_hrtime_bigint) 来进行更精确的测量，它能够以纳秒级来标记当前时间。
 
-- Node.js 支持版本在 v10 以上
-- bigint 和 number 类型需要转换后，才能进行运算
+我们先来看看 `console.time` && `console.timeEnd`
+```js
+console.time(a) // => undefined
+console.timeEnd(a) // => undefined, 但是会在控制台打印 191051479007711: 35843.951171875 ms
 
-
-
-## 通过 NodeJS 执行 shell 脚本
-
-在 node 内执行其他语言的脚本，通过 [child_process](http://nodejs.cn/api/child_process.html#child_process_child_process_execfile_file_args_options_callback) 来实现
-
-
-示例：
-
-```javascript
-// 需求：执行根目录下的 bash control.sh build 命令
-build(params = 'build') {
-  // 注意设置可执行路径，同时设置 control.sh 拥有最高权限
-  const execPath = path.resolve(__dirname, '../../control.sh')
-  execFile(execPath, [params], null, (err, stdout, stderr) => {
-    if (err) return
-  })
-}
+// 当 label 不能被转换为 String 类型时会报错
+const s = Symbol()
+console.time(s) // => Uncaught TypeError: Cannot convert a Symbol value to a string
 ```
+
+对于 `process.hrtime.bigint()` 的使用很简单，将两个节点做差值计算即可，注意：
+- Node.js 版本在 v10.7.0 以上
+- 返回值为 bigint 类型，单位转换时要做类型转换
+
+```js
+process.hrtime.bigint() // => 21818700313170n (纳秒)
+const st = process.hrtime.bigint()
+typeof st // => 'bigint'
+
+st / 1000 // => Uncaught TypeError: Cannot mix BigInt and other types, use explicit conversions
+// 因此需要先将 bigint 转换为 number 类型，再进行计算
+Number(st) / 1000 // => 21818700313.17 (微秒)
+```
+
+## child_process
+
+### Difference between `spawn` and `exec` functions of child_process
+
+在 Node.js 内，我们可以通过 `children_process.spawn` 和 `children_process.exec` 来启动一个子进程，执行其他程序。在这里，我们对其区别进行探讨。
+
+:::info
+`spawn` 和 `exec` 两者最大的区别是返回值，spawn 返回 **stream**，而 exec 返回 **buffer**
+:::
+
+spawn 是 `asynchronously asynchronous`, 这意味着 spawn 在执行子进程程序时，会尽快将子进程返回内容以 stream 的形式进行返回。spawn 返回一个包含 stdout 和 srderr 对象的 stream，你可以通过监听 stream 来将输出转换为可读内容打印到控制台。
+
+参考官网例子：
+
+```js
+const { spawn } = require('node:child_process');
+const ls = spawn('ls', ['-lh', '/usr']);
+
+ls.stdout.on('data', (data) => {
+  console.log(`stdout: ${data}`);
+});
+
+ls.stderr.on('data', (data) => {
+  console.error(`stderr: ${data}`);
+});
+
+ls.on('close', (code) => {
+  console.log(`child process exited with code ${code}`);
+});
+```
+
+exec 则是 `synchronously asynchronous`，这意味着执行 `child_process.exec` 本身这个动作时异步的，但是它会等待子进程执行完毕之后再将结果以 buffer 的形式一次返回。
+- 如果返回 buffer size 超过限制，会跑出 `maxBuffer exceeded` 错误，可以通过设置 `maxBuffer（默认为 1024 * 1024）` 来进行调整
+
+因此，根据两者执行机制的差异，我们需要根据不用的场景进行选择，如果返回值多且难以估计，比如 `yarn --verbose` 则选择 `spawn`。

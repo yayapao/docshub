@@ -75,11 +75,6 @@ const navbarConfig = {
       position: 'left',
       items: [
         {
-          label: 'Node.js Runtime',
-          to: '/docs/toolkit/nodejs-runtime/zx',
-          activeBaseRegex: '/docs/toolkit/nodejs-runtime',
-        },
-        {
           label: 'Interview',
           to: '/docs/interview/js',
           activeBaseRegex: '/docs/interview',

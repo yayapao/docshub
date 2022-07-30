@@ -47,16 +47,13 @@ switch (target) {
     log(`Support command ===> ${cmds.join(' ')}`)
 }
 
-async function dev(values) {
-  await $`pnpm run dev`
-}
-
 // 打包当前项目
 async function build(values) {
+  await $`node --version`
   if (values && values.includes('--analysis')) {
-    await $`pnpm run build:ana`
+    await $`docusaurus build --bundle-analyzer --out-dir dist`
   } else {
-    await $`pnpx docusaurus build --out-dir dist`
+    await $`docusaurus build --out-dir dist`
   }
 }
 
@@ -83,7 +80,7 @@ async function upload(values) {
   const st = dayjs().unix()
   const { user, host, path } = serverConfig
   const serverPath = `${user}@${host}:${path}`
-  const pwdPath = `/usr/local/etc/docshub.conf`
+  const pwdPath = `/usr/local/etc/docshub/docshub.conf`
   await build()
   const distPath = await tarFiles()
   await $`sshpass -f ${pwdPath} scp ${distPath} ${serverPath}`

@@ -1,5 +1,5 @@
 import { animated, useSpring } from 'react-spring'
-import React, { useState, useCallback } from 'react'
+import React, { useState, useEffect } from 'react'
 import styles from './styles.module.css'
 import clsx from 'clsx'
 import Sun from './atoms/Sun'
@@ -58,6 +58,13 @@ const Astronaut: React.FC<Props> = (props) => {
       setActiveSVG(name)
     }
   }
+
+  useEffect(() => {
+    const timer = setInterval(clickSVG, 1000 * 10)
+    return function cleanup() {
+      clearInterval(timer)
+    }
+  }, [])
 
   return (
     <div className={clsx(styles.Container, className)}>

@@ -17,20 +17,17 @@ import {
 
 ESM 现在已然是前端，尤其是浏览器运行时的模块化解决方案，Node.js 也在逐步进行适配。像 Vite, rollup 等开源项目已经全面拥抱 ESM。那么，这里我想探讨，为什么我们要在 Node.js 内放弃 commonjs，而使用 ESM 呢？
 
-1. ESM is future. 现在 ESM 就是 ECAMScript 标准模块，而其他模块化解决方案，比如 cjs, UMD, AMD 实际都是个人开发者驱动的，不是标准认可的。
+1. ESM is future. 现在 ESM 就是 ECAMScript 标准模块，而其他模块化解决方案，比如 cjs, UMD, AMD 实际都是个人开发者驱动的；
 
-2. 在 Node.js 和 Browser runtime 核心模块统一标准有利于前端生态的发展，因此有很多人去主动推动这个事情；
+2. 在 Node.js 和 Browser runtime 核心模块统一标准有利于前端生态的发展，因此会有很多开发者去主动推动这个事情；
 
-3. ESM 本身能够带来诸多益处。比如 tree-shaking, top-level await, stric mode, 在 ESM 中，import 是<HighlightWithBadge label="静态引入" />（在加载时被编译，因此需要放在开头）。这种设计让其静态可分析，这为我们在使用/设计/开发分析工具时提供便利，最直观的表现就是有利于 tree-shaking。<HighlightWithBadge label="require" /> 是动态引入（在运行时引入，可以放在任何地方），因此执行 require 时会阻塞当前程序，即 blocking。同时 import 在<HighlightWithBadge label="发起请求" />时也会更加智能。
+3. ESM 本身能够带来诸多益处。比如 tree-shaking, top-level await, strict mode, 在 ESM 中，<HighlightWithBadge label="import 是静态引入" />（在加载时被编译，因此需要放在开头）。这种设计让其静态可分析，这为我们在使用/设计/开发分析工具时提供便利，最直观的表现就是有利于 tree-shaking。<HighlightWithBadge label="require" /> 是动态引入（在运行时引入，可以放在任何地方），这不利于做分析，同时也会阻塞当前程序，即 blocking。同时 import 在<HighlightWithBadge label="发起请求" />时也会更加智能。
 
-- import 同样支持 `await import()` 的方式来达到动态引入的目
-
-  的
-
+- import 同样支持 `await import()` 的方式来达到动态引入的目的
 - require 方法类似等于 `eval(readFileSync(path.resolve(name)))`，会阻塞当前进程
 - ESM import 会根据 import 的数量发起并发请求（运行时根据实际情况判断），但是 require 会逐条发起
 
-在 joycra-scripts 内，我通过 rollup 来将 .ts 打包成 .mjs，以供脚本进行引用。因为现在属于 Node.js 支持 ESM 的“阵痛期”，开发过程并不是一帆风顺。
+在 joycra-scripts 内，我通过 rollup 来将 .ts 打包成 .mjs，以供脚本进行引用。但是现在属于 Node.js 支持 ESM 的“阵痛期”，开发过程并不是一帆风顺。
 
 ### `__dirname` and `__filename` is undefined
 

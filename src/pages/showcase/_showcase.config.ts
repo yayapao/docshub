@@ -42,7 +42,7 @@ const ftcProject: Application[] = [
     key: 'joycra',
     title: 'joycra',
     description: `Enjoy Creating React App!`,
-    preview: `${imgPath}/joycra.jpg`,
+    preview: `/assets/showcase/joycra.svg`,
     github: 'https://github.com/YaYaPao/joycra',
     website: '/docs/project/frontend-toolkit-chain/joycra',
     tags: ['design', 'React'],

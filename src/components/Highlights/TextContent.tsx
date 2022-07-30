@@ -1,4 +1,4 @@
-import React, { CSSProperties } from 'react'
+import React, { CSSProperties, useRef } from 'react'
 import { HighlightWithBadgeProps } from './data'
 import clsx from 'clsx'
 import styles from './styles.module.css'
@@ -56,7 +56,6 @@ export const HighlightWithText: React.FC<{
   )
 }
 
-
 /**
  * 右上角添加小红点
  * @param { sup?: string, style?: CSSProperties }
@@ -73,22 +72,30 @@ export const HighlightWithBadge: React.FC<HighlightWithBadgeProps> = ({
     fontWeight: 'bold',
     padding: '0 .2rem',
   }
+  const contentRef = useRef<HTMLSpanElement>()
+  let offsetLeft = 0
+  if (contentRef.current) {
+    offsetLeft = contentRef.current.clientWidth - 10
+  }
   return (
     <span
       style={{
         ...defaultStyle,
         ...style,
       }}
+      ref={contentRef}
     >
       {label}
-      <sup
-        className={clsx(styles.dot, !inactive && styles.active)}
-        style={{
-          backgroundColor: supcolor,
-          color: supcolor,
-          left: `${label.length * 14 + 2}px`,
-        }}
-      ></sup>
+      {offsetLeft > 0 && (
+        <sup
+          className={clsx(styles.dot, !inactive && styles.active)}
+          style={{
+            backgroundColor: supcolor,
+            color: supcolor,
+            left: `${offsetLeft}px`,
+          }}
+        />
+      )}
     </span>
   )
 }

@@ -56,17 +56,12 @@ const sidebars = {
       collapsed: true,
       items: [
         'server/cloudServer',
+        'server/linux',
         'server/nginx',
         'server/docker',
         'server/db',
-        'server/github',
+        'server/git',
       ],
-    },
-    {
-      type: 'category',
-      label: 'Manager',
-      collapsed: true,
-      items: ['server/git'],
     },
   ],
   browserSiderbar: [

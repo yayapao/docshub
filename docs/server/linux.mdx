@@ -1,0 +1,64 @@
+---
+id: linux
+title: Linux
+sidebar_label: linux
+---
+
+## CommandLine
+
+我们对开发过程中的常用命令进行记录。
+
+### `ps`
+
+ps - process status，用于查看当前主机内运行的服务状态。
+
+```bash
+# 展示当前用户，在所有 ternimals 内的进程信息
+$ ps
+
+-e, -A # 展示所有的进程信息，不分用户，不分是否由 ternimals 启动
+-a # 展示所有 ternimals 内启动的进程（不筛选当前用户）
+-x # 展示所有进程信息，包括不是在 ternimals 内启动的
+-f # 展示更多系统信息，uid, pid, parent pid, recent CPU usage, process start time, controlling tty, elapsed CPU usage, and the associated command
+-u [username] # 指定用户
+-m # 按照内存进行排序         
+```
+
+我们建立一个速查组合：
+- 查看所有进程信息执行 `ps -ef`
+- 查看与当前用户相关的进行信息 `ps -xf`
+- 查看特定用户的进程信息 `ps -u [username] -xf`
+
+### `du`
+
+```shell
+# 展示各磁盘用量，容器上不推荐使用， -h 表示 human readable
+df -h
+
+# 查看指定目录下每个文件夹的占用（层级为1）
+# mac 下为 $`du -d 1 -h ./`
+du --max-depth=1 -h ./
+
+# 查看指定目录的磁盘占用
+du -sh ./
+```
+
+### `top`
+
+`top` 查看当前系统进程信息（但是在容器内，该命令并不准确，需要去文件内查看真是内存使用）
+
+- 按照内存占用排序：按下 `M`
+- 按照 CPU 占用排序，按下 `P`
+
+### wget
+
+wget 是一个从网络上自动下载文件的自由工具，支持通过 HTTP、HTTPS、FTP 三个最常见的 TCP/IP 协议 下载，并可以使用 HTTP 代理
+
+```bash
+# 查看版本
+$ wget --version
+```
+
+## `stat`
+
+查看本地服务的配置信息 ` echo 'stats settings' | nc localhost 11211 | grep item_size_max`

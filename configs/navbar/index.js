@@ -13,7 +13,7 @@ const navbarConfig = {
       items: [
         {
           label: 'Server',
-          to: '/docs/cloudServer/',
+          to: '/docs/server/cloudServer',
           // 设置高亮
           activeBaseRegex: '/docs/server',
         },

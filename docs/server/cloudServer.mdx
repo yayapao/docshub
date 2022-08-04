@@ -2,47 +2,9 @@
 id: cloudServer
 title: Cloud Server
 sidebar_label: Cloud Server
-slug: /cloudServer/
 ---
 
 import { HighlightWithText } from '../../src/components/Highlights'
-
-## Troubleshooting
-
-
-<HighlightWithText>Q: 在服务器上拉取 github 的代码特别慢？</HighlightWithText>
-
-<!-- -->
-
-```
-通过配置 hosts 来指定 ip，减少 CDN 寻址时间
-
-通过 https://fastly.net.ipaddress.com/ 来查看指定域名的 IP 地址：
-1. github.com
-2. github.global.ssl.fastly.net
-
-之后将其添加到 hosts 文件内，最后执行 `sudo /etc/init.d/network restart` 刷新设置
-```
-
-<HighlightWithText>Q: 磁盘被打满的排障思路？</HighlightWithText>
-
-<!-- -->
-
-1. 通过监控查看磁盘周期内的磁盘使用情况，检查是否存在用量陡增，观察时间点是否存在发布事件；
-2. 在指定服务器上查看磁盘占用情况，重点观察日志文件的磁盘占用；
-3. 找到相应文件，执行不同处理；
-
-```shell
-# 展示各磁盘用量，容器上不推荐使用， -h 表示 human readable
-df -h
-
-# 查看指定目录下每个文件夹的占用（层级为1）
-# mac 下为 $`du -d 1 -h ./`
-du --max-depth=1 -h ./
-
-# 查看指定目录的磁盘占用
-du -sh ./
-```
 
 ## 初始化云服务的基础设施
 
@@ -189,13 +151,6 @@ coscli cos://xxx-1300606192
 - `service [server-name] restart` 重启服务
 - `service [server-name] status` 查看服务状态
 
-### TOP 查看当前系统运行情况
-
-`top` 查看当前系统进程信息（但是在容器内，该命令并不准确，需要去文件内查看真是内存使用），也可以通过 `ps -aux` 来查看
-
-- 按照内存占用排序：按下 `M`
-- 按照 CPU 占用排序，按下 `P`
-
 ### 解决端口占用
 
 查看端口占用情况
@@ -295,16 +250,7 @@ coscli cos://xxx-1300606192
 搜索
 - 通过 `/` 进入搜索模式，通过 `n/N` 来跳转到下一个/上一个
 
-### wget
 
-`wget --version` 查看是否安装 wget
-
-wget 是一个从网络上自动下载文件的自由工具，支持通过 HTTP、HTTPS、FTP 三个最常见的 TCP/IP 协议 下载，并可以使用 HTTP 代理
-
-ubuntu 通常内置 `yum` 和 `apt-get`
-
-- `apt-get update`
-- `apt-get install xxx`
 
 ### 软硬链接
 
@@ -317,5 +263,27 @@ ubuntu 通常内置 `yum` 和 `apt-get`
 
 `time=$(date "+%Y%m%d-%H%M%S")` 格式化当前时间，注意 `date` 后面加空格
 
+
+## Troubleshooting
+
+<HighlightWithText text='Q: 在服务器上拉取 github 的代码特别慢？' />{''}
+
+```
+通过配置 hosts 来指定 ip，减少 CDN 寻址时间
+
+通过 https://fastly.net.ipaddress.com/ 来查看指定域名的 IP 地址：
+1. github.com
+2. github.global.ssl.fastly.net
+
+之后将其添加到 hosts 文件内，最后执行 `sudo /etc/init.d/network restart` 刷新设置
+```
+
+<HighlightWithText text='Q: 磁盘被打满的排障思路？' />{''}
+
+通过 `du` 找到占用量大的文件，进行分析
+
+1. 通过监控查看磁盘周期内的磁盘使用情况，检查是否存在用量陡增，观察时间点是否存在发布事件
+2. 在指定服务器上查看磁盘占用情况，重点观察日志文件的磁盘占用
+3. 找到相应文件，执行不同处理
 
 

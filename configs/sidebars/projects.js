@@ -26,7 +26,7 @@ const fte = {
         'project/sentry/sentry',
         'project/sentry/self_hosted',
         'project/sentry/development',
-        'project/sentry/features',
+        'project/sentry/highlights',
         'project/sentry/sourcecode',
         'project/sentry/faq',
       ],

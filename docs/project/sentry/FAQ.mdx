@@ -39,101 +39,11 @@ import {
 
 ### Remote file too large for caching
 
-由于 Sentry 请求线上的文件太大，导致返回错误，具体原因我们从以下方面探究：
-
-1. 请求文件超时或者文件大小超过 `settings.SENTRY_SOURCE_FETCH_MAX_SIZE` 限制；
-2. `setting.SENTRY_CACHE_MAX_VALUE_SIZE` 被重新设置导致缓存受限；
-
-
-#### 请求文件超时或者文件大小超过 `settings.SENTRY_SOURCE_FETCH_MAX_SIZE` 限制
-
-
-<HighlightWithText text="processor.py fetch_file()" />{''}
-
-```python
-#...
-with metrics.timer("sourcemaps.fetch"):
-    result = http.fetch_file(url, headers=headers, verify_ssl=verify_ssl)
-    z_body = zlib.compress(result.body)
-    cache.set(
-        cache_key,
-        (url, result.headers, z_body, result.status, result.encoding),
-        get_max_age(result.headers),
-    )
-
-    # since the cache.set above can fail we can end up in a situation
-    # where the file is too large for the cache. In that case we abort
-    # the fetch and cache a failure and lock the domain for future
-    # http fetches.
-    if cache.get(cache_key) is None:
-        error = {
-            "type": EventError.TOO_LARGE_FOR_CACHE,
-            "url": http.expose_url(url),
-        }
-        http.lock_domain(url, error=error)
-        raise http.CannotFetch(error)
-#...
-```
-
-通过上面的代码我们可以看到，Sentry 会去请求文件，并将返回结果压缩后写入**缓存**，并立即去请求缓存内容，如果没有请求到缓存文件，会直接抛出 `EventError.TOO_LARGE_FOR_CACHE` 错误。
-
-<HighlightWithText text="http.py fetch_file()" />{''}
-
-```python
-#...
-cl = 0
-# Only need to even attempt to read the response body if we
-# got a 200 OK
-if response.status_code == 200:
-    for chunk in response.iter_content(16 * 1024):
-        if time.time() - start > settings.SENTRY_SOURCE_FETCH_TIMEOUT:
-            raise Timeout()
-        outfile.write(chunk)
-        cl += len(chunk)
-        if cl > settings.SENTRY_SOURCE_FETCH_MAX_SIZE:
-            raise OverflowError()
-
-except Exception as exc:
-  #...
-  elif isinstance(exc, OverflowError):
-      error = {
-          "type": EventError.FETCH_TOO_LARGE,
-          # We want size in megabytes to format nicely
-          "max_size": float(settings.SENTRY_SOURCE_FETCH_MAX_SIZE) / 1024 / 1024,
-      }
-#...
-```
-
-我们发现当请求返回内容的长度大于 `settings.SENTRY_SOURCE_FETCH_TIMEOUT` 时会抛出文件过大异常。我们继续在 `server.py` 内查看默认配置：
-
-```python
-# Timeout (in seconds) for fetching remote source files (e.g. JS)
-SENTRY_SOURCE_FETCH_TIMEOUT = 5
-
-# Timeout (in seconds) for socket operations when fetching remote source files
-SENTRY_SOURCE_FETCH_SOCKET_TIMEOUT = 2
-
-# Maximum content length for source files before we abort fetching
-SENTRY_SOURCE_FETCH_MAX_SIZE = 40 * 1024 * 1024
-```
-
-结合实际情况，我们排除由于 `SENTRY_SOURCE_FETCH_MAX_SIZE` 导致的请求文件失败问题。
-
-
-#### `setting.SENTRY_CACHE_MAX_VALUE_SIZE` 被重新设置导致缓存受限
-
-<HighlightWithText text="server.py" />{''}
-
-```python
-# Maximum content length for cache value.  Currently used only to avoid
-# pointless compression of sourcemaps and other release files because we
-# silently fail to cache the compressed result anyway.  Defaults to None which
-# disables the check and allows different backends for unlimited payload.
-# e.g. memcached defaults to 1MB  = 1024 * 1024
-SENTRY_CACHE_MAX_VALUE_SIZE = None
-```
-
-这里 `SENTRY_CACHE_MAX_VALUE_SIZE` 被设置为 None 以不限制其他缓存的阈值，即以各个缓存自身的配置为准。
+针对此问题，重点研究 Sentry 的缓存策略，相关配置如下：
+1. 请求文件超时或者文件大小超过 `settings.SENTRY_SOURCE_FETCH_MAX_SIZE` 限制
+2. `setting.SENTRY_CACHE_MAX_VALUE_SIZE` 被重新设置导致缓存受限
+3. memcached 服务的 `item_size_max` 限制
+4. memcached client 的配置 `SERVER_MAX_VALUE_LENGTH` 限制
 
 
 ## Relay response 400

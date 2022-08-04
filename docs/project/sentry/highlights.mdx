@@ -1,14 +1,14 @@
 ---
-id: features
-title: Sentry Features
-sidebar_label: features
+id: highlights
+title: Sentry Highlights
+sidebar_label: highlights
 ---
 
-import { HighlightWithCode } from '../../../src/components/Highlights'
+import { HighlightWithCode, HighlightWithBadge } from '/src/components/Highlights'
 
 本章节我们会从 SDK 配置和 Sentry Web 两方面来解读 Sentry 平台的核心概念。
 
-## SDK Config
+## 使用 SDK
 
 这里我们以浏览器端接入为例（其他平台接入配置可以参考[docs-platform](https://docs.sentry.io/platforms/javascript/)）其配置如下：
 
@@ -19,9 +19,32 @@ import { Integrations } from '@sentry/tracing'
 Sentry.init({
   dsn: 'https://examplePublicKey@o0.ingest.sentry.io/0',
   release: 'my-project-name@2.3.12',
+  // store 通道的采样率
+  smapleRate: 1
   integrations: [new Integrations.BrowserTracing()],
-  tracesSampleRate: 1.0,
+  // envelope 通道的采样率
+  tracesSampleRate: 1,
+  beforeSend(event, hint) {
+    return event
+    // return null 会将此次上报丢弃
+  }
 })
+```
+
+`beforeSend(event, hint)` 内的 hint 参数会携带原始异常堆栈信息，可以在此更改指纹来影响 Sentry 对 issues 的聚合方式
+
+```js
+beforeSend(event, hint) {
+  const error = hint.originalException;
+  if (
+    error &&
+    error.message &&
+    error.message.match(/database unavailable/i)
+  ) {
+    event.fingerprint = ["database-unavailable"];
+  }
+  return event;
+}
 ```
 
 ## Grouping Issues
@@ -219,15 +242,22 @@ stack.function:fetchSavedSearches v-group
 
 在本章，我们会介绍如何在 Sentry 内创建一个内部集成，来自定义工作流程。
 
-## SourceMap
+## Source Maps
 
-:::note SourceMap
-SourceMap 是构建时的产物，用来映射源文件，定位源码位置。
+:::note Source Maps
+Source Maps 是构建时的产物，用来映射源文件，定位源码位置。
 :::
 
-Sentry 支持在查看 issues frames 时通过 SourceMap 来定位源码。
+Sentry 支持在查看 issues frames/event details 时通过匹配 Stack Trace + Source Files + Source Maps 来定位源码信息。
 
-### How to upload?
+在 Sentry 内部支持通过以下两种方式来使用 Source Maps:
+1. 将源文件和 Source Maps 文件上传至平台，在文件系统内寻找 Source Maps 文件进行匹配；
+2. 开启 `Allow JavaScript Source Fetching` 开关，由 Sentry 去线上寻找源文件及其 Source Maps 文件，进行匹配；
+
+针对第一点，我们介绍上传的关键步骤，对于第二点，我们会从 Sentry 的实现方面对其核心点进行阐述，同时也会介绍增大请求容忍度的解决方案。
+
+
+### Upload Source Maps
 
 目前 sentry 支持三种上传方式：
 
@@ -235,11 +265,24 @@ Sentry 支持在查看 issues frames 时通过 SourceMap 来定位源码。
 - 配置 webpack 在构建时上传
 - 通过 SENTRY-CLI 上传
 
-注意，需要在平台上申请相关 token，同时在 SDK 配置指定 release。
+:::caution
+1. 需要申请指定权限的 token
+2. 需要配置 SDK 和上传时 release 一致
+3. 源文件和 Source Maps 都需要上传
+:::
 
 #### 通过 API 接口
 
 参考[Upload a New Project Release File](https://docs.sentry.io/api/releases/upload-a-new-project-release-file/)的上传接口，这里我们编写了 [上传工具](./codeFrames/upload_source_file.py)
+
+快速例子：
+
+```bash
+curl -X POST \
+  'https://sentry.io/api/0/projects/huya/[projectName]/releases/[releaseName]/files/' \
+  --header 'Authorization: Bearer [token]' \
+  --form '[filePath].map'
+```
 
 #### 通过 webpack 插件
 
@@ -247,15 +290,18 @@ Sentry 支持在查看 issues frames 时通过 SourceMap 来定位源码。
 npm install --save-dev @sentry/webpack-plugin
 ```
 
-配置 `jsconfig.json` 或者 `tsconfig.json`:
+配置 `jsconfig.json` 或者 `tsconfig.json` 开启 SourceMap:
 
 ```json
 {
   "compilerOptions": {
-    // other configs
     "inlineSourceMap": true,
     "sourceRoot": "/"
   }
+}
+// umi 内
+{
+  "devtool": "source-map",
 }
 ```
 
@@ -264,9 +310,7 @@ npm install --save-dev @sentry/webpack-plugin
 这里是一个配置的例子，请根据自身 webpack 配置情况合理修改：
 
 ```javascript
-const { version } = require('./package')
 const SentryCliPlugin = require('@sentry/webpack-plugin')
-const { CleanWebpackPlugin } = require('clean-webpack-plugin')
 
 module.exports = {
   // 开启 source-map
@@ -281,7 +325,7 @@ module.exports = {
           include: './dist',
           org: 'organization_slug',
           project: 'project_slug',
-          // 可将其写在环境变量内
+          // 注意与 SDK 配置的 release 一致
           release: 'release version',
           ignore: ['node_modules'],
           // url 必须指定，不然就会去源地址寻找
@@ -292,3 +336,188 @@ module.exports = {
   },
 }
 ```
+
+#### 利用 sentry-cli 上传
+
+使用 `sentry-cli` 上传之前，你需要为你的项目的此次发布设置一个平台内独一无二的 **release name**，fems 会用 release 来匹配线上错误和 sourcemap 文件。
+
+下面是具体操作步骤：
+
+1. 创建一个 release，注意 `release_name` 需要和 SDK 配置的 release 字段值一致，且全平台唯一。
+
+```bash
+sentry-cli releases new <release_name>
+```
+
+2. 上传 Source Maps，如下会把指定目录下所有文件上传到 Sentry，并指定为当前 release_name，注意该文件夹下需要同时包含**部署文件**和**sourceMap 文件**，处理完成后，上传文件会被暂存起来，我们继续执行最后一步来完成发布！
+
+```bash
+sentry-cli releases files <release_name> upload-sourcemaps /path/to/files
+```
+
+3. 完成发布
+
+```bash
+sentry-cli releases finalize <release_name>
+```
+
+### Fetch Source Maps Online
+
+除了将文件上传到 Sentry 平台外，我们还可以通过开启 `Allow JavaScript Source Fetching` 来让 Sentry 直接从线上去拉取文件。大家可以思考一下，**为什么 Sentry 不建议这么做？**
+
+:::caution Why not？
+1. 存在安全风险
+2. 阻塞 Sentry 处理进程
+:::
+
+对于**安全风险**，我们从两方面进行解决：
+- 对于开发者来说，我们必须将 Source Maps 文件放在线上指定位置（可以通过 rewriteFrame 来改变位置），这样存在源码暴露的风险
+- 更重要的是存在 CSRF 安全问题，如果存在攻击机在线上脚本内植入恶意脚本，Sentry 在去拉取线上文件时，会执行恶意脚本
+
+同时，Sentry 会启动 worker 来处理 events，当需要请求线上文件时，会阻塞当前的处理程序，等待拉取文件完毕并写入缓存后，才会继续执行其他任务。这里我们对 Sentry 拉取 Source Maps 内容进行深度解读。
+
+#### Process Source Maps
+
+Sentry 在处理 events 时，会根据 Stack Trace 信息去解析并请求源文件，在拉取回源文件之后，会解析文件内容，获取线上 Source Maps 的路由地址，<HighlightWithBadge label='拉取文件内容并进行缓存' />
+- Sentry 本身存在两种缓存机制，一种是 Setrny 自己的视线，结合 Redis 进行缓存；一种是 Django 本身的缓存机制，即通过 memcached 进行缓存
+
+Sentry 在拉取回文件之后，会通过 [memcached client](https://www.sinacloud.com/doc/_static/memcache.html#Client) 立即缓存到 [memcached](https://memcached.org/) 内，之后会通过 `cache.get` 尝试获取刚刚的缓存值，如果没有获取到，则会抛出异常 `EventError.TOO_LARGE_FOR_CACHE`。
+
+
+因此当出现 `Remote file too large for caching` 的问题时，我们排障思路是确认**拉取文件过程**和**各个环节的缓存阈值**是否健康。
+
+##### 拉取文件
+
+<HighlightWithText text="processor.py fetch_file()" />{''}
+
+```python
+#...snippet
+with metrics.timer("sourcemaps.fetch"):
+    result = http.fetch_file(url, headers=headers, verify_ssl=verify_ssl)
+    z_body = zlib.compress(result.body)
+    cache.set(
+        cache_key,
+        (url, result.headers, z_body, result.status, result.encoding),
+        get_max_age(result.headers),
+    )
+    
+    if cache.get(cache_key) is None:
+        error = {
+            "type": EventError.TOO_LARGE_FOR_CACHE,
+            "url": http.expose_url(url),
+        }
+        http.lock_domain(url, error=error)
+        raise http.CannotFetch(error)
+#...snippet
+```
+
+Sentry 认为导致 `cache.set` 失败的唯一的原因就是文件太大，因此直接抛出 `TOO_LARGE_FOR_CACHE` 的异常。
+
+在拉取文件时，Sentry 调用 `http.fetch_file()` 方法，我们一探端倪。
+
+<HighlightWithText text="http.py fetch_file()" />{''}
+
+```python
+#...snippet
+cl = 0
+if response.status_code == 200:
+    for chunk in response.iter_content(16 * 1024):
+        if time.time() - start > settings.SENTRY_SOURCE_FETCH_TIMEOUT:
+            raise Timeout()
+        outfile.write(chunk)
+        cl += len(chunk)
+        if cl > settings.SENTRY_SOURCE_FETCH_MAX_SIZE:
+            raise OverflowError()
+
+except Exception as exc:
+  #...
+  elif isinstance(exc, OverflowError):
+      error = {
+          "type": EventError.FETCH_TOO_LARGE,
+          # We want size in megabytes to format nicely
+          "max_size": float(settings.SENTRY_SOURCE_FETCH_MAX_SIZE) / 1024 / 1024,
+      }
+#...snippet
+```
+
+Sentry 在确认 response status code 为 200 之后，会尝试去以 chunk 的形式读取返回内容。此时，会计算返回值 size，当其总和大于 `setting.SENTRY_SOURCE_FETCH_MAX_SIZE` 时，抛出异常。
+
+在 `server.py` 配置中，观察其默认配置发现超过 40M 才会导致错误，而线上的实际表现是当文件超过 1M 时就已经抛出异常了：
+
+```python
+# Timeout (in seconds) for fetching remote source files (e.g. JS)
+SENTRY_SOURCE_FETCH_TIMEOUT = 5
+
+# Timeout (in seconds) for socket operations when fetching remote source files
+SENTRY_SOURCE_FETCH_SOCKET_TIMEOUT = 2
+
+# Maximum content length for source files before we abort fetching
+SENTRY_SOURCE_FETCH_MAX_SIZE = 40 * 1024 * 1024
+```
+
+结合实际情况，我们排除由于 `SENTRY_SOURCE_FETCH_MAX_SIZE` 限制导致的请求文件失败问题。
+
+##### `SENTRY_CACHE_MAX_VALUE_SIZE`
+
+在 `server.py` 内还存在 `SENTRY_CACHE_MAX_VALUE_SIZE` 来控制缓存的最大值，在查看之后，我们同样排除了该选项。
+
+```python
+# Maximum content length for cache value.  Currently used only to avoid
+# pointless compression of sourcemaps and other release files because we
+# silently fail to cache the compressed result anyway.  Defaults to None which
+# disables the check and allows different backends for unlimited payload.
+# e.g. memcached defaults to 1MB  = 1024 * 1024
+SENTRY_CACHE_MAX_VALUE_SIZE = None
+```
+
+这里 `SENTRY_CACHE_MAX_VALUE_SIZE` 被设置为 None 以不限制其他缓存的阈值，即以各个缓存自身的配置为准。注意，这里**特别提到了 memcached 的默认值为 1MB.**
+
+##### memcached and memcache client
+
+在前面我们提到，Sentry 会将拉取到的文件写入 memcached 内进行缓存，但是 memcached 每个 item 默认为 1MB，这似乎就是问题的症结所在。
+
+在容器内我们对 memcached 服务配置进行查看，发现其 `item_size_max` 为 1048576（1MB）
+
+```bash
+$ memcached -h
+memcached 1.6.10
+-m, --memory-limit=<num>  item memory in megabytes (default: 64)
+-I, --max-item-size=<num> adjusts max item size (default: 1m, min: 1k, max: 1024m)
+
+$ echo 'stats settings' | nc localhost 11211 | grep 'max'
+STAT maxbytes 67108864
+STAT maxconns 1024
+STAT item_size_max 1048576
+```
+
+这里我们将其默认值扩大为 10M，由于 memcached 不支持通过配置文件启动，因此我们需要在启动命令内添加配置，即：
+
+```bash
+memcached -I 10m
+```
+
+之后通过 `ps -ef | grep memcached` 来查看服务启动情况：
+
+```bash
+memcache      1      0  0 Aug03 pts/0    00:00:07 memcached -I 10m
+```
+
+接下来我们继续对 memcached-client 的配置进行升级，其参数配置为 `SERVER_MAX_VALUE_LENGTH`，通过查看源码，获取其默认值和修改配置的方法。
+
+```python
+# python3.6/site-packages
+# Storing values larger than 1MB requires starting memcached with -I <size> for
+# memcached >= 1.4.2 or recompiling for < 1.4.2. If you do, this value can be
+# changed by doing "memcache.SERVER_MAX_VALUE_LENGTH = N" after importing this
+# module.
+SERVER_MAX_VALUE_LENGTH = 1024 * 1024
+```
+
+该配置值也没有暴露在配置文件内，因此我们需要在代码中修改打包。
+
+```python
+# server.py snippet
+import memcache
+memcache.SERVER_MAX_VALUE_LENGTH = 10 * 1024 * 1024
+```
+

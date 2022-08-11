@@ -234,13 +234,15 @@ family:native max-frames=3
 stack.function:fetchSavedSearches v-group
 ```
 
-## A Simple Internel Intergation
+## Integration
 
 :::note
 基于 Sentry 创建内部集成
 :::
 
 在本章，我们会介绍如何在 Sentry 内创建一个内部集成，来自定义工作流程。
+
+在测试时，通过 [Sending Events](https://docs.sentry.io/product/cli/send-event/)，如 `sentry-cli send-event -m 'message'` 来快速生成一个新的 issue，这将在测试时提供便利。
 
 ## Source Maps
 

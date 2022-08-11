@@ -12,25 +12,15 @@ import { TextWithIndex } from '/src/components/Highlights'
 [git](https://git-scm.com/) 是一个分布式的版本管理系统，旨在快速高效地维护项目
 :::
 
-### Commit Rules
+### 处理 `.gitignore` 不生效
 
-通过 commitizen 来提交 commit
+`.gitignore` 不生效通常发生在 merge 之后，或者之前已经将不希望提交的文件提交到 github 上，此时我们：
 
-- 执行 `npm install commitizen --save `
-- 在 **package.json** 内进行如下配置
+- `git stash` 将本地缓存放入缓存区，这里是为了兜底；
+- `git rm -r --cache .` 清理当前项目的缓存文件，此时 git 会根据 `.gitignore` 规则来发现哪些文件不需要 trace，将其进行删除
+- `git add . && git commit -m "fix: untracked files && git push"` 将清理文件提交
 
-```json
-{
-  "scripts": {
-    "commit": "git-cz"
-  },
-  "config": {
-    "commitizen": {
-      "path": "node_modules/cz-conventional-changelog"
-    }
-  }
-}
-```
+### CHANGELOG
 
 项目内添加 CHANGELOG
 

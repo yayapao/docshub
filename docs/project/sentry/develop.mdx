@@ -12,6 +12,34 @@ import { HighlightWithText } from '../../../src/components/Highlights'
 
 我们希望基于源码对服务进行拓展和优化，将按照 **运行时环境 + 源码 + 配置 + 执行脚本** 的思路进行。
 
+## docker
+
+kafka
+
+```bash
+cd usr/bin
+
+# 查看 topics
+kafka-topics --zookeeper sentry_zookeeper:2181 --list
+
+# 查看 topic 详细信息
+kafka-topics --zookeeper sentry_zookeeper:2181 --describe --topic ingest-events
+
+# 查看 topic 内容
+kafka-console-consumer --bootstrap-server sentry_kafka:9092 --topic ingest-events --from-beginning
+
+# 创建一个 topic
+kafka-topics --zookeeper sentry_zookeeper:2181 --create --replication-factor 1 --partitions 1 --topic mytopic
+```
+
+```bash
+# 查看 groups
+kafka-consumer-groups --bootstrap-server sentry_kafka:9092 --list
+
+# 查看 group 详情
+kafka-consumer-groups --bootstrap-server sentry_kafka:9092 --describe --group ingest-consumer
+```
+
 ## 基于 API 进行二次开发
 
 ### FAQ
@@ -19,23 +47,21 @@ import { HighlightWithText } from '../../../src/components/Highlights'
 #### 如何统计每个 team 的日均 events?
 
 根据 Sentry API Docs 我们无法直接获取每个 team 的数据统计，因此我们需要：
+
 1. 获取指定 team 的 projects，见[list-a-teams-projects](https://docs.sentry.io/api/teams/list-a-teams-projects/)
 2. 根据 [query-discover-events-in-table-format](https://docs.sentry.io/api/discover/query-discover-events-in-table-format/) 获取该 project 的聚合数据，**注意，API 内 project 模块提供的是未聚合的详情数据**
 3. 根据 team 聚合每个 project 数据，得到结果
 
 我们通过接口获取的 `events = transactions + errors + csp + default`，**并不包含 sessions** 数据计量
 
-
-
 ## Relay Server
 
 [relay](https://github.com/getsentry/relay) 基于 Rust 开发，自己部署时更建议直接拉取其二进制包，这里介绍如何进行本地开发/部署。
 
-
 ### 环境准备
 
 1. 依赖 rust 环境，[安装 rust](https://learnku.com/rust/wikis/29018)
-2. `brew install cmake`，安装 cmake，CMake是一个比 make 更高级的跨平台的安装、编译、配置工具
+2. `brew install cmake`，安装 cmake，CMake 是一个比 make 更高级的跨平台的安装、编译、配置工具
 3. `brew install java`，安装 java 执行环境
 4. `brew install kafka` 和 `brew install zookeeper` 部署 kafka 服务
 5. `brew install redis` 部署 redis 服务
@@ -47,8 +73,9 @@ import { HighlightWithText } from '../../../src/components/Highlights'
 观察 `Makefile`，这里梳理本地 run 的流程：
 
 `relay-generate` 内依赖 [uap-core](https://github.com/ua-parser/uap-core)，以 submodule 的形式进行引入，因此需要执行 `make setup` 来初始化依赖，
-   - 如果碰到 `pip command not found` 的问题，查看本地的 pip 映射目录，我通过将 Makefile 内的 pip 替换成 pip3 解决
-   - 碰到 `couldn't read relay-general/src/../uap-core/regexes.yaml: No such file or directory` 直接手动文件拷贝到 `/relay-general/uap-core` 目录下即可
+
+- 如果碰到 `pip command not found` 的问题，查看本地的 pip 映射目录，我通过将 Makefile 内的 pip 替换成 pip3 解决
+- 碰到 `couldn't read relay-general/src/../uap-core/regexes.yaml: No such file or directory` 直接手动文件拷贝到 `/relay-general/uap-core` 目录下即可
 
 执行 `make test` 检查 rust, python 以及 integration 的编译和测试用例情况
 
@@ -94,6 +121,7 @@ processing:
 ```
 
 之后，执行 `relay --config [config dir path]` 来启动服务，并指定配置目录路径，配置目录包括：
+
 - **config.yml**
 - **credentials.json**
 
@@ -103,7 +131,8 @@ processing:
 
 通过也可以将 public key 用来在 sentry web 上注册 relay，用来覆盖默认配置，relay 服务会读取 Sentry 相关配置，比如：PII stripping, filtering, rate limiting 等等
 
-相关命令： 
+相关命令：
+
 - `relay credentials generate` 创建证书，证书会在 relay 的工作目录下
 - `relay credentials show` 展示证书
 

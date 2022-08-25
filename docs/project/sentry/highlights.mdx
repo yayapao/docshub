@@ -245,10 +245,68 @@ stack.function:fetchSavedSearches v-group
 ## Integration
 
 :::note
-基于 Sentry 创建内部集成
+[Integation](https://docs.sentry.io/product/integrations/integration-platform/) 是我们能够介入 Sentry 的处理流程，并根据自己的需求进行开发。
 :::
 
-在本章，我们会介绍如何在 Sentry 内创建一个内部集成，来自定义工作流程。
+在本章，我们会介绍如何在 Sentry 内创建一个内部集成，来自定义工作流。Sentry 将集成分为：`internal` 和 `public`。
+
+- `internal integation` 仅能被用在你的组织内，创建后会自动应用在组织内所有项目，验证过程相对简单
+- `public integation` 能被发布，供所有 Sentry 用户使用，验证过程相对复杂
+
+在 `/settings/[org]/developer-settings/` 按照实际需求选择 integation 并写入基本信息后进行创建（后期也可以根据需求进行修改）。
+
+### 创建一个 Internal Integation
+
+用一句话概括整个流程：**Sentry 将 Issus/Event 发送至服务，由服务进行验证后执行相应动作**
+
+参考 [Internal Integation](https://docs.sentry.io/product/integrations/integration-platform/internal-integration/) 和 [Round Robin Assignment](https://blog.sentry.io/2019/11/21/customize-your-sentry-workflow-a-sample-internal-integration) 进行快速搭建一个内部集成。
+
+这里我们抽离部分核心代码：
+
+```js
+// 验证方法，注意 createHmac 的引入方式
+export const verifySignature: (
+  request: any,
+  secret: string
+) => Promise<boolean> = async (request, secret) => {
+  const { createHmac } = await import('node:crypto')
+  const hmac = createHmac('sha256', secret)
+  hmac.update(JSON.stringify(request.body), 'utf8')
+  const digest = hmac.digest('hex')
+  return digest === request.headers['sentry-hook-signature']
+}
+
+// webhook API
+// 由于 internal integation 对组织内所有应用生效，因此最好设置一个白名单来过滤
+@Post()
+async doAssigned(
+  @Body() body: any,
+  @Headers() headers: Record<string, string>,
+  @Request() req,
+) {
+  if (!verifySignature(req, round_robin_assigned_secret)) {
+    return failed('bad signature')
+  }
+  const resource = headers['sentry-hook-resource']
+  const { action } = body
+
+  if (resource === 'issue' && action === 'created') {
+    const { id: newIssueProjectID } = body.data.issue.project
+    // 仅对白名单内应用进行处理
+    if (
+      Array.isArray(this.whiteProjectIDs) &&
+      this.whiteProjectIDs.includes(+newIssueProjectID)
+    ) {
+      const { id: issueID } = body.data.issue
+      // 验证完成之后，开始执行业务逻辑
+    }
+  }
+  return successed({
+    body,
+    headers,
+  })
+}
+```
 
 ## Source Maps
 
@@ -289,7 +347,7 @@ Sentry 支持在查看 issues frames/event details 时通过匹配 Stack Trace +
 
 ```bash
 curl -X POST \
-  'https://sentry.io/api/0/projects/huya/[projectName]/releases/[releaseName]/files/' \
+  'https://sentry.io/api/0/projects/[org]/[projectName]/releases/[releaseName]/files/' \
   --header 'Authorization: Bearer [token]' \
   --form '[filePath].map'
 ```

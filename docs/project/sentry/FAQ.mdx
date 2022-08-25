@@ -26,7 +26,6 @@ import {
 1. 将源文件和 sourceMap 文件上传至平台，在文件系统内寻找 sourceMap 文件进行匹配；
 2. 开启 `Allow JavaScript Source Fetching` 开关，由 Sentry 去线上寻找 sourceMap 文件进行匹配；
 
-
 针对以上两点，我们需要从以下方面来进行排查：
 
 - SDK 内是否配置 `release`，并配置对应版本，可以在平台内进行验证
@@ -40,17 +39,17 @@ import {
 ### Remote file too large for caching
 
 针对此问题，重点研究 Sentry 的缓存策略，相关配置如下：
+
 1. 请求文件超时或者文件大小超过 `settings.SENTRY_SOURCE_FETCH_MAX_SIZE` 限制
 2. `setting.SENTRY_CACHE_MAX_VALUE_SIZE` 被重新设置导致缓存受限
 3. memcached 服务的 `item_size_max` 限制
 4. memcached client 的配置 `SERVER_MAX_VALUE_LENGTH` 限制
 
-
 ## Relay response 400
 
 部署上线之后，发现 sentry 服务的域名产生大量的 400 错误，通过查看 `relay` 日志，我们发现了一些异常，这里我们通过阅读源码对其表现和解决方案进行记录
 
-Relay 返回400的场景
+Relay 返回 400 的场景
 
 - 🐛 Too many envelopes (event_buffer_size reached)
 - 🐛 invalid security report type
@@ -65,6 +64,12 @@ Relay 返回400的场景
 [relay_server::endpoints::common] ERROR: error handling request: failed to queue envelope
 caused by: Too many envelopes (event_buffer_size reached)
 ```
+
+<HighlightWithText text="错误原因" />{' '}
+
+当 `envelope` 处理对列堆积超过 [Config::event_buffer_size](https://docs.sentry.io/product/relay/options/)(默认为 1000) 时，会返回 400 错误。请求包含所有类型的 events、attachments 和 sessionsrelay。
+
+#### 源码分析
 
 通过分析 relay 源码，我们发现一些端倪：
 
@@ -104,10 +109,6 @@ impl BadStoreRequest {
 }
 ```
 
-<HighlightWithText text="错误原因" />{' '}
-
-当 `envelope` 处理对列堆积超过 [Config::event_buffer_size](https://docs.sentry.io/product/relay/options/)(默认为 1000) 时，会返回 400 错误。请求包含所有类型的 events、attachments 和 sessionsrelay。
-
 ### invalid security report type
 
 报错信息如下：
@@ -117,9 +118,15 @@ impl BadStoreRequest {
 ```
 
 该问题相关 issues:
-- [Rejected CSP reports from Firefox latest due to missing effective-directive payload](https://github.com/getsentry/sentry/issues/31433)
 
-我们对其源码进行分析后发现：
+- [Rejected CSP reports from Firefox latest due to missing effective-directive payload](https://github.com/getsentry/sentry/issues/31433)
+- [Too many 400 Bad Request](https://github.com/getsentry/relay/issues/1336)
+
+<HighlightWithText text="错误原因" />{' '}
+
+浏览器上报的数据类型未能被 sentry 识别，通常由 `session` 通道上报，因为使用的 **relay** 版本较低，在 22.7 之后的版本已经对其进行修复。
+
+#### 源码分析
 
 `relay-server/src/actors/envelopes.rs`
 
@@ -207,10 +214,6 @@ impl SecurityReportType {
 }
 ```
 
-<HighlightWithText text="错误原因" />{' '}
-
-浏览器通过安全策略上报的数据未能被 sentry 识别。
-
 ## Development
 
 ### 找不到 `performance` 入口
@@ -223,10 +226,6 @@ impl SecurityReportType {
 参考[sentry.config.js](https://github.com/getsentry/self-hosted/blob/master/sentry/sentry.conf.example.py)
 
 ```python
-############
-# Features #
-############
-
 SENTRY_FEATURES["organizations:performance-view"] = True
 ```
 

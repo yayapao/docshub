@@ -4,7 +4,10 @@ title: Sentry Highlights
 sidebar_label: highlights
 ---
 
-import { HighlightWithCode, HighlightWithBadge } from '/src/components/Highlights'
+import {
+  HighlightWithCode,
+  HighlightWithBadge,
+} from '/src/components/Highlights'
 
 本章节我们会从 SDK 配置和 Sentry Web 两方面来解读 Sentry 平台的核心概念。
 
@@ -58,6 +61,7 @@ beforeSend(event, hint) {
 开始之前，我们需要明晰：Sentry 内同时存在 Issues 和 Event 的概念。Issue 是 Error event 按照一定规则聚合后的产物。
 
 现在，我们不妨思考一下：
+
 - 数亿的错误事件是如何被分门别类放到不同的 issue 内？
 - 如何设计核心方案以支持用户自定义能力？
 
@@ -78,8 +82,10 @@ Sentry 内聚合逻辑的核心在于 <HighlightWithCode bgcolor="#ef613e">finge
 答案是：Sentry 内置的聚合算法**会根据错误的堆栈追踪信息来生产 fingerprint**。即错误事件的堆栈信息相同，则此类错误事件属于同一个 issue。
 
 :::caution
+
 - 所有的聚合策略，均遵循 `stack trace -> exception -> message` 的次序进行处理，一旦 group hash code 生成，不会继续执行剩下的逻辑
 - 仅有 `stack trace` 生成的 group hash code 是可靠的
+
 :::
 
 #### Grouping by stack trace
@@ -160,7 +166,9 @@ merge issues 是 Sentry 提供最易操作的自定义聚合能力，它用来�
 `merge issues` 属于事后的人工干预，仅会影响已处理的错误事件以及将来上报的相同的错误事件。其操作方法很简单，在 issues 面板选择不同的 issue 进行合并即可，这里不再赘述。
 
 :::caution
+
 **Sentry 不会根据 merge issues 来推断新的聚合规则，仅当新的错误事件拥有和当前 merged issues 相同的 fingerprint 并生产同样的 group hash code 才会被自动聚合**
+
 :::
 
 #### Fingerprint Rules
@@ -242,8 +250,6 @@ stack.function:fetchSavedSearches v-group
 
 在本章，我们会介绍如何在 Sentry 内创建一个内部集成，来自定义工作流程。
 
-在测试时，通过 [Sending Events](https://docs.sentry.io/product/cli/send-event/)，如 `sentry-cli send-event -m 'message'` 来快速生成一个新的 issue，这将在测试时提供便利。
-
 ## Source Maps
 
 :::note Source Maps
@@ -253,11 +259,11 @@ Source Maps 是构建时的产物，用来映射源文件，定位源码位置�
 Sentry 支持在查看 issues frames/event details 时通过匹配 Stack Trace + Source Files + Source Maps 来定位源码信息。
 
 在 Sentry 内部支持通过以下两种方式来使用 Source Maps:
+
 1. 将源文件和 Source Maps 文件上传至平台，在文件系统内寻找 Source Maps 文件进行匹配；
 2. 开启 `Allow JavaScript Source Fetching` 开关，由 Sentry 去线上寻找源文件及其 Source Maps 文件，进行匹配；
 
 针对第一点，我们介绍上传的关键步骤，对于第二点，我们会从 Sentry 的实现方面对其核心点进行阐述，同时也会介绍增大请求容忍度的解决方案。
-
 
 ### Upload Source Maps
 
@@ -268,14 +274,16 @@ Sentry 支持在查看 issues frames/event details 时通过匹配 Stack Trace +
 - 通过 SENTRY-CLI 上传
 
 :::caution
+
 1. 需要申请指定权限的 token
 2. 需要配置 SDK 和上传时 release 一致
 3. 源文件和 Source Maps 都需要上传
+
 :::
 
 #### 通过 API 接口
 
-参考[Upload a New Project Release File](https://docs.sentry.io/api/releases/upload-a-new-project-release-file/)的上传接口，这里我们编写了 [上传工具](./codeFrames/upload_source_file.py)
+参考[Upload a New Project Release File](https://docs.sentry.io/api/releases/upload-a-new-project-release-file/)的上传接口，参考 [🔒 上传工具](https://github.com/YaYaPao/docscripts/blob/main/sentry/scripts/upload_source_file.py)
 
 快速例子：
 
@@ -368,11 +376,14 @@ sentry-cli releases finalize <release_name>
 除了将文件上传到 Sentry 平台外，我们还可以通过开启 `Allow JavaScript Source Fetching` 来让 Sentry 直接从线上去拉取文件。大家可以思考一下，**为什么 Sentry 不建议这么做？**
 
 :::caution Why not？
+
 1. 存在安全风险
 2. 阻塞 Sentry 处理进程
+
 :::
 
 对于**安全风险**，我们从两方面进行解决：
+
 - 对于开发者来说，我们必须将 Source Maps 文件放在线上指定位置（可以通过 rewriteFrame 来改变位置），这样存在源码暴露的风险
 - 更重要的是存在 CSRF 安全问题，如果存在攻击机在线上脚本内植入恶意脚本，Sentry 在去拉取线上文件时，会执行恶意脚本
 
@@ -381,16 +392,17 @@ sentry-cli releases finalize <release_name>
 #### Process Source Maps
 
 Sentry 在处理 events 时，会根据 Stack Trace 信息去解析并请求源文件，在拉取回源文件之后，会解析文件内容，获取线上 Source Maps 的路由地址，<HighlightWithBadge label='拉取文件内容并进行缓存' />
+
 - Sentry 本身存在两种缓存机制，一种是 Setrny 自己的视线，结合 Redis 进行缓存；一种是 Django 本身的缓存机制，即通过 memcached 进行缓存
 
 Sentry 在拉取回文件之后，会通过 [memcached client](https://www.sinacloud.com/doc/_static/memcache.html#Client) 立即缓存到 [memcached](https://memcached.org/) 内，之后会通过 `cache.get` 尝试获取刚刚的缓存值，如果没有获取到，则会抛出异常 `EventError.TOO_LARGE_FOR_CACHE`。
-
 
 因此当出现 `Remote file too large for caching` 的问题时，我们排障思路是确认**拉取文件过程**和**各个环节的缓存阈值**是否健康。
 
 ##### 拉取文件
 
-<HighlightWithText text="processor.py fetch_file()" />{''}
+<HighlightWithText text="processor.py fetch_file()" />
+{''}
 
 ```python
 #...snippet
@@ -402,7 +414,7 @@ with metrics.timer("sourcemaps.fetch"):
         (url, result.headers, z_body, result.status, result.encoding),
         get_max_age(result.headers),
     )
-    
+
     if cache.get(cache_key) is None:
         error = {
             "type": EventError.TOO_LARGE_FOR_CACHE,
@@ -417,7 +429,8 @@ Sentry 认为导致 `cache.set` 失败的唯一的原因就是文件太大，因
 
 在拉取文件时，Sentry 调用 `http.fetch_file()` 方法，我们一探端倪。
 
-<HighlightWithText text="http.py fetch_file()" />{''}
+<HighlightWithText text="http.py fetch_file()" />
+{''}
 
 ```python
 #...snippet
@@ -522,4 +535,3 @@ SERVER_MAX_VALUE_LENGTH = 1024 * 1024
 import memcache
 memcache.SERVER_MAX_VALUE_LENGTH = 10 * 1024 * 1024
 ```
-

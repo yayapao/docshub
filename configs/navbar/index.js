@@ -19,13 +19,23 @@ const navbarConfig = {
         },
         {
           label: 'Browser',
-          to: '/docs/browser/corevitals',
+          to: '/docs/browser/chromeperf',
           activeBaseRegex: '/docs/browser',
         },
         {
           label: 'Library',
           to: '/docs/library/nodejs',
           activeBaseRegex: '/docs/library',
+        },
+        {
+          label: 'Toolkit',
+          to: '/docs/toolkit/vscode',
+          activeBaseRegex: '/docs/toolkit',
+        },
+        {
+          label: 'Interview',
+          to: '/docs/interview/js',
+          activeBaseRegex: '/docs/interview',
         },
       ],
     },
@@ -70,17 +80,17 @@ const navbarConfig = {
         },
       ],
     },
-    {
-      label: 'Toolkit',
-      position: 'left',
-      items: [
-        {
-          label: 'Interview',
-          to: '/docs/interview/js',
-          activeBaseRegex: '/docs/interview',
-        },
-      ],
-    },
+    // {
+    //   label: 'Toolkit',
+    //   position: 'left',
+    //   items: [
+    //     {
+    //       label: 'Interview',
+    //       to: '/docs/interview/js',
+    //       activeBaseRegex: '/docs/interview',
+    //     },
+    //   ],
+    // },
     {
       className: 'header-showcase-link',
       position: 'right',

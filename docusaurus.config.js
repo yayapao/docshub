@@ -43,7 +43,7 @@ const metaConfig = {
   title: 'Docshub',
   // main page slogan
   tagline: 'Nice to doc, nice to code!',
-  organizationName: 'Y-lonelY', // Usually your GitHub org/user name.
+  organizationName: 'YaYaPao', // Usually your GitHub org/user name.
   projectName: 'docshub', // Usually your repo name.
   url: 'https://docs.7k7k.life/',
   baseUrl: '/',

@@ -1,10 +1,11 @@
 ---
 id: metrics
-title: Web Metrics
+title: ''
 sidebar_label: Web Metrics
 slug: metrics
 ---
 
+import { DocsHeader } from '/src/components/Layout/DocsHeader'
 import Tabs from '@theme/Tabs'
 import TabItem from '@theme/TabItem'
 import {
@@ -13,7 +14,23 @@ import {
   VitalStandard,
 } from '@site/src/components/Highlights'
 
-Web 指标是 Google 在 2020 左右发布的一项新计划，旨在为应用质量衡量提供统一标准，为此，它定义了大量的 web 指标。 这里我们按照重要程度对 web 指标进行分类：
+<DocsHeader
+  title="Web Core Vitals Metrics"
+  description="Web 指标是 Google 在 2020 左右发布的一项新计划，旨在为应用质量衡量提供统一标准，为此，它定义了大量的 web 指标"
+  tags={['Editor']}
+  links={[
+    {
+      label: `Core Web Vitals`,
+      link: 'https://web.dev/vitals/#core-web-vitals',
+    },
+    {
+      label: 'Github web-vitals',
+      link: 'https://github.com/GoogleChrome/web-vitals',
+    },
+  ]}
+/>
+
+<!-- -->
 
 :::info web metrics
 
@@ -81,7 +98,7 @@ LCP 度量从用户进入 web 应用到在可视区域内渲染最大可见内�
 
 #### 如何在浏览器 runtime 采集 LCP？
 
-通常情况下，我们直接使用官方的[web-vitals](https://github.com/GoogleChrome/web-vitals)即可，这里出于学习目的对其源码进行解读：
+在生产情况下，我们推荐直接使用官方的[web-vitals](https://github.com/GoogleChrome/web-vitals)，这里出于学习目的对其源码进行解读。
 
 通过对浏览器提供的 [PerformanceObserver](https://developer.mozilla.org/zh-CN/docs/Web/API/PerformanceObserver/PerformanceObserver) API 进行封装，来捕获指定的观测类型。对于 LCP、FID 以及 CLS 等指标均适用，其实现如下：
 
@@ -371,7 +388,7 @@ const po = observe('paint', entryHandler)
 
 :::note 关键
 
-- 对于测量规则，我们总结一些关键词帮助记忆：LCP 为起点、5秒安静窗口、没有长任务、不超过2个 GET 请求
+- 对于测量规则，我们总结一些关键词帮助记忆：LCP 为起点、5 秒安静窗口、没有长任务、不超过 2 个 GET 请求
 - 用户的不同操作可能产生不同的 TTI，从而导致大量的差异
 
 :::
@@ -384,7 +401,7 @@ TBT 用来测量 LCP 到 TTI 之间，主线程的阻塞时间，它也是一个
 
 FID 已经有了 TTI 作为辅助指标，为什么还需要 TBT？
 
-因为 TBT 衡量 LCP 到 TTI 这段时间内的主线程阻塞时常，比如一个页面，存在3个51ms长任务和存在一个10s的长任务，其 TTI 的值是相同的，但是实际体验却相差甚远，第一种情况的 TBT 为 3ms，第二种情况的 TBT 为 9950ms，此时就能体现出差距
+因为 TBT 衡量 LCP 到 TTI 这段时间内的主线程阻塞时常，比如一个页面，存在 3 个 51ms 长任务和存在一个 10s 的长任务，其 TTI 的值是相同的，但是实际体验却相差甚远，第一种情况的 TBT 为 3ms，第二种情况的 TBT 为 9950ms，此时就能体现出差距
 
 对于 TBT 我们需要清楚：
 
@@ -397,5 +414,3 @@ FID 已经有了 TTI 作为辅助指标，为什么还需要 TBT？
 - TBT 计算的是所有(长任务耗时 - 50ms)的累计值
 
 :::
-
-

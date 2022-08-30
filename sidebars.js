@@ -69,13 +69,21 @@ const sidebars = {
       type: 'category',
       label: 'WPM',
       collapsed: true,
-      items: ['browser/corevitals', 'browser/chromeperf', 'browser/navigator'],
+      items: ['browser/chromeperf', 'browser/navigator'],
     },
     {
       type: 'category',
       label: 'Devtools',
       collapsed: true,
       items: ['browser/devtools'],
+    },
+  ],
+  toolkitSiderbar: [
+    {
+      type: 'category',
+      label: 'Toolkit',
+      collapsed: true,
+      items: ['toolkit/vscode'],
     },
   ],
   interviewSiderbar: [

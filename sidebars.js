@@ -106,6 +106,7 @@ const sidebars = {
       label: 'React',
       collapsed: true,
       items: [
+        'library/react/handbook',
         'library/react/concept',
         'library/react/libs',
         'library/react/qa',

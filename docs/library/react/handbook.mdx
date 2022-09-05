@@ -1,0 +1,45 @@
+---
+id: handbook
+title: React Handbook
+sidebar_label: Handbook
+---
+
+import { DocsHeader } from '/src/components/Layout/DocsHeader'
+import { HighlightWithText } from '/src/components/Highlights'
+
+<DocsHeader
+  title="React Handbook"
+  description="基于 React 官方文档进行解读和深入研究。"
+  github="https://reactjs.org/docs/getting-started.html"
+  tags={['React', 'Document']}
+  links={[
+    {
+      label: 'useEffect vs useLayoutEffect',
+      link: 'https://kentcdodds.com/blog/useeffect-vs-uselayouteffect',
+    },
+  ]}
+/>{' '}
+
+## useEffect vs useLayoutEffet
+
+<HighlightWithText text="One Word" />{' '}
+
+`useEffect` 与 `useLayoutEffect` 的区别在于执行时机，99% 的场景都是使用 `useEffect`，因为其被设计有更好的执行性能。
+
+**执行时机的区别**
+
+- 用户交互导致组件内的 `props` 或者 `state` 变化
+- React 执行完毕所有 DOM mutations
+- `useLayoutEffect` 被触发，**同步执行**回调函数
+- 浏览器重新绘制，可视化内容展示给到用户
+- `useEffect` 被触发，**异步执行**回调函数
+
+**更好的性能**
+
+`useLayoutEffect` 与类组件的生命周期钩子: `componentDidMount` 和 `componentDidUpdate` 执行时机一样，会在 React 执行完毕所有 DOM 突变（mutations）后，浏览器重新绘制 DOM 变化内容前同步执行。因此会阻塞浏览器的渲染。
+
+`useEffect` 会在浏览器重新绘制时异步执行其回调函数，此时不会阻塞浏览器渲染。
+
+**useLayoutEffect 被用来？**
+
+`useLayoutEffect` 被用来在浏览器渲染之前读取（perform measurements）或者改变 DOM 元素。通常被用来解决元素闪烁问题（在 React v18 版本， `useEffect` 已经表现无差别）。

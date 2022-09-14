@@ -2,7 +2,7 @@
 
 import dayjs from 'dayjs'
 import path from 'node:path'
-import serverConfig from '/usr/local/etc/docshub/config.mjs'
+import serverConfig from '/usr/local/etc/apps-config/config.mjs'
 
 const log = console.log
 const ALERT_MESSAGE = '\nPlease confirm your input!\n'
@@ -78,14 +78,20 @@ async function tarFiles(name) {
  */
 async function upload(values) {
   const st = dayjs().unix()
-  const { user, host, path } = serverConfig
-  const serverPath = `${user}@${host}:${path}`
-  const pwdPath = `/usr/local/etc/docshub/docshub.conf`
+  const {
+    user,
+    host,
+    paths: { docshub },
+  } = serverConfig
+  const serverPath = `${user}@${host}:${docshub}`
+  const pwdPath = `/usr/local/etc/apps-config/apps.conf`
   await build()
   const distPath = await tarFiles()
   await $`sshpass -f ${pwdPath} scp ${distPath} ${serverPath}`
   const cs = dayjs().unix() - st
-  log(chalk.bgGreen.white(`\nCost total ${cs}ms.\n`))
+  log(chalk.bgGreen.white(`\nCost total ${cs}ms.\n\n`))
+  // 新建 tag 触发 webhooks，引起服务器更新
+  // tag(fileName)
 }
 
 // 生成 tag，并推送到 git

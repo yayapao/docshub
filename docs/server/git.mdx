@@ -96,6 +96,19 @@ git push origin -d v0.1 v0.2
 git checkout v0.1
 ```
 
+### branch
+
+```bash
+# 查看仓库分支, -a 查看所有分支，-r 查看远程分支
+git branch [-a | -r]
+
+# 删除分支
+git push origin -d [branch name]
+
+# 批量删除分支，利用管道符找到待删除分支，统一处理后提交
+git branch -r | grep 'key_word' | sed 's/origin\///'| xargs git push origin -d
+```
+
 ### push
 
 如果你在本地 `reset head` 到一个历史 commit，同时在此基础上进行开发，然后不希望再使用 `remote/master` 上的一些提交，跳过他们直接覆盖本地提交，则可以使用 `git push --force` 将本地 commit 强行推送至服务端

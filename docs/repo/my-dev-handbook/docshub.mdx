@@ -9,6 +9,8 @@ import {
   HighlightWithCode,
 } from '/src/components/Highlights'
 import ColorPalette from '/src/components/ColorPalette'
+import { GithubRepoHeader } from '/src/components/Layout/GithubRepoHeader'
+import { StyledCardWrapper } from '/src/components/Wrapper'
 
 :::info
 Handbook of DocsHub!
@@ -37,17 +39,67 @@ Handbook of DocsHub!
       label: 'ant blue',
     },
   ]}
-/>
+/>{' '}
 
 ## 截断 bolg 简介展示
 
 放置 `<!--truncate-->` 关键字在指定位置即可
 
-## 新增一个 showcase
+## 使用 `GithubRepoHeader` 来自定义文章头部
 
-1. 编辑 `src/pages/showcase/_showcase.config.ts` 配置 **tag** 和 **repo/project** 相关属性
-2. 在 `docs/project/` 目录下添加相应的文件
-3. 编辑 `configs/sidebars/projects.js` 侧边栏配置
+:::caution
+根据实际项目更改，根据 github 动态更新。
+:::
+
+引入组件：
+
+```tsx
+import { GithubRepoHeader } from '/src/components/Layout/GithubRepoHeader'
+```
+
+快速使用：
+
+```tsx
+<GithubRepoHeader
+  title="github title"
+  description="Wonderful GithubRepoHeader!"
+  shields={[
+    {
+      link: '#requirements',
+      alt: 'requirements',
+      imgSrc: 'https://img.shields.io/badge/node-%3E8.0.0-brightgreenf',
+    },
+    {
+      link: 'https://github.com/prettier/prettier',
+      alt: 'code style',
+      imgSrc: 'https://img.shields.io/badge/code%20style-prettier-%23ff69b4',
+    },
+  ]}
+  avatar="/assets/showcase/joycra.svg"
+/>
+```
+
+整体展示效果：
+
+<StyledCardWrapper style={{ padding: '1rem' }}>
+  <GithubRepoHeader
+    title="github title"
+    description="Wonderful GithubRepoHeader!"
+    shields={[
+      {
+        link: '#requirements',
+        alt: 'requirements',
+        imgSrc: 'https://img.shields.io/badge/node-%3E8.0.0-brightgreenf',
+      },
+      {
+        link: 'https://github.com/prettier/prettier',
+        alt: 'code style',
+        imgSrc: 'https://img.shields.io/badge/code%20style-prettier-%23ff69b4',
+      },
+    ]}
+    avatar="/assets/showcase/joycra.svg"
+  />
+</StyledCardWrapper>{' '}
 
 ## 使用自定义高亮组件
 
@@ -86,6 +138,12 @@ import { HighlightWithCode } from '/src/components/Highlights'
 <HighlightWithCode bgcolor="#ef613e">Some code content!</HighlightWithCode>
 
 <!-- -->
+
+## 新增一个 showcase
+
+1. 编辑 `src/pages/showcase/_showcase.config.ts` 配置 **tag** 和 **repo/project** 相关属性
+2. 在 `docs/project/` 目录下添加相应的文件
+3. 编辑 `configs/sidebars/projects.js` 侧边栏配置
 
 ## Q&A
 

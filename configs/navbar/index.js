@@ -65,7 +65,7 @@ const navbarConfig = {
         },
         {
           label: 'Golang',
-          to: '/docs/langs/go/concept',
+          to: '/docs/langs/go/fun',
           activeBaseRegex: '/docs/langs/go',
         },
         {

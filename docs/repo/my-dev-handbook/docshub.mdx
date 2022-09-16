@@ -10,6 +10,7 @@ import {
 } from '/src/components/Highlights'
 import ColorPalette from '/src/components/ColorPalette'
 import { GithubRepoHeader } from '/src/components/Layout/GithubRepoHeader'
+import { DocsHeader } from '/src/components/Layout/DocsHeader'
 import { StyledCardWrapper } from '/src/components/Wrapper'
 
 :::info
@@ -45,11 +46,13 @@ Handbook of DocsHub!
 
 放置 `<!--truncate-->` 关键字在指定位置即可
 
-## 使用 `GithubRepoHeader` 来自定义文章头部
+## 整体布局
 
 :::caution
-根据实际项目更改，根据 github 动态更新。
+所有的自定义 header 都需要设置 mdx 的 `title: ''`
 :::
+
+### `GithubRepoHeader` 定义 github README
 
 引入组件：
 
@@ -79,7 +82,7 @@ import { GithubRepoHeader } from '/src/components/Layout/GithubRepoHeader'
 />
 ```
 
-整体展示效果：
+展示效果：
 
 <StyledCardWrapper style={{ padding: '1rem' }}>
   <GithubRepoHeader
@@ -101,6 +104,48 @@ import { GithubRepoHeader } from '/src/components/Layout/GithubRepoHeader'
   />
 </StyledCardWrapper>{' '}
 
+### `DocsHeader` 定义文章开头
+
+引入组件：
+
+```tsx
+import { DocsHeader } from '/src/components/Layout/DocsHeader'
+```
+
+快速使用：
+
+```tsx
+<DocsHeader
+  title="Doc title"
+  description="Doc description"
+  github="related github"
+  tags={['Error', 'Performance']}
+  links={[
+    {
+      label: 'Related article',
+      link: 'article address',
+    },
+  ]}
+/>
+```
+
+展示效果：
+
+<StyledCardWrapper style={{ padding: '1rem' }}>
+  <DocsHeader
+    title="Doc's title"
+    description="Make some descriptions!"
+    github="https://github.com/yayapa"
+    tags={['Error', 'Performance']}
+    links={[
+      {
+        label: 'Homepage',
+        link: 'https://doc.joyjoy.cc/',
+      },
+    ]}
+  />
+</StyledCardWrapper>{' '}
+
 ## 使用自定义高亮组件
 
 自定义高亮组件放置在 `src/components/Highlights` 内，在 `.mdx` 文件内通过相对路径进行引入
@@ -118,26 +163,33 @@ import { HighlightWithText } from '/src/components/Highlights'
 
 效果如下：
 
-<HighlightWithText bgcolor="#ef613e" style={{ fontSize: '12px' }}>
-  Some text content!
-</HighlightWithText>
-
-<!-- -->
+<StyledCardWrapper>
+  <HighlightWithText bgcolor="#ef613e" style={{ fontSize: '12px' }}>
+    Some text content!
+  </HighlightWithText>
+</StyledCardWrapper>{' '}
 
 ---
 
 `HighlightWithCode` 高亮代码块，行内元素
 
+引入组件：
+
 ```tsx
 import { HighlightWithCode } from '/src/components/Highlights'
-;<HighlightWithCode bgcolor="#ef613e">Some code content!</HighlightWithCode>
 ```
 
-效果如下：
+快速使用：
 
+```tsx
 <HighlightWithCode bgcolor="#ef613e">Some code content!</HighlightWithCode>
+```
 
-<!-- -->
+展示效果：
+
+<StyledCardWrapper>
+  <HighlightWithCode bgcolor="#ef613e">Some code content!</HighlightWithCode>
+</StyledCardWrapper>{' '}
 
 ## 新增一个 showcase
 

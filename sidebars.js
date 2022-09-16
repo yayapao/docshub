@@ -163,7 +163,7 @@ const sidebars = {
       type: 'category',
       label: 'Golang',
       collapsed: true,
-      items: ['langs/go/concept', 'langs/go/grammar'],
+      items: ['langs/go/fun', 'langs/go/concept', 'langs/go/grammar'],
     },
     {
       type: 'category',

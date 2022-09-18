@@ -5,7 +5,10 @@ sidebar_label: Nginx
 slug: nginx
 ---
 
-import { HighlightWithText, HighlightWithCode } from '../../src/components/Highlights'
+import {
+  HighlightWithText,
+  HighlightWithCode,
+} from '../../src/components/Highlights'
 
 :::note what's nginx?
 Nginx 是一款轻量级的 HTTP 服务器，采用事件驱动的异步非阻塞处理方式框架，这让其具有极好的 IO 性能，时常用于服务端的反向代理和负载均衡
@@ -13,24 +16,29 @@ Nginx 是一款轻量级的 HTTP 服务器，采用事件驱动的异步非阻�
 
 ## FAQ
 
-<HighlightWithText>配置无误,但是访问网页时返回 403</HighlightWithText>
+### 配置无误,但是访问网页时返回 403/500
 
-403 的情况可能由多种原因导致:
+403/500 的情况可能权限问题导致:
 
-第一，查看 nginx 的启动用户和工作用户是否对应
+查看 nginx 的启动用户和工作用户是否对应
 
 ```bash
 # 执行发现工作用户为 root, 而在 nginx.conf 的 user 设置为 www-data
-# 将 nginx.conf 的 user 设置为 root 即可
-$ ps aux | grep "nginx: worker process" 
+# 修改 nginx.conf 的 user 为 root 即可
+$ ps aux | grep "nginx: worker process"
 ```
 
-<HighlightWithText>server_name 配置是正确的，但是访问子域名会被父域名拦截，返回 404</HighlightWithText>
+### 修改 `server` 发现 80 端口仍未默认页面
+
+观察 `nginx.conf` 内 **includes** 指向的目录，比如 `site-enabled/*`。找到其下 default 文件，修改 80 指向。
+
+或者修改为 `site-enbaled/*.conf`，然后自定义 .conf 文件。
+
+### server_name 配置是正确的，但是访问子域名会被父域名拦截，返回 404
 
 发现是腾讯云 DNS 对子域名的解析配置为“默认”，无法解析，则移交给最上层父域名进行处理，找不到对应资源，返回 404，将 “默认” 修改为 “境内” 解决问题
 
-
-<HighlightWithText>Incompatible SockJS! Main site uses: "1.4.0", the iframe: "1.3.0".</HighlightWithText>
+### `Incompatible SockJS! Main site uses: "1.4.0", the iframe: "1.3.0".`
 
 解决：添加如下配置
 
@@ -44,7 +52,7 @@ location / {
 }
 ```
 
-<HighlightWithText>CreateDirectory()...failed (3: The system cannot find the path specified)</HighlightWithText>
+### `CreateDirectory()...failed (3: The system cannot find the path specified)`
 
 nginx 对于某个文件夹没有访问权限，无法创建 temp 文件夹
 
@@ -57,9 +65,6 @@ http {
     	fastcgi_temp_path temp/fastcgi_temp;
 	}
 ```
-
-
-<!-- -->
 
 ## Install
 
@@ -85,7 +90,6 @@ http {
 
 - `cat /etc/nginx/nginx.conf` 查看 log 文件地址
 - `cat [log address]` 查看日志
-
 
 ### 通过二进制编译 nginx
 
@@ -201,7 +205,6 @@ nginx 指定文件路径有两种方式 root 和 alias
 
 - alias 的处理结果是：使用 alias 替换 location，注意，使用 alias 时，目录名后面一定要加 /，否则会找不到文件
 - root 的处理结果是：root ＋ location
-
 
 ## What's nginx?
 

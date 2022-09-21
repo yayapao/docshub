@@ -18,6 +18,11 @@ const navbarConfig = {
           activeBaseRegex: '/docs/server',
         },
         {
+          label: 'Database',
+          to: '/docs/database/base',
+          activeBaseRegex: '/docs/database',
+        },
+        {
           label: 'Browser',
           to: '/docs/browser/chromeperf',
           activeBaseRegex: '/docs/browser',

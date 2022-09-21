@@ -10,9 +10,9 @@
  */
 
 // @ts-check
-const projectSiderbarsConfig = require('./configs/sidebars/projects')
+const projectSiderbarsConfig = require('./projects')
 // const toolkitSiderbarsConfig = require('./configs/sidebars/toolkit')
-const nodejsProgrammingSidebarConfig = require('./configs/sidebars/programming-nodejs')
+const nodejsProgrammingSidebarConfig = require('./programming-nodejs')
 /** @type {import('@docusaurus/plugin-content-docs').SidebarsConfig} */
 const repoSiderbarsConfig = {
   handbookSiderBar: [
@@ -59,8 +59,20 @@ const sidebars = {
         'server/linux',
         'server/nginx',
         'server/docker',
-        'server/db',
         'server/git',
+      ],
+    },
+  ],
+  databaseSiderbar: [
+    {
+      type: 'category',
+      label: 'Database',
+      collapsed: true,
+      items: [
+        'database/base',
+        'database/kafka',
+        'database/redis',
+        'database/mysql',
       ],
     },
   ],

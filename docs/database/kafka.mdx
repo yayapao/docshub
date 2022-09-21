@@ -1,0 +1,35 @@
+---
+id: kafka
+title: kafka
+sidebar_label: kafka
+---
+
+## Kafka Commands
+
+通过 Docker 进入控制台后，查看 Topic 相关信息
+
+```bash
+cd usr/bin
+
+# 查看 topics
+kafka-topics --zookeeper sentry_zookeeper:2181 --list
+
+# 查看 topic 详细信息
+kafka-topics --zookeeper sentry_zookeeper:2181 --describe --topic ingest-events
+
+# 查看 topic 内容
+kafka-console-consumer --bootstrap-server sentry_kafka:9092 --topic ingest-events --from-beginning
+
+# 创建一个 topic
+kafka-topics --zookeeper sentry_zookeeper:2181 --create --replication-factor 1 --partitions 1 --topic mytopic
+```
+
+查看 consumer-groups 相关信息
+
+```bash
+# 查看 groups
+kafka-consumer-groups --bootstrap-server sentry_kafka:9092 --list
+
+# 查看 group 详情
+kafka-consumer-groups --bootstrap-server sentry_kafka:9092 --describe --group ingest-consumer
+```

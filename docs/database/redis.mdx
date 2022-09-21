@@ -1,0 +1,51 @@
+---
+id: redis
+title: redis
+sidebar_label: redis
+---
+
+在 MacOS 下通过 `brew install redis` 进行安装
+
+在 CentOS 下通过 `yum install redis` 进行安装
+
+安装完成之后，执行 `redis-server` 启动 redis 服务，通过 `ps -ef | grep redis` 查看服务情况
+
+相关命令参考：
+
+- [redis 开发运维实战](https://www.w3cschool.cn/redis_all_about/redis_all_about-pf4826ua.html)
+- [腾讯云服务器 redis 的远程连接](https://blog.csdn.net/Vibugs/article/details/92796760)
+
+### 启动 redis 服务
+
+<b>后台启动</b>
+
+MacOS 下 `vim /usr/local/etc/redis.conf`
+
+- 找到 `daemonize` 选项，将其值设置为 `yes`
+- 执行 `redis-server /usr/local/etc/redis.conf` 启动时添加配置
+- `ps -ef | grep redis` 查看服务情况
+
+<b>开机启动</b>
+
+1. 执行 `ln -f /usr/local/Cellar/redis/6.0.10/homebrew.mxcl.redis.plist ~/Library/LaunchAgents` 建立软连接，加入到 launchd 进程，当用户登录系统后会自动执行
+2. 执行 `launchctl load ~/Library/LaunchAgents/homebrew.mxcl.redis.plist` 加载任务
+
+<!-- -->
+
+### 基于 `redis-cli` 排障
+
+在 ubuntu 上通过 `sudo apt install redis-tools` 安装 redis-cli, 安装完成后，通过 `redis-cli --version` 查看安装是否成功
+
+- 连接 redis: `redis-cli -h [hots] -p [port] -a [auth/password]`
+- 查看内存占用: `redis-cli [connnection params] info memory`
+- 查看不同数据库内最大 key 等统计信息: `redis-cli [connection params] -n [db index] --bigkeys`
+
+### 批量删除 redis key
+
+在 terminal 内执行 `redis-cli -h 127.0.0.1 -p 6379 keys "bull:q_perf:*" | xargs -r -t redis-cli -h 127.0.0.1 -p 6379 del`
+
+注意：
+
+- `|` 是管道符，需要在 shell 内执行
+- `xargs -r` 当 xargs 的输入为空的时候则停止 xargs，不用再去执行了
+- `xargs -t` 表示先打印命令，然后再执行  we

@@ -70,8 +70,8 @@ kafka-consumer-groups --bootstrap-server sentry_kafka:9092 --describe --group in
 
 消费组(Consumer Group)是消费者的集合，它的出现可以解决：
 
-- 分担消费节点的压力，可以在 group 扩容机器
-- 同一份 topic 可以被不同 consumer group 分别消费，维持独自的 offset
+- 相比单节点消费的压力，可以扩容机器，因为现在消息交付以 group 为概念
+- 同一份 topic 可以被不同 consumer group 分别消费，维持各自的 offset
 
 ![consumer-group](/img/database/consumer-group.png)
 
@@ -85,7 +85,23 @@ kafka-consumer-groups --bootstrap-server sentry_kafka:9092 --describe --group in
 
 消费者组是一种**广播模式**。一个消费者组内对 topic 的消费不会影响其他消费者组。
 
+**kafka 如何维护不同 group 提交的 offset？**
+
+如果一个 topic 被多个 consumer group 同时消费，直接将各个分组的 offset commit 到 Broker 服务器会产生很大的负载。因此 kafka 将 \_consumer_offsets 设定拥有 50 个分区，从而将其均匀分布到不同机器上，通过负载均衡来将不同的 commit offsets 请求交给不同的机器处理。
+
 ### 分配策略
+
+分配策略要解决两个问题：
+
+1. partition 和 consumer 的关系？
+2. 当 topic 内一条数据到达时，应该交付给哪个 partition？
+
+分配策略：
+
+- range 默认策略，基于 topic。将 partition 排序后，依次指定。
+- roundrobin 策略，会将消费组内所有消费者以及消费者所订阅的所有 topic 的 partition 按照字典序排序，然后通过轮询算法逐个将分区以此分配给每个消费者。
+
+### partition
 
 **为什么一个 partition 只能被一个消费者实例消费？**
 
@@ -97,18 +113,9 @@ kafka-consumer-groups --bootstrap-server sentry_kafka:9092 --describe --group in
 
 得益于 kafka 的 **partition 分配策略** 和 **offset 管理**
 
-**kafka 如何维护不同 group 提交的 offset？**
-
-如果一个 topic 被多个 consumer group 同时消费，直接将各个分组的 offset commit 到 Broker 服务器会产生很大的负载。因此 kafka 将 \_consumer_offsets 设定拥有 50 个分区，从而将其均匀分布到不同机器上，通过负载均衡来将不同的 commit offsets 请求交给不同的机器处理。
-
 **partition reblancing 的场景**
 
 - 有消费者退出/加入
 - 订阅 topic 的 partition 发生变化
 
 Rebalance 给消费者群组带来了高可用性与伸缩性，但是在 Rebalance 期间，消费者无法读取消息，整个群组一小段时间不可用，而且当分区被重新分配给另一个消费者时，消费者当前的读取状态会丢失
-
-分配策略：
-
-- range 默认策略，基于 topic。将 partition 排序后，依次指定。
-- roundrobin 策略，会将消费组内所有消费者以及消费者所订阅的所有 topic 的 partition 按照字典序排序，然后通过轮询算法逐个将分区以此分配给每个消费者。

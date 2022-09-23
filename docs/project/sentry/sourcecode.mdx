@@ -27,8 +27,60 @@ Sentry 的 API 服务是基于 [django](https://www.djangoproject.com/) 实现�
 - 路由配置位于 `src/sentry/api/urls.py`，遵循 `url(RegExp, View, name)` 的形式进行声明
 - View 通常继承自 `[模块基类] > base.py > view.py`，以 project-event 为例，其位于 `src/sentry/api/endpoints/project_events.py`，类继承自 `ProjectEndpoint` 基类
 
+## ingest-consumer
 
+### Q&A
 
+#### 理解 batching-kafka-consumer 打印日志
+
+1. `batching-kafka-consumer: Flushing 3 items (from {('ingest-events', 0): [152738642, 152738643], ('ingest-transactions', 0): [19053992, 19053992]}): forced:False size:False time:True`
+
+查看 `batching_kafka_consumer.py`：
+
+```py
+def _flush(self, force=False):
+    batch_by_size = len(self.__batch_results) >= self.max_batch_size
+    batch_by_time = self.__batch_deadline and time.time() > self.__batch_deadline
+    if not (force or batch_by_size or batch_by_time):
+        return
+
+    logger.info(
+        "Flushing %s items (from %r): forced:%s size:%s time:%s",
+        len(self.__batch_results),
+        self.__batch_offsets,
+        force,
+        batch_by_size,
+        batch_by_time,
+    )
+    # ...
+```
+
+通过关键代码块可以看出，日志用来打印：
+
+- 本地处理批任务的项目个数
+- 本地处理导致的 offset 变化
+- 是不是强制执行以及本地 flush 触发条件（size or time）
+
+上述日志可以读作：本批次处理 3 条数据，其中 2 条来自 `ingest-events`，1 条来自 `ingest-transactions`，由时间设置触发。
+
+2. `batching-kafka-consumer: Worker flush took 97ms`
+
+3. `[WARNING] sentry.ingest.ingest_consumer: pre-process-forwarder detected a duplicated event with id:2e31713080f3462fa48651f0b6446b32 for project:141`
+
+这条日志表明，该项目的 event 已经被处理过，后续将不再重新处理。发生这种情况的原因可能是之前的 `forwarder` 实例处理完毕 event 之后，在提交 event queue offset 之前这段时间内挂了。
+
+```py
+def _load_event() {
+    deduplication_key = f"ev:{project_id}:{event_id}"
+    if cache.get(deduplication_key) is not None:
+        logger.warning(
+            "pre-process-forwarder detected a duplicated event" " with id:%s for project:%s.",
+            event_id,
+            project_id,
+        )
+        return  # message already processed do not reprocess
+}
+```
 
 ## SourceMap
 
@@ -49,7 +101,6 @@ Sentry 基于 sourcemap 提供了快速定位源码的能力。
 sentry 会对源文件和 SourceMap 单独进行处理，处理关键步骤在于如何缓存和读取文件内容。其中缓存文件时会使用到 `cache_key`(对应文件内容) 和 `cache_key_meta`(对应文件元信息)，而使用读取内容时会遵循**缓存 - database - internet**的顺序。
 
 本章，我们会对 sentry 加工 frames 的过程进行阅读，并记录异常处理，以方便对生产问题进行排查。
-
 
 ![sourcemap_processor](/img/fte/sourcemap.svg)
 

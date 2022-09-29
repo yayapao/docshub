@@ -1,7 +1,7 @@
 ---
 id: features
 title: Sentry Features
-sidebar_label: features
+sidebar_label: Features
 ---
 
 ## 使用 SDK
@@ -42,6 +42,18 @@ beforeSend(event, hint) {
   return event;
 }
 ```
+
+## Sampling
+
+### 为什么要采样？
+
+最理想的情况是，我们希望将客户端上报的所有数据进行处理并存储，这将为我们在数据分析时提升准确率。
+
+但是，当**海量数据（enormous volume of data）**由客户端进行上报后，服务器的计算成本和数据存储成本将是我们不得不考虑的问题。
+
+### 设计采样策略的难点？
+
+Sentry 如何设计采样方案？
 
 ## Grouping Issues
 

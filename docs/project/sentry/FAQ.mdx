@@ -34,9 +34,11 @@ import { DocsHeader } from '/src/components/Layout/DocsHeader'
 
 ### 信息被 `[Filtered]` 占位
 
-在查看错误字段时，发现信息被 `[Filtered]` 占位，并展示 `Replaced because PII rule "@xxxxxx:filter"`
+**Q:** 在查看错误字段时，发现信息被 `[Filtered]` 占位，并展示 `Replaced because PII rule "@xxxxxx:filter"`
 
-是由于 sentry 匹配到敏感信息，并对其进行处理。**请确认该信息是否有能够展示！**
+**A:** sentry 在处理 event 时匹配到敏感信息（通常为 username 和 password），会对其进行占位处理。
+
+**请确认该信息是否有能够展示！**
 
 用户可以配置 `setting > Security & Privacy > Safe Feilds` 来放开指定敏感字段
 
@@ -44,14 +46,14 @@ import { DocsHeader } from '/src/components/Layout/DocsHeader'
 
 :::note
 
-首先通过 `sentry-cli sourcemaps explain <event_id>` 来排查 sourcemaps 文件匹配原因
+通过 `sentry-cli sourcemaps explain <event_id>` 来排查 sourcemaps 文件匹配原因
 
 :::
 
-当出现无法定位 sourceMap 的问题时，我们首先需要确认用户的匹配路径，即：
+当出现无法定位 sourceMap 的问题时，我们首先需要**确认源文件的匹配路径**，即：
 
-1. 将源文件和 sourceMap 文件上传至平台，在文件系统内寻找 sourceMap 文件进行匹配；
-2. 开启 `Allow JavaScript Source Fetching` 开关，由 Sentry 去线上寻找 sourceMap 文件进行匹配；
+1. 将源文件和 sourceMap 文件上传至平台，在文件系统内寻找 sourceMaps 进行匹配；
+2. 开启 `Allow JavaScript Source Fetching` 开关，由 processor 去线上拉取 sourceMaps 进行匹配；
 
 针对以上两点，我们需要从以下方面来进行排查：
 

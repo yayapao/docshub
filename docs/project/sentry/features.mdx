@@ -1,0 +1,447 @@
+---
+id: features
+title: Sentry Features
+sidebar_label: features
+---
+
+## 使用 SDK
+
+这里我们以浏览器端接入为例（其他平台接入配置可以参考[docs-platform](https://docs.sentry.io/platforms/javascript/)）其配置如下：
+
+```javascript
+import * as Sentry from '@sentry/browser'
+import { Integrations } from '@sentry/tracing'
+
+Sentry.init({
+  dsn: 'https://examplePublicKey@o0.ingest.sentry.io/0',
+  release: 'my-project-name@2.3.12',
+  // store 通道的采样率
+  smapleRate: 1
+  integrations: [new Integrations.BrowserTracing()],
+  // envelope 通道的采样率
+  tracesSampleRate: 1,
+  beforeSend(event, hint) {
+    return event
+    // return null 会将此次上报丢弃
+  }
+})
+```
+
+`beforeSend(event, hint)` 内的 hint 参数会携带原始异常堆栈信息，可以在此更改指纹来影响 Sentry 对 issues 的聚合方式
+
+```js
+beforeSend(event, hint) {
+  const error = hint.originalException;
+  if (
+    error &&
+    error.message &&
+    error.message.match(/database unavailable/i)
+  ) {
+    event.fingerprint = ["database-unavailable"];
+  }
+  return event;
+}
+```
+
+## Grouping Issues
+
+:::note
+错误事件的聚合
+:::
+
+在本章，我们将会在[Issue Grouping](https://docs.sentry.io/product/data-management-settings/event-grouping/#grouping-by-stack-trace)的基础上介绍 Sentry 内置聚合规则以及如何自定义聚合规则。
+
+开始之前，我们需要明晰：Sentry 内同时存在 Issues 和 Event 的概念。Issue 是 Error event 按照一定规则聚合后的产物。
+
+现在，我们不妨思考一下：
+
+- 数亿的错误事件是如何被分门别类放到不同的 issue 内？
+- 如何设计核心方案以支持用户自定义能力？
+
+### How to group error events?
+
+Sentry 内聚合逻辑的核心在于 <HighlightWithCode bgcolor="#ef613e">fingerprint</HighlightWithCode>。
+
+每个错误都会有按照指定聚合算法生成对应的 fingerprint，Sentry 根据 fingerprint 生成对应的 `Group Hash Code`，并以此来对错误事件进行归类。即相同的 `Group Hash Code` 被归为同一个 `issue`。
+
+我们可以在 `Error details > JSON link > fingerprint property` 内查看置顶错误事件的指纹。
+
+**注意，如果使用内建的聚合规则会展示 `fingerprint: "{{ default }}"`，否则会展示展示的 fingerprint 值。**
+
+### Built-in Grouping Algorithms
+
+相信不少用户都有同样的困扰，明明在页面上展示的错误信息值不一样，为什么会被归纳到同一个 issue 呢？
+
+答案是：Sentry 内置的聚合算法**会根据错误的堆栈追踪信息来生产 fingerprint**。即错误事件的堆栈信息相同，则此类错误事件属于同一个 issue。
+
+:::caution
+
+- 所有的聚合策略，均遵循 `stack trace -> exception -> message` 的次序进行处理，一旦 group hash code 生成，不会继续执行剩下的逻辑
+- 仅有 `stack trace` 生成的 group hash code 是可靠的
+
+:::
+
+#### Grouping by stack trace
+
+当错误事件到达时，Sentry 会从提取其 stack trace 数据。**并且 sentry 仅会处理由 SDK 上报并与应用关联的 stack trace frames。**
+
+原因在于：
+
+1. 有一些平台的 SDK 不会上报堆栈追踪信息；
+2. 如果仅仅是与项目无关的堆栈信息不一致，错误事件仍然会被归为同一类；
+
+Sentry 在堆栈追踪信息内会提取：
+
+- 模块名；
+- 标准化的文件名，比如修订后的 hash 值会被删除掉；
+- 标准化的上下文，即受影响的代码（源码，如果能够匹配 sourcemap）
+
+这里我们创建一个方法，在相同的方法内，抛出不同的错误信息：
+
+```js
+// 抛出一个Error, value 为当前时间
+function sendSentry() {
+  throw new Error(new Date().toLocaleString())
+}
+```
+
+在 Sentry 返回结果：
+
+![group_diff](/img/fte/sentry/sentry_group_diff.png)
+
+根据上图结果我们可以得出：**使用默认的内建聚合规则，在 stack trace 相同的情况下会被聚合到同一个 issue，即使他们的 exception/message 并不相同。**
+
+我们继续在 issue details 页面展开 `EVENT GROUPING INFORMATION` 来对比同一个 issue 内不同 event 的聚合细节，如下所示：
+
+![group_info](/img/fte/sentry/group_information.png)
+
+我们不难发现：**在该 issue 内的错误拥有相同的 `group hash code`，实际上 Sentry 最终也是根据它来确定 event 归属！**
+
+#### Grouping by exception
+
+当 stack trace 无法找到时，Sentry 会使用 exception 的 `type` 和 `value` 字段进行兜底，此时聚合不可靠！
+
+异常信息如下所示：
+
+```
+Error: 2022/4/21 18:04:06
+  at Error: 2022(/4/21 18:4:6)
+  at sendSentry(/main.d1f2e7dbd07e024bf014.hot-update.js:27:11)
+  at dispatchDiscreteEvent(/static/js/bundle.js:27074:7)
+```
+
+如上所示，type 也就是 exception name，即 Error；value 则为人类可读的描述，即 2022/4/21 18:04:06
+
+#### Fallback Grouping
+
+如果以上都不能奏效时，Sentry 将尝试使用不带任何参数的 message。如果这不可用，将使用完整的 message 属性来进行聚合。
+
+### How to customized Grouping?
+
+实际上，Sentry 内建的聚合规则能够满足我们 80% 以上的使用场景，但是对于或多或少的错误事件我们需要拆分或者聚合来更正确地分析数据，因此我们也迫切需要自定义聚合规则的能力。所幸，Sentry 提供了不同的方案，来帮助用户更科学地归纳错误事件。
+
+- `Merge Issues` 合并已存在 issue
+- `Fingerprint Rules` 应用所有新入的错误事件，决定生成 `group hash code` 的规则
+- `Stack Trace Rules` 应用所有新入的错误事件，决定生成 `group hash code` 的 stack trace
+
+对于 `Fingerprint Rules` 和 `Stack Trace Rules` 都遵循统一的匹配规则，即：
+
+- 不同行形成**或**的关系
+- 统一行不同规则形成**与**的关系
+
+#### Merge Issues
+
+merge issues 是 Sentry 提供最易操作的自定义聚合能力，它用来处理：
+
+1. 多个 issues 类似；
+2. 用户希望减少 issue noise，使 issues 面板更加整洁，方便专注于某一类 issue；
+
+`merge issues` 属于事后的人工干预，仅会影响已处理的错误事件以及将来上报的相同的错误事件。其操作方法很简单，在 issues 面板选择不同的 issue 进行合并即可，这里不再赘述。
+
+:::caution
+
+**Sentry 不会根据 merge issues 来推断新的聚合规则，仅当新的错误事件拥有和当前 merged issues 相同的 fingerprint 并生产同样的 group hash code 才会被自动聚合**
+
+:::
+
+#### Fingerprint Rules
+
+Sentry 支持通过配置 `[Project] > Settings > Issue Grouping > FINGERPRINT RULES` 在服务端根据自定义聚合规则。
+
+**注意，配置 fingerprint rules 会覆盖默认的聚合规则**
+
+finterprint rules 遵循如下模式：
+
+```
+# partten
+matcher:glob -> fingerprint, values title=""
+```
+
+比如，我们配置了一条规则 `error.type:ReferenceError -> Not-found-error, {{ transaction }}`，它表示匹配所有 type 为 ReferenceError 的错误事件，对其聚合并赋值 fingerprint 为 Not-found-error，同时，使用 {{ transaction }} 进行通配，达到按照不同 transaction 进行聚合的目的
+
+在了解基本规则之后，我们希望在对上文的例子进行拆分，即按照不同的 exception 值来对错误事件进行聚合，并在 issue 上自定义标题展示。
+
+首先，我们在项目内配置了一条 fingerprint rule，如下：
+
+```
+error.type:Error -> error, {{ error.value }} title="Error from value={{ error.value }}"
+```
+
+当我们在客户端再次触发错误时，我们观察到结果如下所示：
+
+![fingerprint-rules](/img/fte/sentry/fingerprint_rules.png)
+
+据此我们可以分析：
+
+1. 根据内建算法对错误事件进行聚合，这些错误拥有相同的堆栈信息和 `group hash code`
+2. 当配置如上 `FINGERPRINT RULES` 之后，会对所有 `error.type=Error` 的错误按照 `error.value` 进行分类，且标题展示 `Error from value={{ error.value }}`
+3. 根据自定义规则，其 `fingerprint values` 根据 exception 的值而发生变化，导致其 `group hash code` 不尽相同，最终被聚合到不同的 issue
+
+#### Stack Trace Rules
+
+基于 `stack trace` 第一可靠的原则，Sentry 为我们提供在生成 `group hash code` 之前处理 `stack trace` 的能力，它被看作是聚合规则的增强措施。
+
+思路就是在聚合之前，允许我们按照规则修改 `stack trace` 来影响最终聚合结果。
+
+同样，我们可以在 `[Project] > Settings > Issue Grouping > Stack Trace Rules` 内配置相应规则。其 pattern 如下：
+
+```
+# Enhancement Rules
+matcher-name:expression other-matcher:expression ... action1 action2 ...
+```
+
+定义规则支持的标志符：
+
+- `+`: 设置标记
+- `-`: 清除标记
+- `^`: 应用当前 frame 到栈顶的所有 frame
+- `v`: 应当当前 frame 到栈底所有的 frame
+- `app`: 在应用内标记/清除标记指定 frame
+- `group`: 聚合时添加/清除指定 frame
+
+我们通过使用标志符的组合来达到不同的效果，如下我们列举了一组例子帮助理解：
+
+```
+# frame 内绝对路径命中 **/node_modules/** 规则的，聚合时都不会参与计算
+stack.abs_path:**/node_modules/** -group
+
+# 标记所有 node_modules 目录下的所有代码为不再应用中
+stack.abs_path:**/node_modules/** -app
+
+# native 平台允许的最大帧为 3（从栈顶向下数）
+family:native max-frames=3
+
+# 命中 function 为 fetchSavedSearches 的下面所有帧都不会被纳入聚合计算
+stack.function:fetchSavedSearches v-group
+```
+
+## Integration
+
+:::note
+[Integation](https://docs.sentry.io/product/integrations/integration-platform/) 是我们能够介入 Sentry 的处理流程，并根据自己的需求进行开发。
+:::
+
+在本章，我们会介绍如何在 Sentry 内创建一个内部集成，来自定义工作流。Sentry 将集成分为：`internal` 和 `public`。
+
+- `internal integation` 仅能被用在你的组织内，创建后会自动应用在组织内所有项目，验证过程相对简单
+- `public integation` 能被发布，供所有 Sentry 用户使用，验证过程相对复杂
+
+在 `/settings/[org]/developer-settings/` 按照实际需求选择 integation 并写入基本信息后进行创建（后期也可以根据需求进行修改）。
+
+### 创建一个 Internal Integation
+
+用一句话概括整个流程：**Sentry 将 Issus/Event 发送至服务，由服务进行验证后执行相应动作**
+
+参考 [Internal Integation](https://docs.sentry.io/product/integrations/integration-platform/internal-integration/) 和 [Round Robin Assignment](https://blog.sentry.io/2019/11/21/customize-your-sentry-workflow-a-sample-internal-integration) 进行快速搭建一个内部集成。
+
+这里我们抽离部分核心代码：
+
+```js
+// 验证方法，注意 createHmac 的引入方式
+export const verifySignature: (
+  request: any,
+  secret: string
+) => Promise<boolean> = async (request, secret) => {
+  const { createHmac } = await import('node:crypto')
+  const hmac = createHmac('sha256', secret)
+  hmac.update(JSON.stringify(request.body), 'utf8')
+  const digest = hmac.digest('hex')
+  return digest === request.headers['sentry-hook-signature']
+}
+
+// webhook API
+// 由于 internal integation 对组织内所有应用生效，因此最好设置一个白名单来过滤
+@Post()
+async doAssigned(
+  @Body() body: any,
+  @Headers() headers: Record<string, string>,
+  @Request() req,
+) {
+  if (!verifySignature(req, round_robin_assigned_secret)) {
+    return failed('bad signature')
+  }
+  const resource = headers['sentry-hook-resource']
+  const { action } = body
+
+  if (resource === 'issue' && action === 'created') {
+    const { id: newIssueProjectID } = body.data.issue.project
+    // 仅对白名单内应用进行处理
+    if (
+      Array.isArray(this.whiteProjectIDs) &&
+      this.whiteProjectIDs.includes(+newIssueProjectID)
+    ) {
+      const { id: issueID } = body.data.issue
+      // 验证完成之后，开始执行业务逻辑
+    }
+  }
+  return successed({
+    body,
+    headers,
+  })
+}
+```
+
+## Source Maps
+
+:::note Source Maps
+Source Maps 是构建时的产物，用来映射源文件，定位源码位置。
+:::
+
+Sentry 支持在查看 issues frames/event details 时通过匹配 Stack Trace + Source Files + Source Maps 来定位源码信息。
+
+在 Sentry 内部支持通过以下两种方式来使用 Source Maps:
+
+1. 将源文件和 Source Maps 文件上传至平台，在文件系统内寻找 Source Maps 文件进行匹配；
+2. 开启 `Allow JavaScript Source Fetching` 开关，由 Sentry 去线上寻找源文件及其 Source Maps 文件，进行匹配；
+
+针对第一点，我们介绍上传的关键步骤，对于第二点，我们会从 Sentry 的实现方面对其核心点进行阐述，同时也会介绍增大请求容忍度的解决方案。
+
+### Upload Source Maps
+
+目前 sentry 支持三种上传方式：
+
+- 通过 Sentry API 上传
+- 配置 webpack 在构建时上传
+- 通过 SENTRY-CLI 上传
+
+:::caution
+
+1. 需要申请指定权限的 token
+2. 需要配置 SDK 和上传时 release 一致
+3. 源文件和 Source Maps 都需要上传
+
+:::
+
+#### 通过 API 接口
+
+参考[Upload a New Project Release File](https://docs.sentry.io/api/releases/upload-a-new-project-release-file/)的上传接口，参考 [🔒 上传工具](https://github.com/YaYaPao/docscripts/blob/main/sentry/scripts/upload_source_file.py)
+
+快速例子：
+
+```bash
+curl -X POST \
+  'https://sentry.io/api/0/projects/[org]/[projectName]/releases/[releaseName]/files/' \
+  --header 'Authorization: Bearer [token]' \
+  --form '[filePath].map'
+```
+
+#### 通过 webpack 插件
+
+```bash
+npm install --save-dev @sentry/webpack-plugin
+```
+
+配置 `jsconfig.json` 或者 `tsconfig.json` 开启 SourceMap:
+
+```json
+{
+  "compilerOptions": {
+    "inlineSourceMap": true,
+    "sourceRoot": "/"
+  }
+}
+// umi 内
+{
+  "devtool": "source-map",
+}
+```
+
+**修改 webpack 配置**
+
+这里是一个配置的例子，请根据自身 webpack 配置情况合理修改：
+
+```javascript
+const SentryCliPlugin = require('@sentry/webpack-plugin')
+
+module.exports = {
+  // 开启 source-map
+  devtool: 'source-map',
+  configureWebpack: (config) => {
+    // 生产环境上传
+    if (process.env.NODE_ENV === 'production') {
+      config.plugins = [
+        ...config.plugins,
+        new SentryCliPlugin({
+          authToken: 'token',
+          include: './dist',
+          org: 'organization_slug',
+          project: 'project_slug',
+          // 注意与 SDK 配置的 release 一致
+          release: 'release version',
+          ignore: ['node_modules'],
+          // url 必须指定，不然就会去源地址寻找
+          url: 'https://sentry.io/',
+        }),
+      ]
+    }
+  },
+}
+```
+
+#### 利用 sentry-cli 上传
+
+使用 `sentry-cli` 上传之前，你需要为你的项目的此次发布设置一个平台内独一无二的 **release name**，fems 会用 release 来匹配线上错误和 sourcemap 文件。
+
+下面是具体操作步骤：
+
+1. 创建一个 release，注意 `release_name` 需要和 SDK 配置的 release 字段值一致，且全平台唯一。
+
+```bash
+sentry-cli releases new <release_name>
+```
+
+2. 上传 Source Maps，如下会把指定目录下所有文件上传到 Sentry，并指定为当前 release_name，注意该文件夹下需要同时包含**部署文件**和**sourceMap 文件**，处理完成后，上传文件会被暂存起来，我们继续执行最后一步来完成发布！
+
+```bash
+sentry-cli releases files <release_name> upload-sourcemaps /path/to/files
+```
+
+3. 完成发布
+
+```bash
+sentry-cli releases finalize <release_name>
+```
+
+### Fetch Source Maps Online
+
+除了将文件上传到 Sentry 平台外，我们还可以通过开启 `Allow JavaScript Source Fetching` 来让 Sentry 直接从线上去拉取文件。大家可以思考一下，**为什么 Sentry 不建议这么做？**
+
+:::caution Why not？
+
+1. 存在安全风险
+2. 阻塞 Sentry 处理进程
+
+:::
+
+对于**安全风险**，我们从两方面进行解决：
+
+- 对于开发者来说，我们必须将 Source Maps 文件放在线上指定位置（可以通过 rewriteFrame 来改变位置），这样存在源码暴露的风险
+- 更重要的是存在 CSRF 安全问题，如果存在攻击机在线上脚本内植入恶意脚本，Sentry 在去拉取线上文件时，会执行恶意脚本
+
+同时，Sentry 会启动 worker 来处理 events，当需要请求线上文件时，会阻塞当前的处理程序，等待拉取文件完毕并写入缓存后，才会继续执行其他任务。这里我们对 Sentry 拉取 Source Maps 内容进行深度解读。
+
+#### Process Source Maps
+
+Sentry 在处理 events 时，会根据 Stack Trace 信息去解析并请求源文件，在拉取回源文件之后，会解析文件内容，获取线上 Source Maps 的路由地址，<HighlightWithBadge label='拉取文件内容并进行缓存' />
+
+- Sentry 本身存在两种缓存机制，一种是 Setrny 自己的实现，即结合 Redis 进行缓存；一种是 Django 本身的缓存机制，即通过 memcached 进行缓存

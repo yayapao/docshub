@@ -21,7 +21,7 @@ import { GithubRepoHeader } from '/src/components/Layout/GithubRepoHeader'
       imgSrc: 'https://img.shields.io/badge/code%20style-prettier-%23ff69b4',
     },
   ]}
-  avatar="https://docs-1300606192.cos.ap-shanghai.myqcloud.com/showcase/joylint.jpg"
+  avatar="/assets/showcase/joylint.jpg"
 />
 
 <!-- -->
@@ -30,7 +30,6 @@ Joylint is the simplest way to enable lint-power for your project. Once installe
 
 - 👍 **Enable ESLint, Prettier, Stylelint, husky and lint-staged.**
 - 🥰 **Includes powerful shortcodes** to execute on your dev process. It's based on husky and lint-staged.
-
 
 ## Installation
 
@@ -65,7 +64,7 @@ pnpx joylint lint
 pnpx joylint husky
 ```
 
-### config *rc.js
+### config \*rc.js
 
 Here's a quick demostration:
 
@@ -82,11 +81,12 @@ module.exports = {
 **.eslintrc.js**
 
 :::note Supported
+
 - eslint4React
 - eslint4Vue3
 - eslint4Vue2
 - eslint4TS
-:::
+  :::
 
 ```js
 // customized options
@@ -115,9 +115,10 @@ module.exports = {
 **tsconfig.json**
 
 :::note Supported
+
 - tsconfig4React
 - tsconfig4Vue3
-:::
+  :::
 
 It's highly recommmanded to refer to its content.
 
@@ -130,7 +131,7 @@ It's highly recommmanded to refer to its content.
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src", "types/**/*", "configs/**/*", "vite.config.ts"],
+  "include": ["src", "types/**/*", "configs/**/*", "vite.config.ts"]
 }
 ```
 

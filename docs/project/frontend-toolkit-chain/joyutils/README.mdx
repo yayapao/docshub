@@ -27,3 +27,37 @@ import { GithubRepoHeader } from '/src/components/Layout/GithubRepoHeader'
 <!-- -->
 
 Joyutils is a Javascript library, and which come from my engineering experience.
+
+## Installation
+
+### Requirements
+
+- Node.js 8.0.0+
+
+Choose your favorite package manager:
+
+```bash
+# npm
+npm i joyutils -D
+
+# yarn
+yarn add joyutils -D
+```
+
+## Usage
+
+In Node.js:
+
+```js
+import { geuuid } from 'joyutils'
+
+const uuid = geuuid()
+```
+
+## FAQ
+
+### Why named export?
+
+1. Module is a namespace. Default export often leads to function/component per file dogma and makes code less maintainable.
+2. Interop with commonjs is broken in many cases or hard to maintain.
+3. Show me any good language with default exports. It's historical javascriptism.

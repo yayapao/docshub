@@ -1,0 +1,93 @@
+---
+id: ECharts
+title: Joyutils of ECharts
+sidebar_label: ECharts
+---
+
+## genPieMockData
+
+`genPieMockData(names: string[])` 生成 ECharts 的饼图 series
+
+**Arguments**
+
+- `names string[]`: the Array maps series name
+
+**Returns**
+
+- `Array`: [series-pie.data](https://echarts.apache.org/zh/option.html#series-pie.data)
+
+**Example**
+
+```js
+import { genPieMockData } from 'joyutils'
+const series = genPieMockData(['a', 'b', 'c'])
+// => [{ a: 100, b: 299, c: 500 }]
+```
+
+## genLineMockData
+
+`genLineMockData(names: string[], count: number)` 生成 ECharts 的折线图（柱状图）series
+
+**Arguments**
+
+- `names string[]`: the Array maps series name
+- `count: number`: the length of data
+
+**Returns**
+
+- `Array`: [series-line.data](https://echarts.apache.org/zh/option.html#series-line.data)
+
+**Example**
+
+```js
+import { genLineMockData } from 'joyutils'
+const series = genLineMockData(['a', 'b'], 2)
+// => [{ name: 'a', data: [100, 200] }, { name: 'b', data: [200, 300] }]
+```
+
+## genCategory
+
+`genCategory(count: number, step: number = 86400)` 生成横坐标的 category
+
+**Arguments**
+
+- `count: number`: the length of data
+- `step: number(Default 86400)`: step of time series
+
+**Returns**
+
+- `Array`: [xAxis.data](https://echarts.apache.org/zh/option.html#xAxis.data)
+
+**Example**
+
+```js
+import { genCategory } from 'joyutils'
+const category = genCategory(2)
+// => [1664519723735, 1664519810135]
+```
+
+## calcObjectPercent
+
+`calcObjectPercent(data, key, value, decimals)` 计算每项的值占比，常用于渲染饼图的 legend
+
+**Arguments**
+
+- `data: Record<string, any>[]`: pie series
+- `key: string`: alias of key name
+- `value: string`: alias of value name
+- `decimals: number`: preserved decimals
+
+**Returns**
+
+- `Array`: series data with `percent`, also see [series-pie.tooltip.formatter](https://echarts.apache.org/zh/option.html#series-pie.tooltip.formatter)
+
+**Example**
+
+```js
+import { calcObjectPercent } from 'joyutils'
+const series = [
+  { name: 'a', count: 100 },
+  { name: 'b', count: 200 },
+]
+const res = calcObjectPercent(series, 'name', 'count', 2)
+```

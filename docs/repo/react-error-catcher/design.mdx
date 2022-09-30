@@ -25,7 +25,6 @@ Keyword:
 
 具体实现可以参考[React-error-catcher](https://github.com/Y-lonelY/react-error-catcher)
 
-
 ## How did the error occurs？
 
 在 React 内，一个错误是如何产生的呢？
@@ -72,16 +71,12 @@ render() {
 }
 ```
 
-
-
 在 React 内错误根据其**表现类型**可以分为：
 
 - 渲染错误，即在渲染阶段发生异常，比如某个组件没有引入就使用
 - 引用错误，即引入某个资源文件时发生错误，这个往往在编译过程中能够捕获到。在这里我们讨论异步引入的情况
 - 事件处理，即渲染没问题，但是在在调用其触发事件时发生错误，比如 `JSON.parse(JSON.parse("some reason"))`，这类错误可以细分为用户手动触发和脚本触发，可以参考 `Error.isTrusted` 属性进行理解
 - 异步代码，比如 `promise.reject("some reason")`
-
-
 
 ## How to catch errors in React?
 
@@ -95,8 +90,6 @@ render() {
 - `window.addEventListener('unhandledrejection')`，可以捕获**异步代码**错误
 
 接下来，我们将从 **错误类型**，**捕获时机**和**捕获信息**对这三种事件逐一进行介绍
-
-
 
 ### Error boundaries
 
@@ -113,8 +106,6 @@ Error boundaries **可以捕获并打印发生在其子组件树任何位置的 
 - 服务端渲染
 
 注意，**Error Boundaries 仅捕获其子组件中的错误，本身的错误无法捕获**，这要求我们在封装组件时，我们需要对组件本身的错误进行处理，使其能够捕获并且不会陷入死循环
-
-
 
 ### ErrorEvent of JavaScript
 
@@ -135,10 +126,8 @@ Error boundaries **可以捕获并打印发生在其子组件树任何位置的 
 
 通过 `onunhandledrejection` 捕获的错误类型为 [PromiseRejectionEvent](https://developer.mozilla.org/zh-CN/docs/Web/API/PromiseRejectionEvent) ，它出现在 JavaScript 内 `promise` 被 `reject` 时触发事件，其同样继承于 Event，其自身属性包括：
 
-- `promise` 
+- `promise`
 - `reason` 表示 promise 为什么被 rejected
-
-
 
 ## Catched error data
 
@@ -170,8 +159,6 @@ export interface ErrorInfo {
   screenWidth?: number | string
 }
 ```
-
-
 
 ## Create a component
 

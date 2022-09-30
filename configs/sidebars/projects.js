@@ -68,7 +68,7 @@ const ftc = {
       type: 'category',
       label: 'joyutils',
       collapsed: false,
-      items: [`${ftcPrefix}joyutils/readme`],
+      items: [`${ftcPrefix}joyutils/readme`, `${ftcPrefix}joyutils/ECharts`],
     },
   ],
   joylintSiderBar: [

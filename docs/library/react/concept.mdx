@@ -103,78 +103,27 @@ useEffect(() => {
 
 ### useState
 
-> 用来解决在函数组件内使用 state 特性的问题
+:::note state
+
+用来解决在函数组件内使用 state 特性的问题
+
+:::
 
 **知识要点**
 
-1. 一般来说，函数执行完毕，其作用域内的变量等会被回收掉，但是通过 `useState` 设置的变量会被 React 保留
+- 一般来说，函数执行完毕，其作用域内的变量等会被回收掉，但是通过 `useState` 设置的变量会被 React 保留
+- 可以这么读：向 `useState()` 内传入一个参数作为初始化数据，其会返回两个参数: state 和 setState，即当前的 state 和改变它的方法
+- 不同于 class 中的 `this.setState`，**更新 state 变量总是替换它而不是合并它**
 
-2. 可以这么读：向 `useState()` 内传入一个参数作为初始化数据，其会返回两个参数: state 和 setState，即当前的 state 和改变它的方法
+`useState` 的异步特性会带来**读写不一致的问题**
 
-3. 不像 class 中的 `this.setState`，**更新 state 变量总是替换它而不是合并它**
+React 在设计时出于性能的考虑，将多个状态的改变放在一个队列内，争取只重绘一次就能够解决问题。这样子就意味着，`useState` 本身是异步的。
+
+直接表现在，当你调用 `setState` 方法之后，立即读取 `state` 仍为旧值，即读取不同步。
+
+要解决这个问题，我们可以设置一个局部变量来保持同一引用，在 React 内，使用 `useRef` 来保持其实例引用：
 
 ```js
-import React, { useState, useEffect } from 'react'
-
-interface Data {
-  name: string;
-  age: number;
-}
-
-// 这里结合 typescript 来使用
-function Test() {
-  const [data, setData] =
-    useState <
-    Data >
-    {
-      name: '',
-      age: 17,
-    }
-
-  /**
-   * 和 class 的 `setState()` 方法不同
-   * 通过 hook 来更新 state 是直接替换，而 `setState()` 是合并操作
-   * 这意味着 setData 时要传入完整的 state
-   */
-  useEffect(() => {
-    const { age } = data
-    setData({
-      ...data,
-      age: age + 1,
-    })
-  }, [])
-}
-```
-
----
-
-我们接下来来讨论，`useState` 一些特性带来的"麻烦"
-
-React 在设计时出于性能的考虑，将多个状态的改变放在一个队列内，争取只重绘一次就能够解决问题。这样子就意味着，`useState` 本身是异步的，直接表现就是，当你调用 `setState` 方法之后，立即读取 `state` 仍为旧值，即读取不同步。
-
-看下面一个例子：
-
-```typescript
-const [timer, setTimer] = useState<number>(0)
-
-function handleTimer() {
-  const v = setTimeout(() => {}, 0)
-  setTimer(v)
-}
-
-useEffect(() => {
-  return function cleanup() {
-    // 仍为 0
-    clearTimeout(timer)
-  }
-}, [])
-```
-
-在上面的例子中，**并不能清除当前的定时器任务**，原因在于：timer 是 useState 的一个返回，读的是旧值，写的是新值，不是同一个值（即不同引用）。
-
-要解决这个问题，我们可以设置一个局部变量来保持同一引用，或者可以尝试一些更 React 的方式，使用 useRef 来保持其实例引用：
-
-```typescript
 const timer = useRef(0)
 
 function handleTimer() {

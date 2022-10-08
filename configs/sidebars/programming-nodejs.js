@@ -18,6 +18,7 @@ const nodejsProgrammingSidebar = {
       label: 'Node.js Toolkits',
       collapsed: true,
       items: [
+        `${toolkitPrefix}/npm`,
         `${toolkitPrefix}/zx`,
         `${toolkitPrefix}/pm2`,
         `${toolkitPrefix}/axios`,

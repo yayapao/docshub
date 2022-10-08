@@ -20,10 +20,40 @@ import { ResolvedTag } from '/src/components/Highlights/CustomizedTag'
       label: `what's npm?`,
       link: 'https://www.npmjs.com/about',
     },
+    {
+      label: `npm-run-script`,
+      link: 'https://docs.npmjs.com/cli/v8/commands/npm-run-script',
+    },
   ]}
 />
 
 <!-- -->
+
+## Guidebook
+
+### 执行 `npm run X` 的过程？
+
+`npm run` 是 `npm run-scripts` 的代称，用来执行 package.json 内 `scripts` 字段所对应的脚本。
+
+那么当我们在执行 `npm run X` 时，实际发生了什么？
+
+**一言以蔽之：`npm run` 的本质是执行脚本，而 npm 帮我们处理了寻找可执行脚本的过程。**
+
+假设我们在 package.json 内有如下配置：
+
+```json
+"scripts": {
+  "dev": "umi dev",
+},
+```
+
+当执行 `npm run dev` 时，npm 会先在 **本地 `node_modules/.bin`目录下找寻 `umi` 命令**，找到之后立即执行，相当于 `node_modules/.bin umi dev`。如果没有找到，会在全局安装的 node_modules 内继续寻找。
+
+`node_modules/.bin` 内存放的实际上是各个执行脚本的软链接（Symbolic link），`umi` 实际指向 `node_modules/umi/bin/umi.js`
+
+- 这里的实际指向路径由 `node_modules/umi/package.json` 的 `bin` 属性决定
+- 当执行 `npm install umi` 时，npm 会读取 umi 内的 `bin` 声明，并将相应文件（这里指 `node_modules/umi/bin/umi.js`）软链接到 `node_modules/.bin` 目录下
+- 同时，npm 会将 `node_modules/.bin` 加入到 **$PATH**，从而可以直接作为命令运行依赖程序和开发依赖程序
 
 ## Troubleshooting
 

@@ -17,8 +17,67 @@ import { HighlightWithText } from '/src/components/Highlights'
       label: 'useEffect vs useLayoutEffect',
       link: 'https://kentcdodds.com/blog/useeffect-vs-uselayouteffect',
     },
+    {
+      label: 'useMemo',
+      link: 'https://beta.reactjs.org/apis/react/useMemo'
+    }
   ]}
 />{' '}
+
+## useMemo
+
+:::note
+
+`useMemo` caches a calculation result between re-renders untils its dependencies change.
+
+:::
+
+`memoization` 被用来在 re-renders 判断是否使用缓存，这意味着它不会解决第一次渲染带来的消耗，而会在组件更新时提供帮助。通常用来解决：
+
+- 用 `useMemo` 处理消耗大量资源的重新计算（Skipping expensive recalculation）
+- 用 `memo` 和 `useMemo` 处理组件的重新渲染（Skipping re-rendering of components）
+
+```tsx
+// 通过 `memo` 来包裹 List 组件，当 props 不发生改变时，List 不会被重新渲染
+// 但是如果每次 props 都是一个新的数组（值相同，但是引用地址改变），则其仍会重新渲染
+import { memo } from 'react';
+
+const List = memo(function List({ items }) {
+  // ...
+});
+```
+
+此时需要结合 `useMemo` 来优化上游 props.
+
+```tsx
+export default function TodoList({ todos, tab, theme }) {
+  // Tell React to cache your calculation between re-renders...
+  const visibleTodos = useMemo(
+    () => filterTodos(todos, tab),
+    [todos, tab] // ...so as long as these dependencies don't change...
+  );
+  return (
+    <div className={theme}>
+      {/* ...List will receive the same props and can skip re-rendering */}
+      <List items={visibleTodos} />
+    </div>
+  );
+}
+```
+
+### 为什么不建议在任何地方使用 `useMemo`?
+
+1. 代码可读性变差；
+2. 有些组件即使用了 `useMemo` 也没啥影响，需要从底层去发现并解决问题，比如 `useMemo` 依赖值每次都更新，那么此时 `useMemo` 并无用处；
+
+为了避免过度使用 memoization 我们应该遵循以下法则：
+
+- 使用 JSX 作为子组件传递，当自身组件的 state 改变时，React 可以判断是否需要 re-render 子组件；
+- 尽量不要提升 state，更多地使用 local state
+- 保持更加纯粹的渲染逻辑
+- 在状态更新时，避免不必要的 Effects
+- 清除不必要的 Effetcs 依赖
+
 
 ## useEffect vs useLayoutEffet
 
@@ -26,7 +85,7 @@ import { HighlightWithText } from '/src/components/Highlights'
 
 `useEffect` 与 `useLayoutEffect` 的区别在于执行时机，99% 的场景都是使用 `useEffect`，因为其被设计有更好的执行性能。
 
-**执行时机的区别**
+**两者的执行时机**
 
 - 用户交互导致组件内的 `props` 或者 `state` 变化
 - React 执行完毕所有 DOM mutations

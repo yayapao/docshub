@@ -18,11 +18,21 @@ import { HighlightWithText } from '/src/components/Highlights'
       link: 'https://kentcdodds.com/blog/useeffect-vs-uselayouteffect',
     },
     {
-      label: 'useMemo',
-      link: 'https://beta.reactjs.org/apis/react/useMemo'
+      label: 'Before You memo()',
+      link: 'https://overreacted.io/before-you-memo/'
     }
   ]}
 />{' '}
+
+## 关于 re-render
+
+在 React 内，发生 re-render 往往是由于一下原因：
+
+- 组件 state 变化
+- 父组件 re-render 导致子组件 re-render
+- Context 变化
+- Hooks 变化
+
 
 ## useMemo
 

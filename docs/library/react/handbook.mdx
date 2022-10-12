@@ -30,14 +30,26 @@ import { HighlightWithText } from '/src/components/Highlights'
 
 ## 关于 re-render
 
+:::tips
+
+React 的工作之一就是保持 React state 和 application UI 同步。
+
+:::
+
+React 每次 render 实际上就是一次**快照**，snapshot 的 React state 表示 application UI 应该如何展示。React 需要从前后两次 snapshot 找出**差异**。
+
 _What triggers a re-render in React?_
 
-在使用 `memo() / useMemo()` 之前，我们需要在 React 内，发生 re-render 往往是由于一下原因：
+在使用 `memo() / useMemo()` 之前，我们需要在 React 内，发生 re-render 往往是由于以下原因：
 
 - 组件 state 变化，会导致组件及其子（孙）组件 re-render
-- 父组件 re-render 导致子组件 re-render
-- Context 变化
+- 父组件 re-render 导致子组件 re-render，**注意 `props` 和 re-render 本质上没有关系**
+- Context 变化，context 可以看作是 `internal props`
 - Hooks 变化
+
+为什么说 re-render 是由于父组件重新渲染而不是由于 `props` 变更导致呢？
+
+因为 `props` 变更是果，父组件 re-render 才是根。即使子组件没有任何接受任何 `props`，当父组件发生 re-render 时，该子组件仍然会 re-render。这样运行的原因很大程度上是因为 React 并不能 100% 确定 state 的改变是否会间接影响到其子（孙）组件，因此它选择全部 re-render。这是 React 基本的执行标准，但是我们可以通过 `memoization` 来避免该行为！
 
 ## useMemo
 
@@ -81,6 +93,10 @@ export default function TodoList({ todos, tab, theme }) {
 ```
 
 ### 为什么不建议在任何地方使用 `useMemo`?
+
+或者说**为什么 React 不将 memoization 作为默认行为？**
+
+一次快照通常包括两个阶段：**find diffs** and **re-render**。作为开发者，我们往往高估了 re-render 带来的性能损耗，并且低估了 React 对 props 差异比较的成本。
 
 1. 代码可读性变差；
 2. 有些组件即使用了 `useMemo` 也没啥影响，需要从底层去发现并解决问题，比如 `useMemo` 依赖值每次都更新，那么此时 `useMemo` 并无用处；

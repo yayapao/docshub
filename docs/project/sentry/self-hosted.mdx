@@ -1,110 +1,163 @@
 ---
 id: self_hosted
-title: 私有化部署
+title: ''
 sidebar_label: self hosted
 ---
 
 import { HighlightWithText } from '/src/components/Highlights'
+import { DocsHeader } from '/src/components/Layout/DocsHeader'
 
-对于开源项目，出于数据安全和功能拓展的考虑，我们一般会选择私有化部署。在本章节，我们将讨论私有化部署 Sentry 的解决方案。
+<DocsHeader
+  title="Sentry Self Hosted"
+  description="对于开源项目，出于数据安全和功能拓展的考虑，我们一般会选择私有化部署。"
+  github="https://github.com/getsentry/self-hosted"
+  tags={['self-hosted']}
+  links={[
+    {
+      label: 'Development Environment',
+      link: 'https://develop.sentry.dev/environment/',
+    },
+  ]}
+/>{' '}
+
+在本章节，我们将着重讨论如何私有化部署 Sentry 服务。
 
 ## 官方解决方案
 
-参考[官方推荐私有化部署](https://github.com/getsentry/self-hosted)，它是将 Sentry 依赖的各个服务挂载到 Docker 上，通过 Docker-compose 来统一管理
+参考[官方推荐私有化部署](https://github.com/getsentry/self-hosted) 我们可以直接通过 Dokcer-compose 启动整个应用。它是将 Sentry 依赖的各个服务挂载到 Docker 上，通过 Docker-compose 来统一管理。达到 **All-in-one** 的效果。
 
-系统要求：
-- Docker 19.03.6+ 
-- Compose 1.28.0+
-- 4 CPU Cores
-- 8 GB RAM
-- 20 GB Free Disk Space
-- MacOS
+官方推荐的私有化方式能够快速部署上线，但是这种方式存在明显劣势：
 
-部署流程参考官方文档即可。官方推荐的私有化方式能够快速部署上线，但是由于整个服务部署在单机上，无法灵活地扩容，性能瓶颈十分明显。因此在实际生产中，我们并没有直接采纳该方案，而是将其各个服务拆解出来，独立部署。
+- 整个系统部署在单机上，无法灵活地扩容，性能瓶颈十分明显
+- 排障困难
+- 无法自定义开发
 
-:::info why this way works?
-因为 sentry 本身基于 redis、Kafka 和 CK 等数据服务来进行事件流的通信和处理，业务服务之间并未直接依赖
+因此在生产环境内，我们将其各个服务拆解出来，独立部署，以此来解决上述问题。
+
+:::tips why this way works?
+
+Sentry 本身基于 redis、postgres、Kafka 和 CK 等数据服务来进行服务间事件流的通信、处理以及数据存储，模块之间并未直接依赖
+
 :::
 
+## DEVELOPMENT
 
-## 环境准备
-
-现在目标很明确：在测试环境（本地）将 Sentry 各个服务跑起来，之后将各个服务拆开，进而部署到生产环境。
-
-参考[官方文档-Environment](https://develop.sentry.dev/environment/) 部署运行时环境并且安装依赖。
-
-### 运行时依赖
-
-<HighlightWithText text="源码"/> 
-
-- [clone sentry](https://github.com/getsentry/sentry) **建议选择最新的稳定 release 版本**
-
-<HighlightWithText text="基础环境准备 - MacOS"/> 
-
-- 执行 `xcode-select --install` 或者启动 Xcode 更新 Xcode CLI tools，目的是安装 MacOS 的基础开发环境
-- 进入 sentry 本地目录，执行 `brew bundle --verbose` 安装在 Brewfile 内列出的各种软件
-
-<HighlightWithText text="Python 依赖"/> 
+在上线生产之前，我们需要现在本地将各个服务跑起来，并且在这里我们仅针对 Sentry 做自定义开发。
 
 :::caution
-**⚠️ 一定要主要重启控制台！**
+
+本章节系统均为 MacOS.
+
 :::
 
-Sentry 依赖 [python wheels](https://pythonwheels.com/)，它包含一些二进制包，需要保证 MacOS 版本较新且本机内安装有 Rust 执行环境
+### 环境准备
 
-Sentry 利用 [pyenv](https://github.com/pyenv/pyenv) 来安装和管理 python 版本，执行 `brew install pyenv` 安装一下，之后执行 `make setup-pyenv` 安装 Sentry 依赖环境
-  - 安装完成之后，执行 `which python` --> 预期出现 `/usr/bin/python`
-  - 修改 `bash_profile`，添加 `#pyenv \n eval "$(pyenv init -)" \n export PATH="$HOME/.pyenv/bin:$PATH"` 来指定路径
-  - 执行 `eval "$SHELL"` 重启控制台 
-  - 再次执行 `which python` --> 预期出现 `/Users/you/.pyenv/shims/python`，相当于做了一次拦截，将 python 命令托管给 pyenv 后统一处理
-  - 在 sentry 根目录下，执行 `python -m venv .venv` 创建 python 项目虚拟执行路径
-  - `source .venv/bin/activate` 启用运行环境
-  - 此时在虚拟环境内执行 `which python` --> 预期出现 `/Users/you/sentry/.venv/bin/python`
+在 MacOS 内可以直接执行脚本一键安装，它会尽力确保 MacOS 下开发环境一致。
 
-<HighlightWithText text="Node.js 依赖"/> 
+```bash
+bash <(curl -s https://raw.githubusercontent.com/getsentry/bootstrap-sentry/main/bootstrap.sh)
+```
 
-Sentry 依赖 [volta](https://github.com/volta-cli/volta) 来安装和管理 Node.js 版本
-  - 执行 `curl https://get.volta.sh | bash` 来 install volta
-  - 执行 `eval "$SHELL"` 重启控制台
-  - 修改 `bash_profile`，添加 `export VOLTA_HOME="$HOME/.volta" \n export PATH="$VOLTA_HOME/bin:$PATH"`
+同样，我们也记录手动安装的各个步骤：
 
-<HighlightWithText text="管理环境变量"/> 
+注意除此之外还需要安装 Docker
 
-- Sentry 依赖 [direnv](https://github.com/direnv/direnv) 来自动激活你的虚拟环境，设置一些必要的环境变量，并且会自动检测你的环境是否可用
-  - 执行 `brew install direnv` ，之后在 `.zshrc` 文件末尾添加配置 `eval "$(direnv hook zsh)"`
-  - 执行 `eval "$SHELL"` 重启控制台
+```bash
+# 克隆官方仓库，建议选择最新的稳定 release 版本
+git clone https://github.com/getsentry/sentry.git
+cd sentry
 
-## 启动项目
+# MacOS 安装系统依赖
+xcode-select --install
 
-执行 `make bootstrap` 来启动项目，在 Docker Dashboard 内观察 Sentry 服务的运行情况，理论上会启动：
+# 安装 Brewfile 列举的 packages
+brew bundle --verbose
+```
 
-- `sentry_relay` （会在每次启动 sentry 服务时，自动启动一个 relay 服务）
-- `sentry_snuba`
-- `sentry_kafka`
-- `sentry_zookeeper`
-- `sentry_postgres`
-- `sentry_redis`
-- `sentry_clickhouse`
+由于 Sentry 使用 [Python Wheels](https://pythonwheels.com/) 打包，而该工具基于 rust，因此我们需要[install rust](https://www.rust-lang.org/tools/install)。
 
-### 运行 Sentry
+通过 `rust update stable` 来确保最新稳定的 rust 版本。
 
-:::caution --workers
-如果需要走通 sentry 上报的全部流程(即启动所有服务)，需要执行 `sentry devserver --workers`
-:::
+Sentry 利用 `pyenv` 来管理 Python 版本：
 
-在本地仓库内，重点观察 `Makfile`, `setup.py` 文件，下面介绍运行命令：
+```bash
+# 如果系统内没有 pyenv，则通过 brew 安装
+brew install pyenv
 
-- 执行 `make bootstrap` 在 docker 内启动服务
-- 执行 `sentry help` 查看相关命令
+# 装 Sentry 依赖环境
+make setup-pyenv
+```
+
+- 安装完成之后，执行 `which python` --> 预期出现 `/usr/bin/python`
+- 修改 `bash_profile`，添加 `#pyenv \n eval "$(pyenv init -)" \n export PATH="$HOME/.pyenv/bin:$PATH"` 来指定路径
+- 执行 `eval "$SHELL"` 重启控制台
+- 再次执行 `which python` --> 预期出现 `/Users/you/.pyenv/shims/python`，相当于做了一次拦截，将 python 命令托管给 pyenv 后统一处理
+- 在 sentry 根目录下，执行 `python -m venv .venv` 创建 python 项目虚拟执行路径
+- `source .venv/bin/activate` 启用运行环境
+- 此时在虚拟环境内执行 `which python` --> 预期出现 `/Users/you/sentry/.venv/bin/python`
+
+Node.js 版本通过 [volta](https://github.com/volta-cli/volta) 管理，这里不再赘述。
+
+Sentry 通过 `direnv` 自动激活你的虚拟环境，设置一些必要的环境变量，并且会自动检测你的环境是否可用，进入目录后可以通过 `direnv allow ` 来进行激活。
+
+```bash
+brew install direnv
+
+# 在 .zshrc 文件末尾添加
+eval "$(direnv hook zsh)"
+```
+
+### 启动项目
+
+执行 `make bootstrap` 来初始化项目，它会执行如下命令：
+
+- `sentry init` 创建基本配置文件在 `~/.sentry/`
+- `sentry devservices up` 用来启动 Docker services
+- `sentry upgrade` 用来执行 Postgres migrations（更新表结构）
+
+之后可以执行 `sentry devserver --workers` 来启动整个项目。
+
+在 Docker Dashboard 内观察 Sentry 服务的运行情况。Docker services 启动项配置在 `src/sentry/conf/server.py`，我们可以更改来灵活进行配置。比如修改 `pull: False` 来直接使用本地的镜像。
+
+理论上会启动如下服务：
+
+- `sentry_relay` （在每次启动 sentry 服务时才会创建 container）
+
+```
+CONTAINER ID   IMAGE                                COMMAND                  CREATED          STATUS                 PORTS                                                                          NAMES
+85d2e8ab542b   ghcr.io/getsentry/snuba:latest       "./docker_entrypoint…"   52 minutes ago   Up 52 minutes          127.0.0.1:1218->1218/tcp                                                       sentry_snuba
+76f826b6d8b6   confluentinc/cp-kafka:5.1.2          "/etc/confluent/dock…"   12 months ago    Up 2 hours             127.0.0.1:9092->9092/tcp                                                       sentry_kafka
+0277a232111e   confluentinc/cp-zookeeper:5.1.2      "/etc/confluent/dock…"   12 months ago    Up 2 hours             2181/tcp, 2888/tcp, 3888/tcp                                                   sentry_zookeeper
+88daf5f278cc   postgres:9.6-alpine                  "docker-entrypoint.s…"   12 months ago    Up 2 hours (healthy)   127.0.0.1:5432->5432/tcp                                                       sentry_postgres
+bc0a0d455542   redis:5.0-alpine                     "docker-entrypoint.s…"   12 months ago    Up 2 hours             127.0.0.1:6379->6379/tcp                                                       sentry_redis
+c9cb1fa5a2f6   yandex/clickhouse-server:20.3.9.70   "/entrypoint.sh"         12 months ago    Up 2 hours             127.0.0.1:8123->8123/tcp, 127.0.0.1:9000->9000/tcp, 127.0.0.1:9009->9009/tcp   sentry_clickhouse
+```
+
+注意，当在本地运行不同版本的 sentry 代码时，我们的依赖环境往往会发生变化，可能存在旧版本的 snuba 和新版本的 sentry 不匹配的现象。此时我们可以通过观察 `server.py` 配置，来单独创建相关 container。
+
+```bash
+# 启动指定服务
+sentry devservices up [service]
+
+# 支持的服务
+Services that are available:
+redis
+postgres
+zookeeper
+kafka
+clickhouse
+snuba
+relay
+```
 
 ### 打包构建
 
 这里我们参考源仓库的 `/docker/builder.*` 文件来查看构建流程，基于此，我们开发了一个构建脚本。
 
 最终效果会在 dist 目录下生成构建产物
+
 - **requirements.txt** 用来表示需要安装的依赖
 - **sentry-[sentry version]-[python version]-none-any.whl** 打包文件
-
 
 ## Relay
 
@@ -121,6 +174,7 @@ Relay Server 是一个运行在应用和 Sentry.io 之间的独立中间层服�
 这一步我们目的是获取 relay 的可执行文件、配置文件、必须物料
 
 我们获取构建产物的途径：
+
 - 根据 [relay 源码](https://github.com/getsentry/relay) 打包
 - [dockerhub](https://hub.docker.com/r/getsentry/relay) 内获取
 
@@ -129,6 +183,7 @@ Relay Server 是一个运行在应用和 Sentry.io 之间的独立中间层服�
 思路：下载官方镜像，在本地容器内启动之后，通过 `docker cp` 将其拷贝到本地；上传到存储服务后，每次构建拉取文件即可。
 
 具体步骤：
+
 1. 参考 Dockerfile.relay.local 编写 Dockerfile；
 2. 构建本地镜像
 
@@ -162,10 +217,10 @@ processing:
 ```
 
 5. 执行 `docker cp [container id]:[path] [local host path]` 将容器内文件拷贝至本地，需要拷贝文件包括：
+
 - **/usr/local/bin/relay** relay 的二进制文件
 - **/opt/relay/relay.src.zip**
 - **/opt/relay/relay-debug.zip**
-
 
 #### 源码打包
 
@@ -174,6 +229,7 @@ processing:
 #### 配置文件
 
 配置文件包括：
+
 - **config.yml**
 - **credentials.json**
 
@@ -184,12 +240,13 @@ processing:
 #### 其他必须物料
 
 必须物料：
+
 - **GeoLite2-City.mmdb** 直接在仓库内下载即可，用来指定地理位置文件路径
 
 ```yml
 processing:
   enabled: true
-  geoip_path: "/var/cache/geoip/GeoLite2-City.mmdb"
+  geoip_path: '/var/cache/geoip/GeoLite2-City.mmdb'
 ```
 
 ### 构建镜像
@@ -201,5 +258,3 @@ processing:
 - 启动 relay 服务
 
 相关 Dockerfile 参考 [Dockerfile.relay.start]
-
-

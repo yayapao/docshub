@@ -1,13 +1,24 @@
 ---
 id: entry
-title: Nice Node.js!
+title: ''
 sidebar_label: Nice Node.js
 slug: entry
 ---
 
-:::note what's Node.js?
-Node.js is an open-source and cross-platform JavaScript runtime environment built on Chrome's V8 engine
-:::
+import { DocsHeader } from '/src/components/Layout/DocsHeader'
+
+<DocsHeader
+  title="Nice Node.js"
+  description="Node.js is an open-source and cross-platform JavaScript runtime environment built on Chrome's V8 engine"
+  github="https://github.com/nodejs/node"
+  tags={['JavaScript', 'Runtime']}
+  links={[
+    {
+      label: 'Node.js topic',
+      link: 'https://github.com/topics/nodejs',
+    },
+  ]}
+/>{' '}
 
 在这里，我们先给 Node.js 下一个定义：Node.js 是一个基于 Chrome V8 引擎的 JavaScript 运行时。所谓运行时，可以将其想象成一个执行环境，里面包含了运行代码所需的编译器和操作系统的底层支持。
 
@@ -16,7 +27,7 @@ Node.js is an open-source and cross-platform JavaScript runtime environment buil
 
 在开始之前，我们先进行一些知识储备：
 
-**回调**
+### 回调
 
 回调在 Node.js 中被大量使用，其本质是一个高阶函数，即接受一个可执行函数作为参数，并返回一个函数，比如
 
@@ -30,13 +41,13 @@ fs.readFile('app.json', function (err, data) {
 })
 ```
 
-**CPU 执行**
+### CPU 执行
 
 在任务完成之前，CPU 在任何情况下都不会暂停或者停止执行，即 CPU 如何执行和同步或者异步、阻塞还是非阻塞没有必然联系
 
 操作系统保证 CPU 始终出于执行中状态，这是通过系统调度来实现的，具体一点就是通过在不同进程/线程内切换实现的
 
-**并发和并行**
+### 并发和并行
 
 并发和并行分别对应计算机的两种需求
 
@@ -46,7 +57,7 @@ fs.readFile('app.json', function (err, data) {
 
 Node.js 通过单线程 + 事件机制实现并发，不同于 Java 通过多线程实现并发
 
-**同步和异步**
+### 同步和异步
 
 同步/异步描述的是进程/线程的调用方式，注意这里需要区别于阻塞/非阻塞
 
@@ -56,7 +67,7 @@ Node.js 通过单线程 + 事件机制实现并发，不同于 Java 通过多线
 
 异步则是指当进程 / 线程发起调用时，会继续执行，等到调用返回时再以某种方式通知调用者
 
-**阻塞和非阻塞**
+### 阻塞和非阻塞
 
 当你在 Node.js 进程内执行一段新增的 JavaScript 代码时，需要等待非 JavaScript 操作执行完毕，此时就是处于阻塞状态
 

@@ -10,7 +10,12 @@ import { DocsHeader } from '/src/components/Layout/DocsHeader'
   title="Linux Handbook"
   description="Learning Linux from practice."
   tags={['Linux', 'Bash', 'Shell']}
-  links={[]}
+  links={[
+    {
+      label: 'Linux 教程',
+      link: 'https://www.runoob.com/linux/linux-tutorial.html',
+    },
+  ]}
 />{' '}
 
 ## CommandLine
@@ -68,6 +73,9 @@ $ date # Wed Oct 12 10:53:47 CST 2022 展示当前系统时间
 
 # 输出当前时间戳
 $ date +"%s"
+
+# 输出指定格式时间 => "2022-10-12 10:58:26"
+date +"%F %T"
 ```
 
 ### `top`

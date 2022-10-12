@@ -49,6 +49,16 @@ const navbarConfig = {
       position: 'left',
       items: [
         {
+          label: 'Node.js',
+          to: '/docs/programming-language/nodejs/entry',
+          activeBaseRegex: '/docs/programming-language/nodejs',
+        },
+        {
+          label: 'Golang',
+          to: '/docs/programming-language/golang/entry',
+          activeBaseRegex: '/docs/programming-language/golang',
+        },
+        {
           label: 'JavaScript',
           to: '/docs/langs/javascript/concept',
           activeBaseRegex: '/docs/langs/javascript',
@@ -59,20 +69,11 @@ const navbarConfig = {
           activeBaseRegex: '/docs/langs/typescript',
         },
         {
-          label: 'Node.js',
-          to: '/docs/programming-language/nodejs/entry',
-          activeBaseRegex: '/docs/programming-language/nodejs',
-        },
-        {
           label: 'Python3',
           to: '/docs/langs/python/concept',
           activeBaseRegex: '/docs/langs/python',
         },
-        {
-          label: 'Golang',
-          to: '/docs/langs/go/fun',
-          activeBaseRegex: '/docs/langs/go',
-        },
+
         {
           label: 'HTML5',
           to: '/docs/langs/html5/concept',
@@ -85,17 +86,6 @@ const navbarConfig = {
         },
       ],
     },
-    // {
-    //   label: 'Toolkit',
-    //   position: 'left',
-    //   items: [
-    //     {
-    //       label: 'Interview',
-    //       to: '/docs/interview/js',
-    //       activeBaseRegex: '/docs/interview',
-    //     },
-    //   ],
-    // },
     {
       className: 'header-showcase-link',
       position: 'right',

@@ -15,7 +15,7 @@ import { HighlightWithText } from '/src/components/Highlights'
   links={[
     { label: 'Getting Started', link: 'https://gorm.io/zh_CN/docs/index.html' },
   ]}
-/> 
+/>{' '}
 
 ## FAQ
 
@@ -23,9 +23,9 @@ import { HighlightWithText } from '/src/components/Highlights'
 
 在插入数据时出现 `incorrect datetime value '0000-0-0 00:00:00' for column`，原因是 MySQL v8 以上版本不支持零值日期。
 
-<HighlightWithText text="解决方案"> 
+<HighlightWithText>解决方案</HighlightWithText>
 
-1. **设置MySQL 的 sql_mode**
+1. **设置 MySQL 的 sql_mode**
 
 ```sql
 # 查看当前支持的 mode，删除 NO_ZERO_DATE 配置
@@ -38,6 +38,3 @@ set global sql_mode='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,ERRO
 2. **检查 gorm 支持的日期自动填充字段**
 
 在 gorm 内，约定的字段名为 `CreatedAt` 和 `UpdatedAt`，注意拼写正确。
-
-
-

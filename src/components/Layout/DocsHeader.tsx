@@ -17,6 +17,8 @@ export const DocsHeader: React.FC<DocsHeaderProps> = (props) => {
   const showTags = tags && Array.isArray(tags) && tags.length > 0
   const showLinks = links && Array.isArray(links) && links.length > 0
 
+  const showTagDivider = npm || github
+
   return (
     <header className={styles.headerContainer}>
       <h1 className={styles.headerTitle}>{title}</h1>
@@ -42,7 +44,7 @@ export const DocsHeader: React.FC<DocsHeaderProps> = (props) => {
         )}
         {showTags && (
           <div className={styles.TagContainer}>
-            <span className={styles.divider}>|</span>
+            {showTagDivider && <span className={styles.divider}>|</span>}
             {tags.map((item) => (
               <span className={styles.docsTag} key={item}>
                 {item}

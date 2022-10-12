@@ -18,21 +18,26 @@ import { HighlightWithText } from '/src/components/Highlights'
       link: 'https://kentcdodds.com/blog/useeffect-vs-uselayouteffect',
     },
     {
+      label: 'Why React Re-Renders',
+      link: 'https://www.joshwcomeau.com/react/why-react-re-renders/',
+    },
+    {
       label: 'Before You memo()',
-      link: 'https://overreacted.io/before-you-memo/'
-    }
+      link: 'https://overreacted.io/before-you-memo/',
+    },
   ]}
 />{' '}
 
 ## 关于 re-render
 
-在 React 内，发生 re-render 往往是由于一下原因：
+_What triggers a re-render in React?_
 
-- 组件 state 变化
+在使用 `memo() / useMemo()` 之前，我们需要在 React 内，发生 re-render 往往是由于一下原因：
+
+- 组件 state 变化，会导致组件及其子（孙）组件 re-render
 - 父组件 re-render 导致子组件 re-render
 - Context 变化
 - Hooks 变化
-
 
 ## useMemo
 
@@ -50,11 +55,11 @@ import { HighlightWithText } from '/src/components/Highlights'
 ```tsx
 // 通过 `memo` 来包裹 List 组件，当 props 不发生改变时，List 不会被重新渲染
 // 但是如果每次 props 都是一个新的数组（值相同，但是引用地址改变），则其仍会重新渲染
-import { memo } from 'react';
+import { memo } from 'react'
 
 const List = memo(function List({ items }) {
   // ...
-});
+})
 ```
 
 此时需要结合 `useMemo` 来优化上游 props.
@@ -65,13 +70,13 @@ export default function TodoList({ todos, tab, theme }) {
   const visibleTodos = useMemo(
     () => filterTodos(todos, tab),
     [todos, tab] // ...so as long as these dependencies don't change...
-  );
+  )
   return (
     <div className={theme}>
       {/* ...List will receive the same props and can skip re-rendering */}
       <List items={visibleTodos} />
     </div>
-  );
+  )
 }
 ```
 
@@ -87,7 +92,6 @@ export default function TodoList({ todos, tab, theme }) {
 - 保持更加纯粹的渲染逻辑
 - 在状态更新时，避免不必要的 Effects
 - 清除不必要的 Effetcs 依赖
-
 
 ## useEffect vs useLayoutEffet
 

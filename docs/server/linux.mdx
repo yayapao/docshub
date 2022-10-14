@@ -114,6 +114,9 @@ name = "yayapa"
 # 通过 ${...} 使用变量
 echo ${name}
 
+# 通过 `-e` 支持不转义
+echo "Hello, $name\n"
+
 # readonly 设置变量只读
 readonly read_name = "cool"
 

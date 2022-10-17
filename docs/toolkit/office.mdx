@@ -1,0 +1,40 @@
+---
+id: office
+title: ''
+sidebar_label: office
+---
+
+import { DocsHeader } from '/src/components/Layout/DocsHeader'
+import {
+  HighlightWithCode,
+  HighlightWithText,
+} from '/src/components/Highlights/TextContent'
+
+<DocsHeader
+  title="Office Related"
+  description="About office files."
+  tags={['Docx']}
+  links={[
+    {
+      label: `Redefined Editor?`,
+      link: 'https://code.visualstudio.com/docs',
+    },
+  ]}
+/>{' '}
+
+## Office Viewer
+
+最近在研究如何在 Web 上预览（或许需要编辑） office 文件（比如 .docx, .xlsx 等），通过调研发现了几种实现方案。
+
+- 直接将文件内容解析成浏览器可展示，比如 [react-file-viewer](https://github.com/plangrid/react-file-viewer)
+- 使用第三方 API 将解析文件，将返回 html 在 iframe 内进行展示
+- 将 office 文件转换成 PDF 格式后，在浏览器上进行展示，参考 [Gotenberg](https://github.com/gotenberg/gotenberg) 和 [pdf.js](https://github.com/mozilla/pdf.js)
+- 搭建一个在线 Office 平台，将其内嵌到当前页面，比如 [onlyoffice](https://github.com/ONLYOFFICE/onlyoffice-nextcloud)
+
+**Google 文档在线展示**
+
+`https://docs.google.com/viewer?url=[你的文档地址]`
+
+**MS 文档在线展示**
+
+`https://view.officeapps.live.com/op/view.aspx?src=[你的文档地址]`

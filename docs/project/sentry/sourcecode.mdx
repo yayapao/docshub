@@ -1,22 +1,41 @@
 ---
 id: sourcecode
-title: Sentry Source Code
+title: ''
 sidebar_label: Source Code
 ---
 
-import { HighlightWithText } from '../../../src/components/Highlights'
+import { DocsHeader } from '/src/components/Layout/DocsHeader'
+import {
+  HighlightWithCode,
+  HighlightWithText,
+} from '/src/components/Highlights/TextContent'
+import { ResolvedTag } from '/src/components/Highlights/CustomizedTag'
+
+<DocsHeader
+  title="Sentry Source Code"
+  description="Read Sentry sourcecode step by step."
+  tags={['sourcecode']}
+  links={[
+    {
+      label: `Ingest consumer pipeline`,
+      link: 'https://getsentry.github.io/event-ingestion-graph/',
+    },
+  ]}
+/>{' '}
 
 ## Customized OpenAPI
 
-:::note OpenAPI
-自定义 OpenAPI
+:::note
+
+如何自定义 OpenAPI？
+
 :::
 
 **Why need to customized openAPI?**
 
 我们希望基于采集数据做 sentry 尚未完备的分析和探索，因此我们需要提供接口来关联数据、分析数据以及对外提供服务。
 
-为什么不直连 clickhouse 进行分析？
+**为什么不直连 clickhouse 进行分析？**
 
 - 权限，sentry 通过 API token 来解决 openAPI 的权限问题
 - 架构复杂性，我们并不希望开启一个新的后端服务来做 sentry 内已兼备的工作
@@ -28,6 +47,264 @@ Sentry 的 API 服务是基于 [django](https://www.djangoproject.com/) 实现�
 - View 通常继承自 `[模块基类] > base.py > view.py`，以 project-event 为例，其位于 `src/sentry/api/endpoints/project_events.py`，类继承自 `ProjectEndpoint` 基类
 
 ## ingest-consumer
+
+:::tip What's ingest-consumer?
+
+The "ingest consumer" tasks read events from a kafka topic (coming from Relay) and schedules
+process event celery tasks for them
+
+:::
+
+**ingest-consumer** 用于消费由 Relay 写入 `ingest-events` topic 的数据，并为其编排事件处理任务。它是 Sentry 开始处理任务的第一步，我们可以单独部署来启动 `ingest-consumer` 服务。
+
+通过 `sentry run ingest-consumer --help` 查看该服务详情：
+
+```sh
+
+Usage: sentry run ingest-consumer [OPTIONS]
+
+  Runs an "ingest consumer" task.
+
+  The "ingest consumer" tasks read events from a kafka topic (coming from Relay) and schedules
+  process event celery tasks for them
+
+Options:
+  --consumer-type [events|attachments|transactions]
+                                  Specify which type of consumer to create, i.e. from which topic
+                                  to consume messages. By default all ingest-related topics are
+                                  consumed
+
+  --all-consumer-types            Listen to all consumer types at once.
+  --force-cluster TEXT            Kafka cluster ID of the overriden topic. Configure clusters via
+                                  KAFKA_CLUSTERS in server settings.
+
+  --force-topic TEXT              Override the Kafka topic the consumer will read from.
+  --auto-offset-reset [earliest|latest|error]
+                                  Position in the commit log topic to begin reading from when no
+                                  prior offset has been recorded.
+
+  --max-batch-time-ms INTEGER     How long to batch for before committing offsets.
+  --max-batch-size INTEGER        How many messages to process before committing offsets.
+  --consumer-group TEXT           Kafka consumer group for the consumer.
+  --concurrency INTEGER           Thread pool size (only utilitized for message types that support
+                                  concurrent processing)
+
+```
+
+其中：
+
+- `--concurrency` 仅用于支持并发处理的消息类型
+- 支持消费三种类型数据，我们可以根据实际情况来拆分服务。比如压力来自于 transctions，则可以通过 `--consumer-type` 将其独立部署
+
+在开始解读源码之前，我们通过 [Event Ingestion Pipline](https://getsentry.github.io/event-ingestion-graph/) 可以发现：
+
+- 在 Sentry 内，各 task 基于 Celery(使用 Redis) 进行通信，tasks 由 ingest-consumer 进行编排
+
+<!-- 展示 event-ingest 视图 -->
+
+<div
+  style={{
+    position: 'relative',
+    width: '100%',
+    height: '600px',
+    overflow: 'hidden',
+  }}
+>
+  <iframe
+    width="100%"
+    height="680"
+    frameborder="0"
+    scrolling="no"
+    style={{ position: 'absolute', top: '-110px', left: '-10px' }}
+    src="https://getsentry.github.io/event-ingestion-graph/"
+  ></iframe>
+</div>{' '}
+
+### Start
+
+我们以 `sentry run ingest-consumer --all-consumer-types --concurrency 16 --max-batch-size 100 --max-batch-time-ms 200` 作为命令入口，看看 Sentry 如何根据该命令启动服务。
+
+#### 命令入口
+
+`sentry/runner/commands/run.py` 作为入口文件，当接受到执行命令之后，会执行**初始化工作**：
+
+- 判断支持消费事件类型
+- 判断是否为 ThreadPoolExecutor(线程池处理器)，即并非处理
+- 初始化 `ingest_consumer` 实例
+- 执行其 `run()` 方法
+
+### 获取 ingest_consumer 实例
+
+我们通过 `get_ingest_consumer()` 方法获取 topic 的 consumer 实例。一般而言，实例化 Kafka 消费者需要：
+
+- topics
+- group name
+- cluster name
+
+![get_ingest_consumer](/img/fte/sentry/get_ingest_consumer.png)
+
+在 `sentry/ingest/ingest_consumer.py` 内，Sentry 解析 consumer-type 参数获取 **topics**，并调用 `create_batching_kafka_consumer()` 进一步获取实例。同时，在此步骤还在初始化 `IngestConsumerWorker` 实例，它被用来进行 tasks 编排。
+
+在 `sentry/utils/kafka.py` 内，Sentry 调用 `create_batching_kafka_consumer()` 方法，会先验证 topics 和配置的 cluster 是否合法。如果通过合法性检验，则继续返回 `BatchingKafkaConsumer()`
+
+在 `sentry/utils/batching_kafka_consumer.py`，Sentry 定义创建消费者实例的**核心方法**：
+
+- BatchingKafkaConsumer 是 `confluent_kafka.Consumer` 实现的进一步封装
+- 通过 `BatchingKafkaConsumer.__init__()` 方法，定义对象变量
+- 调用 `create_consumer()` 生成最终 consumer 并将其挂载至 `BatchingKafkaConsumer.consumer` 上
+
+```py
+# 创建 consumer 并订阅指定 topics，注意 Sentry 关闭了自动提交
+def create_consumer():
+    consumer_config = kafka_config.get_kafka_consumer_cluster_options(
+        cluster_name,
+        override_params={
+            "enable.auto.commit": False,
+            "group.id": group_id,
+            "default.topic.config": {"auto.offset.reset": auto_offset_reset},
+            # overridden to reduce memory usage when there's a large backlog
+            "queued.max.messages.kbytes": queued_max_messages_kbytes,
+            "queued.min.messages": queued_min_messages,
+        },
+    )
+    consumer = Consumer(consumer_config)
+    consumer.subscribe(
+        topics, on_assign=on_partitions_assigned, on_revoke=on_partitions_revoked
+    )
+
+    return consumer
+```
+
+Sentry 实现的 `Class BatchingKafkaConsumer` 是多种 kafka 消费者处理事件循环的抽象，它与原生的 `KafkaConsumer` 几个不同点：
+
+- 消费的消息会在本地处理，一旦拿到消息就会写入缓存的批处理中
+- 根据批次的触发时间或者 size 来触发 flush
+- **手动提交 offset**，这样做是为了减少数据丢失的概率（并不会减少重复消费的问题）。当一批数据发生 flush 时，会将其存储到外部存储节点，并立即提交 offset(在同一个线程/循环中)
+- 支持 `dead letter topic` 来处理 `process_evet` 发生错误的情况，以避免发生阻塞
+
+### 执行 `BatchingKafkaConsumer.run()` 方法
+
+:::tip
+
+`run()` 方法实际就是执行在实例化 consumer 时提供的 `Class IngestConsumerWorker` worker 实例所实现的事件循环。
+
+:::
+
+在 `sentry/utils/batching_kafka_consumer.py` 内，执行 `_run_once()` 方法，该方法会执行三个关键步骤：
+
+- `self._flush()` 用来决定 BatchingKafkaConsumer 是否需要执行 flush，即清空当前 batch 并且提交 offset 到 kafka
+- `msg = self.consumer.poll(timeout=1.0)`
+- `self._handle_message(msg)`
+
+在 `_flush()` 内会调用 `self.worker.flush_batch()`方法，之后依次执行 `self._commit()` 和 `self._reset_batch()`。
+
+其中，`self.worker.flush_batch()` 为**核心方法**。它会调用 `sentry/ingest/ingest_consumer.py` 文件内的 `flush_batch()` 方法。
+
+首先，执行 `mark_scope_as_unsafe()` 将 scope 显式标记为不安全，来允许 recursion breaker 在遍历堆栈寻找不安全文件之前尽早做出判断。设置完毕之后立即执行 `self._flush_batch` 方法，处理由 Kafka ingest-event topic 传递的批 message。
+
+```py
+def _flush_batch(self, batch: Sequence[Message]):
+    projects_to_fetch = set()
+    # 1. 将 message 的 project_id 写入 set 结构内；
+    # 2. 根据 message 类型，对该批次 message 进行分类；
+    # 3. 根据不同类型，将 message 与其对应的处理方法绑定，写入 list 结构内；
+    with metrics.timer("ingest_consumer.prepare_messages"):
+        for message in batch:
+            message_type = message["type"]
+            projects_to_fetch.add(message["project_id"])
+
+            if message_type == "event":
+                other_messages.append((self.__process_event, message))
+            elif message_type == "attachment_chunk":
+                attachment_chunks.append(message)
+            elif message_type == "attachment":
+                other_messages.append((process_individual_attachment, message))
+            elif message_type == "user_report":
+                other_messages.append((process_userreport, message))
+            else:
+                raise ValueError(f"Unknown message type: {message_type}")
+    # 根据 project_id 从缓存内获取文件详情
+    with metrics.timer("ingest_consumer.fetch_projects"):
+        projects = {p.id: p for p in Project.objects.get_many_from_cache(projects_to_fetch)}
+
+    # 遍历，将 message 作为参数执行对应的 process 方法
+    # 这里声明 result 用来处理异步事件，当 reslut 内值被填充后，说明本次同步任务执行完毕
+    # 继续遍历后，读取其 future 属性，继续执行其上一步约定的异步任务
+    if other_messages:
+        with metrics.timer("ingest_consumer.process_other_messages_batch"):
+            results: MutableMapping["Future[Any]", "AsyncResult[Any]"] = {}
+            # Execute synchronous tasks and dispatch asynchronous tasks.
+            for processing_func, message in other_messages:
+                result = processing_func(message, projects)
+                # 为 AsyncResult 实例，则将其写入 future
+                if isinstance(result, AsyncResult):
+                    results[result.future] = result
+
+            # 当所有同步任务执行完毕之后，再依次执行 future callback
+            for future in as_completed(results.keys()):
+                results[future].callback(future)
+
+```
+
+事件的执行器参考 `sentry/ingest/ingest_consumer.py` 内的 `process_event_async` 方法，其包含：
+
+- `_load_event()`
+- `_store_event()`
+- `dispatch_task(key)`
+
+**\_load_event()** 用来做一些初始化过滤，反序列化 message 并将其写入缓存，该份缓存能够被其他 task 使用。可以看到其定义了 `dispatch_task` 方法，该方法用来调用 `preprocess_event` 方法。
+
+```py
+def _load_event(
+    message: Message, projects: Mapping[int, Project]
+) -> Optional[Tuple[Any, Callable[[str], None]]]:
+    # ...
+
+    # 当检查到重复的 message 后，直接返回
+    deduplication_key = f"ev:{project_id}:{event_id}"
+    if cache.get(deduplication_key) is not None:
+        logger.warning(
+            "pre-process-forwarder detected a duplicated event" " with id:%s for project:%s.",
+            event_id,
+            project_id,
+        )
+        return  # message already processed do not reprocess
+
+    # 从 raw message 内解析 payload
+    data = json.loads(payload)
+
+    def dispatch_task(cache_key: str) -> None:
+        # preprocess 预处理 event, 它产生 process_event 或者 save_event
+        # 显式传输 data 避免再次从缓存中读取
+        with sentry_sdk.start_span(op="ingest_consumer.process_event.preprocess_event"):
+            preprocess_event(
+                cache_key=cache_key,
+                data=data,
+                start_time=start_time,
+                event_id=event_id,
+                project=project,
+            )
+
+        # remember for an 1 hour that we saved this event (deduplication protection)
+        cache.set(deduplication_key, "", CACHE_TIMEOUT)
+
+        # emit event_accepted once everything is done
+        event_accepted.send_robust(ip=remote_addr, data=data, project=project, sender=process_event)
+
+    return data, dispatch_task
+```
+
+`_store_event(data)` 会将数据写入缓存，并返回其 key。参考 `sentry/eventstore/processing/base.py` 的 `store` 方法。
+
+将返回 key 值作为参数调用 `dispatch_task` 方法，进一步执行 `preprocess_event` 方法。
+
+#### `preprocess_event`
+
+在 `sentry/tasks/store.py` 内执行 `_do_preprocess_event` 方法，它会：
+
+- 获取项目、组织信息和配置
+- 根据 `event.type` 来进行不同的处理，即 `should_process_with_symbolicator` 或者 `should_process`
+- 最终事件都会执行 `submit_save_event()`
 
 ### Q&A
 

@@ -30,7 +30,7 @@ import { HighlightWithText } from '/src/components/Highlights'
 
 ## 关于 re-render
 
-:::tips
+:::tip
 
 React 的工作之一就是保持 React state 和 application UI 同步。
 
@@ -40,16 +40,102 @@ React 每次 render 实际上就是一次**快照**，snapshot 的 React state �
 
 _What triggers a re-render in React?_
 
-在使用 `memo() / useMemo()` 之前，我们需要在 React 内，发生 re-render 往往是由于以下原因：
+在使用 `memo() / useMemo()` 之前，我们需要了解 React 发生 re-render 的原因：
 
-- 组件 state 变化，会导致组件及其子（孙）组件 re-render
+- 组件 state 变化，会导致组件 re-render
 - 父组件 re-render 导致子组件 re-render，**注意 `props` 和 re-render 本质上没有关系**
 - Context 变化，context 可以看作是 `internal props`
 - Hooks 变化
 
 为什么说 re-render 是由于父组件重新渲染而不是由于 `props` 变更导致呢？
 
-因为 `props` 变更是果，父组件 re-render 才是根。即使子组件没有任何接受任何 `props`，当父组件发生 re-render 时，该子组件仍然会 re-render。这样运行的原因很大程度上是因为 React 并不能 100% 确定 state 的改变是否会间接影响到其子（孙）组件，因此它选择全部 re-render。这是 React 基本的执行标准，但是我们可以通过 `memoization` 来避免该行为！
+因为 `props` 变更是果，父组件 re-render 才是根。即使子组件没有任何接受任何 `props`，当父组件发生 re-render 时，该子组件仍然会 re-render。很大程度上是因为 React 并不能 100% 确定 state 的改变是否会间接影响到其子（孙）组件，因此它选择全部 re-render。这是 React 基本的执行标准，但是我们可以通过 `memoization` 来避免该行为！
+
+## Before meme
+
+React 作者 Dan 发布过一篇文章，用来讨论在使用 `memo` 进行性能优化之前应该尝试和确认的事情。一般来说，React 应用在**生产环境的性能表现远优于其在开发环境。**
+
+我们在使用 `memo` 之前可以先从组件的组织方式上入手，总结起来就是：
+
+- `Moving state down`
+- `Lifting content up`
+
+### Moving state down
+
+通过将状态及其影响元素进行封装，抽离成子组件，从而避免影响其他组件渲染。
+
+```tsx
+// 优化前，每次 state 变化都会导致 ExpensiveRenderComponent re-render
+function App() {
+  const [state, setState] = useState()
+  return (
+    <div>
+      <h5>{state.title}</h5>
+      <main>{state.data}</main>
+      <ExpensiveRenderComponent />
+    </div>
+  )
+}
+
+// 通过 `moving state down` 优化后，我们将 state 及其关联元素抽离，避免 state 变化导致 ExpensiveRenderComponent re-render
+function StateApp() {
+  const [state, setState] = useState()
+  return (
+    <div>
+      <h5>{state.title}</h5>
+      <main>{state.data}</main>
+    </div>
+  )
+}
+
+function App() {
+  return (
+    <div>
+      <StateApp />
+      <ExpensiveRenderComponent />
+    </div>
+  )
+}
+```
+
+### Lifting content up
+
+将 state 及其依赖元素进行提升，并利用 `children` 传入其他元素，来避免 re-render。
+
+```tsx
+// 优化前，此时 ExpensiveRenderComponent 的父组件也依赖 state，状态下沉不再可行
+function App() {
+  const [state, setState] = useState()
+  return (
+    <div style={state.style}>
+      <h5>{state.title}</h5>
+      <main>{state.data}</main>
+      <ExpensiveRenderComponent />
+    </div>
+  )
+}
+
+// 通过 `lifting content up` 优化后，将 ExpensiveRenderComponent 作为 props.children 传入
+// 当 state 改变时，children 并未发生变化，以此来避免 re-render
+function StateProvider({ children }) {
+  const [state, setState] = useState()
+  return (
+    <div style={state.style}>
+      <h5>{state.title}</h5>
+      <main>{state.data}</main>
+      {children}
+    </div>
+  )
+}
+
+func App() {
+  return (
+    <StateProvider>
+      <ExpensiveRenderComponent />
+    </StateProvider>
+  )
+}
+```
 
 ## useMemo
 

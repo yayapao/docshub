@@ -74,6 +74,7 @@ const sidebars = {
         'database/kafka',
         'database/redis',
         'database/mysql',
+        'database/postgres',
       ],
     },
   ],

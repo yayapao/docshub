@@ -182,13 +182,15 @@ Sentry 实现的 `Class BatchingKafkaConsumer` 是多种 kafka 消费者处理�
 - **手动提交 offset**，这样做是为了减少数据丢失的概率（并不会减少重复消费的问题）。当一批数据发生 flush 时，会将其存储到外部存储节点，并立即提交 offset(在同一个线程/循环中)
 - 支持 `dead letter topic` 来处理 `process_evet` 发生错误的情况，以避免发生阻塞
 
-### 执行 `BatchingKafkaConsumer.run()` 方法
+### 执行 BatchingKafkaConsumer.run
 
 :::tip
 
 `run()` 方法实际就是执行在实例化 consumer 时提供的 `Class IngestConsumerWorker` worker 实例所实现的事件循环。
 
 :::
+
+![ingest_consumer_run](/img/fte/sentry/ingest_consumer_run.png)
 
 在 `sentry/utils/batching_kafka_consumer.py` 内，执行 `_run_once()` 方法，该方法会执行三个关键步骤：
 
@@ -201,6 +203,10 @@ Sentry 实现的 `Class BatchingKafkaConsumer` 是多种 kafka 消费者处理�
 其中，`self.worker.flush_batch()` 为**核心方法**。它会调用 `sentry/ingest/ingest_consumer.py` 文件内的 `flush_batch()` 方法。
 
 首先，执行 `mark_scope_as_unsafe()` 将 scope 显式标记为不安全，来允许 recursion breaker 在遍历堆栈寻找不安全文件之前尽早做出判断。设置完毕之后立即执行 `self._flush_batch` 方法，处理由 Kafka ingest-event topic 传递的批 message。
+
+#### \_flush_batch
+
+分别不同的事件类型，为其分配不同的处理器。
 
 ```py
 def _flush_batch(self, batch: Sequence[Message]):
@@ -252,7 +258,12 @@ def _flush_batch(self, batch: Sequence[Message]):
 - `_store_event()`
 - `dispatch_task(key)`
 
-**\_load_event()** 用来做一些初始化过滤，反序列化 message 并将其写入缓存，该份缓存能够被其他 task 使用。可以看到其定义了 `dispatch_task` 方法，该方法用来调用 `preprocess_event` 方法。
+#### load_event
+
+- 做一些初始化过滤；
+- 反序列化 message 并将其写入缓存，该份缓存能够被其他 task 使用；
+
+可以看到其定义了 `dispatch_task` 方法，在该方法内能够调用 `preprocess_event` 方法。
 
 ```py
 def _load_event(
@@ -298,13 +309,87 @@ def _load_event(
 
 将返回 key 值作为参数调用 `dispatch_task` 方法，进一步执行 `preprocess_event` 方法。
 
-#### `preprocess_event`
+#### preprocess_event
 
-在 `sentry/tasks/store.py` 内执行 `_do_preprocess_event` 方法，它会：
+在该方法内，通过对 eventData 进行解析后，会存在三种处理方式：
 
-- 获取项目、组织信息和配置
-- 根据 `event.type` 来进行不同的处理，即 `should_process_with_symbolicator` 或者 `should_process`
-- 最终事件都会执行 `submit_save_event()`
+- 被 symbolicate_event 处理后，执行 `submit_symbolicate`
+- 被 process_event 处理后，执行 `submit_process`，在 process_event 内会执行 `submit_save_event`
+- 事件未被前两张捕获，直接执行 `submit_save_event`，即将事件提交给 **Save envent Task** 处理
+
+```py
+def _do_preprocess_event(cache_key, data, start_time, event_id, process_task, project):
+    # 前面获取了事件、项目以及组织信息
+
+    if should_process_with_symbolicator(data):
+        reprocessing2.backup_unprocessed_event(project=project, data=original_data)
+        submit_symbolicate(
+            project, from_reprocessing, cache_key, event_id, start_time, original_data
+        )
+        return
+
+    if should_process(data):
+        submit_process(
+            project,
+            from_reprocessing,
+            cache_key,
+            event_id,
+            start_time,
+            data_has_changed=False,
+        )
+        return
+
+    submit_save_event(project, from_reprocessing, cache_key, event_id, start_time, original_data)
+
+```
+
+什么条件下 `should_process_with_symbolicator` 为 True ?
+
+1. exception 的 `mechanism.type == minidump` 时；minidump 是包含崩溃进程的最重要内存区域文件。详细内容参考 [minidump](https://docs.sentry.io/platforms/native/guides/minidumps/)
+2. exception 的 `mechanism.type == applecrashreport` 时；applecrashreport 表明该内容是 apple 的崩溃报告；
+3. 判断 SDK 的 platform 是否命中 apple, symbolic, elf, macho, pe 和 wasm;
+
+什么条件下 `should_process` 为 True ?
+
+1. 事件类型不为 `transaction` 且事件或者事件的 stacktrace 能够支持所有插件的 `get_event_preprocessors` 和 `get_event_enhancers` 验证；
+
+#### process_event
+
+- 获取 event、project 以及组织信息，判断当前事件是否在上下文内（在，则不会继续处理）
+- 解析并处理 stacktrace 数据
+- 清洗数据内的敏感信息
+- 依次执行 plugin 内的预处理函数来处理数据
+- 对事件进行标准化处理，丢弃过大或者错误数据的堆栈信息
+- 采取重试机制
+- 执行 `save_event` Task
+
+对于 `process_stacktraces` 来说，主要内容就是通过 `find_stacktraces_in_data` 解析 stacktrace，为其添加处理必须的元数据，之后调用 `get_stacktrace_processing_task` 来创建 frames 任务列表，最终调用 `process_single_stacktrace` 来处理每条 frames。
+
+在得到处理后的 stacktrace 之后，Sentry 会立即调用 `scrub_data` 来清洗数据。
+
+之后依次调用 `plugin.get_event_preprocessors` 来预处理被清洗后的数据。
+
+处理完毕之后，Sentry 会判断 data 是否被改变，如果被改变了，则执行 `normalizer.normalize_event(dict(data))` 对其进行标准化处理，该标准遵循规则：
+
+- 不会保留过大的堆栈
+- 不会保存时间戳比 retention window 还大的堆栈
+
+#### save_event
+
+该任务的主要职责是将 event 写入数据库
+
+- 删除还未被 preprocessing 的 事件和 data 为空的事件
+- 判断 data 是否为空，为空则不会继续执行
+- 调用 `EventManager.save` 方法，将被处理后的事件按照不同类型被处理后写入 pg 和 eventstream，**eventstream 内的事件被 snuba 和 post-processing 任务处理**
+
+向 Pg 内写入相邻模型(save adjacent models such as releases and environments in postgres)，向 eventstream 和 TSDB 写入事件，在写入之前会按照事件类型，提取不同的信息，处理后进行写入。
+
+snuba 能够处理重复写入，因此在 sentry 内直接插入就行，会以最后到达的事件为准。由于存在重复写入的问题，写入 eventstream 内的事件数量会大于最终的事件计数。
+
+在 Sentry 内，有两种情况会导致 data 为空：
+
+- data 在队列内过期，被清理掉了
+- 在 reprocessing 时原生事件被删除了
 
 ### Q&A
 

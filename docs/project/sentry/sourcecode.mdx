@@ -458,21 +458,133 @@ def _load_event() {
 
 Sentry 基于 sourcemap 提供了快速定位源码的能力。
 
-### sentry processor
+sentry 会对 sourceFile 和 SourceMap File 单独进行处理，即 Sentry 会先从 stacktrace 内依次解析 frames，从中提取出源文件路径，拉取源文件后解析其 sourceMap 地址，再去拉取 SourceMap Files。
 
-sentry 会对源文件和 SourceMap 单独进行处理，处理关键步骤在于如何缓存和读取文件内容。其中缓存文件时会使用到 `cache_key`(对应文件内容) 和 `cache_key_meta`(对应文件元信息)，而使用读取内容时会遵循**缓存 - database - internet**的顺序。
+处理关键步骤在于如何缓存和读取文件内容。其中缓存文件时会使用到 `cache_key`(对应文件内容) 和 `cache_key_meta`(对应文件元信息)，而使用读取内容时会遵循**缓存 > database > internet**的顺序。
 
 本章，我们会对 sentry 加工 frames 的过程进行阅读，并记录异常处理，以方便对生产问题进行排查。
 
 ![sourcemap_processor](/img/fte/sourcemap.svg)
 
-#### 处理源文件
+### 判断 frames 是否有效
 
-从 frames 内容中提取出文件地址后：
+对于 stacktrace 内的 frames，通过遍历依次判断 frame 是否有效，**判断规则就是能够获取到 `lineno`**
 
-- `frames.abs_path` 不存在
-- `frames.abs_path` 为 `<anonymous>`
-- 平台为 node 并且源文件路径不以 `app:` 开头
+```py
+
+def is_valid_frame(frame):
+    return frame is not None and frame.get("lineno") is not None
+
+```
+
+### 拉取文件
+
+Sentry 提供 `fetch_file` 来拉取文件，Source File 和 SourceMap File 都通过该方法进行拉取。
+
+拉取顺序遵循 `database(Event 内携带了 release 信息) > internet`
+
+<HighlightWithText text="fetch_file()" />{' '}
+
+```python
+# url = abs_path
+def fetch_file(url, project=None, release=None, dist=None, allow_scraping=True):
+    # `frames.abs_path` 太长导致被省略号占位，不会继续请求
+    if url[-3:] == "...":
+        raise http.CannotFetch({"type": EventError.JS_MISSING_SOURCE, "url": http.expose_url(url)})
+
+    # 如果存在 release，则优先去 Sentry 文件存储服务里面查找
+    if release:
+        result = fetch_release_artifact(url, release, dist)
+    else:
+        result = None
+
+    # 生成 cache_key 用于标识 result
+    cache_key = f"source:cache:v4:{md5_text(url).hexdigest()}"
+
+    # 在 Sentry 文件存储服务里面没找到或者 release 没配置，则会尝试通过网络拉取
+    # 此时需要保证开启了 `allow_scraping` 配置，并且 url 是以 http(s) 开头
+    if result is None:
+        if not allow_scraping or not url.startswith(("http:", "https:")):
+            error = {"type": EventError.JS_MISSING_SOURCE, "url": http.expose_url(url)}
+            raise http.CannotFetch(error)
+        # 如果能够从缓存中获取，则将 body 解压之后写入 result
+        result = cache.get(cache_key)
+        if result is not None:
+            result = http.UrlResult(
+                result[0], result[1], zlib.decompress(result[2]), result[3], encoding
+            )
+    # 如果从缓存内获取失败，则从网络上进行拉取
+    if result is None:
+        headers = {}
+        verify_ssl = False
+        if project and is_valid_origin(url, project=project):
+            verify_ssl = bool(project.get_option("sentry:verify_ssl", False))
+            token = project.get_option("sentry:token")
+            if token:
+                token_header = project.get_option("sentry:token_header") or "X-Sentry-Token"
+                headers[token_header] = token
+
+        # 从网络上拉取文件，将 body 进行压缩后，将最终结果写入缓存
+        with metrics.timer("sourcemaps.fetch"):
+            result = http.fetch_file(url, headers=headers, verify_ssl=verify_ssl)
+            z_body = zlib.compress(result.body)
+            cache.set(
+                cache_key,
+                (url, result.headers, z_body, result.status, result.encoding),
+                get_max_age(result.headers),
+            )
+
+            # 如果文件太大，则无法写入缓存，直接抛出异常
+            if cache.get(cache_key) is None:
+                error = {
+                    "type": EventError.TOO_LARGE_FOR_CACHE,
+                    "url": http.expose_url(url),
+                }
+                http.lock_domain(url, error=error)
+                raise http.CannotFetch(error)
+
+    # 请求文件失败
+    if result.status != 200:
+        raise http.CannotFetch(
+            {
+                "type": EventError.FETCH_INVALID_HTTP_CODE,
+                "value": result.status,
+                "url": http.expose_url(url),
+            }
+        )
+    # 编码文件失败，Unable to fetch HTTP resource
+    if not isinstance(result.body, bytes):
+        try:
+            result = http.UrlResult(
+                result.url,
+                result.headers,
+                result.body.encode("utf8"),
+                result.status,
+                result.encoding,
+            )
+        except UnicodeEncodeError:
+            error = {
+                "type": EventError.FETCH_INVALID_ENCODING,
+                "value": "utf8",
+                "url": http.expose_url(url),
+            }
+            raise http.CannotFetch(error)
+
+    # 如果不是 JavaScript/json 文件，Unable to fetch HTTP resource
+    if urlsplit(url).path.endswith(".js"):
+        body_start = result.body[:20].lstrip()
+        if body_start[:1] == b"<":
+            error = {"type": EventError.JS_INVALID_CONTENT, "url": url}
+            raise http.CannotFetch(error)
+    return result
+```
+
+### 处理源文件
+
+处理完 frames 之后，将其移交给 `populate_source_cache` 来拉取所有我们需要的 Source File。
+
+存在以下几种情况，不会去拉取源文件：
+
 - `frames.abs_path` 太长导致被省略号占位
 - 未配置 release 或者 release 文件为空的前提下，关闭 `Allow JavaScript Source Fetching` 或者 `frames.abs_path` 不是以 `http:` 或者 `https:` 开头
 - 请求源文件失败
@@ -485,71 +597,125 @@ sentry 会对源文件和 SourceMap 单独进行处理，处理关键步骤在�
 def populate_source_cache(self, frames):
   pending_file_list = set()
   for f in frames:
+    # 获取不到文件路径
     if f.get("abs_path") is None:
         continue
+    # 有些 SDK 会上报，但是也不处理
     if f["abs_path"] == "<anonymous>":
         continue
+    # SDK 平台为 node 并且文件路径不以 `app:` 开头
     if self.data.get("platform") == "node" and not f.get("abs_path").startswith("app:"):
         continue
     pending_file_list.add(f["abs_path"])
 ```
 
-<HighlightWithText text="fetch_file()" />{' '}
+在 `populate_source_cache` 处理完 frames 的前置过滤之后，将请求文件列表提交给 `cache_source` 内进行处理，**它会请求 Source File 并缓存，并解析文件 SourceMappingURL**
 
-```python
-# url = abs_path
-def fetch_file(url, project=None, release=None, dist=None, allow_scraping=True):
-    if url[-3:] == "...":
-        raise http.CannotFetch({"type": EventError.JS_MISSING_SOURCE, "url": http.expose_url(url)})
+<HighlightWithText text="cache_source()" />{' '}
 
-#...
-# 未配置 release 或者没找到 release 的 artifact 会导致 result 为 None
-    if result is None:
-        if not allow_scraping or not url.startswith(("http:", "https:")):
-            error = {"type": EventError.JS_MISSING_SOURCE, "url": http.expose_url(url)}
-            raise http.CannotFetch(error)
+```py
+def cache_source(self, filename):
+    self.fetch_count += 1
+    # 每请求一次会自增一次，当大于最大请求数时，不会继续请求
+    if self.fetch_count > self.max_fetches:
+        cache.add_error(filename, {"type": EventError.JS_TOO_MANY_REMOTE_SOURCES})
+        return
 
-#...
-# 请求文件失败
-    if result.status != 200:
-        raise http.CannotFetch(
-            {
-                "type": EventError.FETCH_INVALID_HTTP_CODE,
-                "value": result.status,
-                "url": http.expose_url(url),
-            }
-        )
-#...
-# 编码文件失败，Unable to fetch HTTP resource
-if not isinstance(result.body, bytes):
+    # 请求源文件
+    result = fetch_file(
+        filename,
+        project=self.project,
+        release=self.release,
+        dist=self.dist,
+        allow_scraping=self.allow_scraping,
+    )
+    # 将请求文件内容写入缓存
+    cache.add(filename, result.body, result.encoding)
+    cache.alias(result.url, filename)
+    # 根据源文件获取 SourceMappingURL
+    sourcemap_url = discover_sourcemap(result)
+    sourcemaps.link(filename, sourcemap_url)
+    if sourcemap_url in sourcemaps:
+        return
+
+    # pull down sourcemap
     try:
-        result = http.UrlResult(
-            result.url,
-            result.headers,
-            result.body.encode("utf8"),
-            result.status,
-            result.encoding,
-        )
-    except UnicodeEncodeError:
-        error = {
-            "type": EventError.FETCH_INVALID_ENCODING,
-            "value": "utf8",
-            "url": http.expose_url(url),
-        }
-        raise http.CannotFetch(error)
+        with sentry_sdk.start_span(
+            op="JavaScriptStacktraceProcessor.cache_source.fetch_sourcemap"
+        ) as span:
+            span.set_data("sourcemap_url", sourcemap_url)
+            sourcemap_view = fetch_sourcemap(
+                sourcemap_url,
+                project=self.project,
+                release=self.release,
+                dist=self.dist,
+                allow_scraping=self.allow_scraping,
+            )
+    except http.BadSource as exc:
+        # we don't perform the same check here as above, because if someone has
+        # uploaded a node_modules file, which has a sourceMappingURL, they
+        # presumably would like it mapped (and would like to know why it's not
+        # working, if that's the case). If they're not looking for it to be
+        # mapped, then they shouldn't be uploading the source file in the
+        # first place.
+        cache.add_error(filename, exc.data)
+        return
 
-#...
-# 如果不是 JavaScript/json 文件，Unable to fetch HTTP resource
-if urlsplit(url).path.endswith(".js"):
-    body_start = result.body[:20].lstrip()
-    if body_start[:1] == b"<":
-        error = {"type": EventError.JS_INVALID_CONTENT, "url": url}
-        raise http.CannotFetch(error)
+    sourcemaps.add(sourcemap_url, sourcemap_view)
+
+    # cache any inlined sources
+    for src_id, source_name in sourcemap_view.iter_sources():
+        source_view = sourcemap_view.get_sourceview(src_id)
+        if source_view is not None:
+            self.cache.add(non_standard_url_join(sourcemap_url, source_name), source_view)
+
+
 ```
 
-#### 处理 SourceMap
+### 处理 SourceMap
 
 处理完源文件，并返回文件结果后，首先尝试用源文件内容中获取 sourcemap 索引地址，遵循 `header > force_bytes(sourcemap) > sourceMappingURL=` 的寻找顺序，如果找到，会将其 `filename-sourcemap_url` 键值对写入缓存，否则直接返回（不会报错）
+
+<HighlightWithText text="discover_sourcemap()" />{' '}
+
+```py
+def discover_sourcemap(result):
+    # 从 Fetch Source File Response 的 headers 里面获取 sourcemap，默认值为 `result.headers.get("x-sourcemap")`
+    sourcemap = result.headers.get("sourcemap", result.headers.get("x-sourcemap"))
+
+    # 将从 header 获取 sourcemap 值强制转换为字节
+    sourcemap = force_bytes(sourcemap) if sourcemap is not None else None
+
+    # 如果 Response Headers 里面没有携带 sourceMap 信息，则从文件内进行提取
+    # Sentry 认定 SourceMappingURL 只会存在文件开头或者结尾，因此在解析 body 后直接提取前5行和最后5行内通
+    # 遍历，匹配到 "//# sourceMappingURL=" 这样的内容后，直接截取其后面的内容作为 sourcemap
+    if not sourcemap:
+        parsed_body = result.body.split(b"\n")
+        if len(parsed_body) > 10:
+            possibilities = parsed_body[:5] + parsed_body[-5:]
+        else:
+            possibilities = parsed_body
+        for line in possibilities:
+            if line[:21] in (b"//# sourceMappingURL=", b"//@ sourceMappingURL="):
+                sourcemap = line[21:].rstrip()
+        if not sourcemap:
+            search_space = possibilities[-1][-300:].rstrip()
+            match = SOURCE_MAPPING_URL_RE.search(search_space)
+            if match:
+                sourcemap = match.group(1)
+
+    if sourcemap:
+        if b"/*" in sourcemap and sourcemap[-2:] == b"*/":
+            index = sourcemap.index(b"/*")
+            if index == 0:
+                raise AssertionError(
+                    "react-native comment found at bad location: %d, %r" % (index, sourcemap)
+                )
+            sourcemap = sourcemap[:index]
+        sourcemap = non_standard_url_join(result.url, force_text(sourcemap))
+
+    return force_text(sourcemap) if sourcemap is not None else None
+```
 
 之后，会根据 sourcemap_url 去调用 `fetch_file()` 方法请求指定 sourcemaps。因此在排障时我们可以从以下方面入手：
 

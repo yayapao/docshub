@@ -1,40 +1,79 @@
 ---
 id: redis
-title: redis
+title: ''
 sidebar_label: redis
 ---
 
-在 MacOS 下通过 `brew install redis` 进行安装
+import { DocsHeader } from '/src/components/Layout/DocsHeader'
 
-在 CentOS 下通过 `yum install redis` 进行安装
+<DocsHeader
+  title="Redis"
+  description="The open source, in-memory data store used by millions of developers as a database, cache, streaming engine, and message broker."
+  github="https://github.com/redis/redis"
+  tags={['DB', 'in-memory']}
+  links={[
+    {
+      label: 'Redis 运维实战',
+      link: 'https://www.w3cschool.cn/redis_all_about/redis_all_about-pf4826ua.html',
+    },
+  ]}
+/>{' '}
 
-安装完成之后，执行 `redis-server` 启动 redis 服务，通过 `ps -ef | grep redis` 查看服务情况
+## Get Start
 
-相关命令参考：
+不同环境下安装 redis
 
-- [redis 开发运维实战](https://www.w3cschool.cn/redis_all_about/redis_all_about-pf4826ua.html)
-- [腾讯云服务器 redis 的远程连接](https://blog.csdn.net/Vibugs/article/details/92796760)
+```sh
+# MacOS
+$ brew install redis
+
+# Linux
+apt update && apt install redis
+
+# CentOS
+yum install redis
+```
+
+安装完成之后，通过 `redis-cli --version` 查看 cli 版本，`redis-server --version` 查看 redis 服务版本，验证安装是否成功。
+
+通过 `ps -ef | grep redis` 查看服务是否运行，或者在 Linux Ubuntu 上通过 `systemctl status redis` 来查看服务运行情况，v5 以上默认自动运行。
 
 ### 启动 redis 服务
 
-<b>后台启动</b>
+#### 设置后台启动
 
-MacOS 下 `vim /usr/local/etc/redis.conf`
+MacOS 下 `vim /usr/local/etc/redis.conf`，Linux 配置文件在 `/etc/redis/redis.conf`
 
 - 找到 `daemonize` 选项，将其值设置为 `yes`
-- 执行 `redis-server /usr/local/etc/redis.conf` 启动时添加配置
+- MacOS 执行 `redis-server /usr/local/etc/redis.conf` 启动时添加配置
+- Linux 执行 `/etc/init.d/redis-server restart` 来重启 redis 服务
 - `ps -ef | grep redis` 查看服务情况
 
-<b>开机启动</b>
+#### 设置开机启动
 
-1. 执行 `ln -f /usr/local/Cellar/redis/6.0.10/homebrew.mxcl.redis.plist ~/Library/LaunchAgents` 建立软连接，加入到 launchd 进程，当用户登录系统后会自动执行
-2. 执行 `launchctl load ~/Library/LaunchAgents/homebrew.mxcl.redis.plist` 加载任务
+MacOS
 
-<!-- -->
+- 执行 `ln -f /usr/local/Cellar/redis/6.0.10/homebrew.mxcl.redis.plist ~/Library/LaunchAgents` 建立软连接，加入到 launchd 进程，当用户登录系统后会自动执行
+- 执行 `launchctl load ~/Library/LaunchAgents/homebrew.mxcl.redis.plist` 加载任务
+
+#### 设置远程连接
+
+设置 `redis.conf` 的 bind 字段来支持网卡访问
+
+```sh
+# ifconfig(Linux) 查看本机网卡地址
+
+# 修改 redis.conf
+bind 127.0.0.1 [inet]
+```
+
+redis 默认没有密码，设置 `requirepass` 修改连接密码
+
+## 运维排障技巧
 
 ### 基于 `redis-cli` 排障
 
-在 ubuntu 上通过 `sudo apt install redis-tools` 安装 redis-cli, 安装完成后，通过 `redis-cli --version` 查看安装是否成功
+通过 redis-cli 来查看服务运行情况
 
 - 连接 redis: `redis-cli -h [hots] -p [port] -a [auth/password]`
 - 查看内存占用: `redis-cli [connnection params] info memory`
@@ -48,4 +87,4 @@ MacOS 下 `vim /usr/local/etc/redis.conf`
 
 - `|` 是管道符，需要在 shell 内执行
 - `xargs -r` 当 xargs 的输入为空的时候则停止 xargs，不用再去执行了
-- `xargs -t` 表示先打印命令，然后再执行  we
+- `xargs -t` 表示先打印命令，然后再执行

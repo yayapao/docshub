@@ -24,6 +24,10 @@ import { ResolvedTag } from '/src/components/Highlights/CustomizedTag'
       label: `npm-run-script`,
       link: 'https://docs.npmjs.com/cli/v8/commands/npm-run-script',
     },
+    {
+      label: 'Selective dependency resolutions',
+      link: 'https://classic.yarnpkg.com/lang/en/docs/selective-version-resolutions/',
+    },
   ]}
 />
 
@@ -142,3 +146,28 @@ npm 默认执行根目录下，package.json 内的命令，可以通过配置：
 1. 通过设置 `.gitignore` 使其在 git 代码管理和 npm publish 内同时生效；
 2. 通过设置 `.npmignore` ，其设置语法和 `.gitignore` 一致，但是**优先级更高！**
 3. 通过设置 `package.json` 内的 [files](https://docs.npmjs.com/cli/v7/configuring-npm/package-json#files) 字段来选择发布的文件或者目录，其优先级在同级目录下时更高！
+
+### 通过 `yarn` 来指定依赖包的依赖包版本
+
+通俗来说，就是我们通过 `yarn add` 引入的依赖包内可能同时依赖其他包（即**次级依赖包**），如果在依赖包内没有指定版本的话，默认会拉取其最新版本，这样做会产生问题，因为 yarn 通过支持 `resolutions` 字段来显式指定依赖包的版本（之前会更改 yarn.lock 文件）
+
+**为什么需要 resolutions 参数？**
+
+- 直接依赖的包可能不频繁更新，但是次级依赖包可能发布了一个重大更新，此时你可能需要等待作者去处理后发布
+- 次级依赖包暴露出一个重大的安全漏洞
+- 次级依赖包和当前其他直接依赖不兼容，需要将次级依赖包回退
+
+**举个例子**
+
+`NPM package cannot be used as a JSX Component - Type errors` 在 React v17 到 v18 内常见问题。
+
+原因是 `@types/react-dom` 内依赖 `@types/react` 并将其版本设置为 \*，这就会导致，即使 `@types/react-dom` 拉取的版本是 v17，但是拉取的 `@types/react` 为 v18，从而造成上诉问题。
+
+解决方案是在 package.json 内设置（根据实际情况灵活设置）：
+
+```json
+"resolutions": {
+  "@types/react": "17.0.0",
+  "@types/react-dom": "17.0.0"
+}
+```

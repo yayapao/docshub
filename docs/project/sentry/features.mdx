@@ -1,8 +1,22 @@
 ---
 id: features
-title: Sentry Features
+title: ''
 sidebar_label: Features
 ---
+
+import { DocsHeader } from '/src/components/Layout/DocsHeader'
+
+<DocsHeader
+  title="Sentry Features"
+  description="基于 Sentry 平台做贴近业务的功能实现。"
+  tags={['features']}
+  links={[
+    {
+      label: 'Customize Your Sentry Workflow: A Sample Internal Integration',
+      link: 'https://blog.sentry.io/2019/11/21/customize-your-sentry-workflow-a-sample-internal-integration/',
+    },
+  ]}
+/>{' '}
 
 ## 使用 SDK
 
@@ -368,6 +382,14 @@ async doAssigned(
   })
 }
 ```
+
+### 验证流程
+
+**如果遇到再次启动，integration 不会主动触发的情况，尝试修改 integation 配置并重新保存**
+
+- 启动接受 Sentry Post 的后端服务
+- 本地启动 Sentry，并且为 workers 模式
+- 通过 sentry-cli 向本地项目发送 event
 
 ## Source Maps
 

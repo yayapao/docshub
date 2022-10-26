@@ -150,6 +150,19 @@ snuba
 relay
 ```
 
+#### 注意事项
+
+如果本地需要跑不同版本的 Sentry，可能其依赖服务需要运行不同版本，比如 snuba 提供了更多的接口支持，那么我们在本地开发需要做好环境切换
+
+- 发现缺少 table，通过 `sentry upgrade` 执行升级事项或者数据库迁移
+
+如果需要升级指定服务？
+
+- 观察 `server.py` 查看 docker 内服务的配置和源
+- 手动从源拉取镜像后，设置 `"pull": False`，表示启动时会从本地拉取
+- 执行 `sentry devservices attach snuba` 手动启动 sunba 服务
+- 启动 Sentry
+
 ### 打包构建
 
 这里我们参考源仓库的 `/docker/builder.*` 文件来查看构建流程，基于此，我们开发了一个构建脚本。

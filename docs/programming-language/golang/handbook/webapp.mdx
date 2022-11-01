@@ -1,0 +1,281 @@
+---
+id: webapp
+title: ''
+sidebar_label: webapp
+---
+
+import { DocsHeader } from '/src/components/Layout/DocsHeader'
+import { HighlightWithText } from '/src/components/Highlights'
+
+<DocsHeader
+  title="Go WebAPP Guide"
+  description="Rules and resolutions for developing Go webapp."
+  github=""
+  tags={['web']}
+  links={[
+    {
+      label: 'How to cross-compile Go programs for Windows, Linux and MacOS.',
+      link: 'https://freshman.tech/snippets/go/cross-compile-go-programs/',
+    },
+    {
+      label: 'GORM 指南',
+      link: 'https://gorm.io/zh_CN/docs/index.html',
+    },
+    {
+      label: 'Gin Web Framework',
+      link: 'https://gin-gonic.com/zh-cn/docs/examples/',
+    },
+  ]}
+/>{' '}
+
+**在本章节将会介绍如何开始一个使用 Go 来开发一个 web 服务，并且使其拥有良好的开发规范和应用性能。**
+
+- 基于 yaml 定义项目配置
+- 基于 zap 作为项目日志管理工具
+- 使用 Gin 作为 webapp 框架
+- 使用 Gorm 作为连接数据库的客户端
+- 基于 Redis 使用请求缓存
+- 基于 JWT 作为用户 token 验证
+
+## Preworks
+
+### 设置环境变量
+
+类似 Node.js，我们需要在项目内通过环境变量来定义不同场景下应用的行为：
+
+```bash
+# 开发环境
+APP_ENV=development go run main.go
+
+# 生产环境
+APP_ENV=production ./main.go
+```
+
+在代码内获取当前环境变量：
+
+```go
+// 如果没有找到会返回空字符串
+env := os.Getenv("APP_ENV")
+```
+
+### Compile and build
+
+:::tip CROSS-COMPILE(交叉编译)
+
+How do you build Go binaries that target operating systems and architectures other than your own? This is called cross-compiling.
+
+:::
+
+通过 `go env` 查看编译的环境变量，我们可以观察到本地的系统架构和目标（Host）的目标架构。Go 支持通过更改 `GOHOSTARCH` 和 `GOHOSTOS` 来编译指定环境的二进制包。
+
+```bash
+$ go env
+
+# output
+GOARCH="amd64" # 64-bit architecture
+GOHOSTARCH="amd64"
+GOHOSTOS="darwin"
+GOOS="darwin"
+```
+
+#### MacOS
+
+编译 MacOS 下二进制应用，如果本地使用 MacOS 开发，则直接 `go build` 即可。
+
+```bash
+# 64-bits
+GOOS=darwin GOARCH=amd64 go build app.go
+
+# 32-bits
+GOOS=darwin GOARCH=386 go build app.go
+```
+
+#### Linux
+
+编辑 Lunix 下二进制应用。
+
+```bash
+# 64-bit
+GOOS=linux GOARCH=amd64 go build app.go
+
+# 32-bit
+GOOS=linux GOARCH=386 go build app.go
+```
+
+#### Windows
+
+编译 `.exe` 应用：
+
+```bash
+# 64-bits
+GOOS=windows GOARCH=amd64 go build app.go
+
+# 32-bits
+GOOS=windows GOARCH=386 go build app.go
+```
+
+## 项目组织结构
+
+目录基于 tree（`brew install tree`） 生成。
+
+```
+.
+├── conf # System config
+├── docs # related documents
+│   └── processor # logic flow processor
+├── http_operation # http related：failed、successed、req/res structs
+├── middleware # Router middlewares
+├── models # Mapping orm and related methods(control data directly)
+├── pkg # Self-defined packages
+│   ├── cacheStore # Cache store for request
+│   ├── core # Core methods(like Init())
+│   ├── settings # Read from .yaml settings
+│   ├── utils # Toolkits
+│   └── zaplog # Logger based on zap
+├── router # Register routes and return the router
+│   ├── api # Mapping routes handler
+│   └── routes # Module's routes
+└── service # module's core handlers between model and api/routes
+
+
+```
+
+在 `main.go` 内，我们会在 `init()` 内调用各个模块的初始化方法，包括 settings, logger, database, cache。
+
+之后会将初始化的路由对象实例化，启动服务。
+
+## Start
+
+Highly Recommended using **Goland RUN Configurations** to start APP.
+
+> CAUTION: add `APP_ENV=development`
+
+### Develop an API Interface
+
+以下定义开发一个接口的主要流程：
+
+1. Defined ORM Model struct in DIR `models/`;
+2. In `models/[module]`, make common methods, like: `Save`, `Query`, `Exist` etc;
+3. Defined Request/Response structs in DIR `http_operation/[module]`;
+4. Defined API handlers in DIR `service/[module]`;
+5. Defined GIN handle response in DIR `router/api/[module]`;
+6. Defined the mapping of GIN response handler and GIN routes, in DIR `router/routes/[module]`;
+7. Defined the mapping of router and GIN routes in `router/router.go`.
+
+## With Gorm
+
+在使用 Grom 时，明显感受是不如 Node.js 生态的 `typeorm`，主要体现在：
+
+- many2many 更新数据
+- 更改值时，不会主动变更零值
+
+我觉得根本原因在于 gorm 是基于 **upsert** 的模型实现的，以及 go 本身的默认值规则。
+
+### many2many update
+
+这里我们定义两个 models 来做具体说明：
+
+```go
+
+type Objective struct {
+	ID        uint           `gorm:"autoIncrement" json:"id"`
+	Enabled   uint8          `gorm:"comment:1-enable 2-disable;default:1;" json:"enabled"`
+	Tags      []Tag          `gorm:"many2many:objective_tag;" json:"tags"`
+}
+
+type Tag struct {
+	ID        uint      `gorm:"autoIncrement" json:"id"`
+	Name      string    `json:"name"`
+}
+
+```
+
+由此，我们定了三个表，objective、tag 以及其关联表 objective_tag，其中 objective_tag 表结构为：
+
+```DDL
+
+create table objective_tag
+(
+    objective_id bigint unsigned not null,
+    tag_id       bigint unsigned not null,
+    primary key (objective_id, tag_id),
+    constraint fk_objective_tag_objective
+        foreign key (objective_id) references objective (id),
+    constraint fk_objective_tag_tag
+        foreign key (tag_id) references tag (id)
+);
+
+```
+
+参考 [How to properly apply updates to associations](https://github.com/go-gorm/gorm/issues/3487) 我们可知 gorm 是基于 upsert，这将导致 gorm 在插入数据时遵循**如果当前存在则不会进行任何操作，如果不存在则将其插入的原则**。很明显，在这样的规则下，**我们无法更新已经存在的记录，因为它只会新增不会修改，更不会删除**。
+
+参考社区并未发现更好的解决方案，目前我的解决方案是在更新之前先删除之前的关联，做全量替换。
+
+```go
+// UpdateObjective 更新时剔除 id 字段
+// 如果存在 tags，则需要先清除其依赖关系，再进行更新
+// DBClient.Session(&gorm.Session{FullSaveAssociations: true}) == Model(&Objective{}) 但是其会更新关联数据
+func (o *Objective) UpdateObjective() error {
+	if len(o.Tags) != 0 {
+		err := DBClient.Model(&Objective{ID: o.ID}).Association("Tags").Clear()
+		if err != nil {
+			return err
+		}
+	}
+	err := DBClient.Session(&gorm.Session{FullSaveAssociations: true}).Updates(&o).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+```
+
+## With Gin
+
+### 对于 Query/Body 参数解析
+
+实际上也是对于类 Get/Post 方法的解析
+
+#### GET 参数解析
+
+对于 Get 类请求，通常通过解析 `query` 获取其请求参数。对于此类场景需要注意：
+
+- `form:"[name]"` 形式来定义请求参数结构体
+- 通过 `c.ShouldBindQuery` 来解析其请求参数
+
+```go
+type FindObjectiveReq struct {
+	Name   string `form:"name" binding:"required"`
+}
+
+func GetObjectives(c *gin.Context) {
+	var findObjectives httpOperation.FindObjectiveReq
+	if err := c.ShouldBindQuery(&findObjectives); err != nil {
+		httpOperation.Failed(httpOperation.REQUEST_ERROR, err, c)
+		return
+	}
+  // else...
+}
+```
+
+#### Post Body 解析
+
+对于 Post 类请求，通过解析其 body 获取请求参数。注意：
+
+- `json:"[name]"` 形式来定义请求参数结构体
+
+```go
+type SaveObjectiveReq struct {
+	UUID      string          `json:"uuid" binding:"required"`
+	Objective string          `json:"objective" binding:"required"`
+}
+
+func PostObjective(c *gin.Context) {
+	var objective httpOperation.SaveObjectiveReq
+	if err := c.ShouldBind(&objective); err != nil {
+		httpOperation.Failed(httpOperation.REQUEST_ERROR, err, c)
+		return
+	}
+  // else...
+}
+```

@@ -11,7 +11,7 @@ const golangProgrammingSidebar = {
       type: 'category',
       label: 'Go Handbook',
       collapsed: true,
-      items: [`${handbookPrefix}/grammar`],
+      items: [`${handbookPrefix}/grammar`, `${handbookPrefix}/webapp`],
     },
     {
       type: 'category',

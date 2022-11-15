@@ -1,7 +1,7 @@
 ---
 id: self_hosted
 title: ''
-sidebar_label: self hosted
+sidebar_label: Self Hosted
 ---
 
 import { HighlightWithText } from '/src/components/Highlights'
@@ -271,3 +271,23 @@ processing:
 - 启动 relay 服务
 
 相关 Dockerfile 参考 [Dockerfile.relay.start]
+
+## Database
+
+初始化服务之后，Sentry 在分别在 PG、ClickHouse 创建表，在 Kafka 内创建 Topics
+
+### ClickHouse
+
+参考[运维脚本](https://doc.joyjoy.cc/docs/database/clickhouse)
+
+在 ClickHouse 内，Sentry 会创建如下表，由 Snuba 服务对其进行代理，负责插入和代理查询数据：
+
+```
+sessions_raw_local
+
+outcomes_raw_local
+
+errors_local
+
+transactions_local
+```

@@ -1,0 +1,90 @@
+---
+id: clickhouse
+title: ''
+sidebar_label: clickhouse
+---
+
+import { DocsHeader } from '/src/components/Layout/DocsHeader'
+
+<DocsHeader
+  title="ClickHouse"
+  description="ClickHouse® is a free analytics DBMS for big data."
+  github="https://github.com/ClickHouse/ClickHouse"
+  tags={['DBMS', 'Time Series Data']}
+  links={[
+    {
+      label: 'ClickHouse tutorial',
+      link: 'https://clickhouse.com/docs/zh/getting-started/tutorial',
+    },
+  ]}
+/>{' '}
+
+## 常用运维脚本
+
+**查看数据库内表、数据使用量**
+
+```sql
+
+SELECT
+    table,
+    sum(rows) AS total_rows,
+    formatReadableSize(sum(data_uncompressed_bytes)) AS uncompressed_bytes,
+    formatReadableSize(sum(data_compressed_bytes)) AS compressed_bytes,
+    round((sum(data_compressed_bytes) / sum(data_uncompressed_bytes)) * 100, 0) AS compressed_rate
+FROM system.parts
+WHERE active AND datebase='[database name]'
+GROUP BY table
+ORDER BY total_rows DESC
+
+```
+
+**查看数据库、表结构、数据**
+
+```sql
+
+SHOW DATABASES
+
+DESC TABLE [database name].[table.name]
+
+-- 选择一条数据进行查看
+SELECT * FROM [database name].[table.name] LIMIT 1
+
+```
+
+**查看指定数据库的资源用量、rows、日均数据**
+
+```sql
+
+select
+    database,
+    formatReadableSize(size) as size,
+    formatReadableSize(bytes_on_disk) as bytes_on_disk,
+    formatReadableSize(data_uncompressed_bytes) as data_uncompressed_bytes,
+    formatReadableSize(data_compressed_bytes) as data_compressed_bytes,
+    compress_rate,
+    rows,
+    days,
+    formatReadableSize(avgDaySize) as avgDaySize
+from
+(
+    select
+        database,
+        sum(bytes) as size,
+        sum(rows) as rows,
+        min(min_date) as min_date,
+        max(max_date) as max_date,
+        sum(bytes_on_disk) as bytes_on_disk,
+        sum(data_uncompressed_bytes) as data_uncompressed_bytes,
+        sum(data_compressed_bytes) as data_compressed_bytes,
+        (data_compressed_bytes / data_uncompressed_bytes) * 100 as compress_rate,
+        max_date - min_date as days,
+        size / (max_date - min_date) as avgDaySize
+    from system.parts
+    where active
+     and database = '[database name]'
+    group by
+        database
+)
+
+
+```

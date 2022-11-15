@@ -1,6 +1,6 @@
 ---
 id: faq
-title: Troubleshooting
+title: ''
 sidebar_label: Troubleshooting
 ---
 
@@ -30,9 +30,7 @@ import { DocsHeader } from '/src/components/Layout/DocsHeader'
 
 <!-- -->
 
-## In Production
-
-### 信息被 `[Filtered]` 占位
+## 信息被 `[Filtered]` 占位
 
 **Q:** 在查看错误字段时，发现信息被 `[Filtered]` 占位，并展示 `Replaced because PII rule "@xxxxxx:filter"`
 
@@ -67,7 +65,9 @@ import { DocsHeader } from '/src/components/Layout/DocsHeader'
 
 ## Remote file too large for caching
 
-针对此问题，重点研究 Sentry 的缓存策略，相关配置如下：
+在 Sentry 主动拉取文件时报错 `Remote file too large for caching`，**即文件过大无法写入缓存。**
+
+解决方案从 Sentry 的缓存策略入手，其相关配置：
 
 1. 请求文件超时或者文件大小超过 `settings.SENTRY_SOURCE_FETCH_MAX_SIZE` 限制
 2. `setting.SENTRY_CACHE_MAX_VALUE_SIZE` 被重新设置导致缓存受限
@@ -382,9 +382,15 @@ impl SecurityReportType {
 }
 ```
 
-## Development
+## Duplicate key value violates
 
-### 找不到 `performance` 入口
+在 PG 和 ingest-consumer 日志内均发现重复 Event Key 相关的报错/警告，参考 [Duplicate key value violates](https://forum.sentry.io/t/duplicate-key-value-violates/934/4)
+
+诚如作者所说，这类错误不会对 Sentry 服务产生影响，实际上这是它的一种数据插入策略，Sentry 利用 PG v9.5 的新特性，即**introduced the ability to do INSERT … ON CONFLICT DO NOTHING**。
+
+Sentry 会直接将数据插入 PG，如果 PG 产生如上回应，则表示当前数据已经存在，从而避免了在插入前先查询当前 Event 是否存在，进而决定下一步操作。对于 Sentry 这种数据使用场景来说，这种插入策略无疑更加高效。
+
+## [DEV]找不到 `performance` 入口
 
 在本地部署 Sentry 后，发现找不到 performance 模块的入口
 
@@ -397,7 +403,7 @@ impl SecurityReportType {
 SENTRY_FEATURES["organizations:performance-view"] = True
 ```
 
-### invaild platform
+## [DEV]invaild platform
 
 在本地创建项目后，发现 `POST /api/0/teams/sentry/sentry/projects/` 报错 `400 invaild platform`
 

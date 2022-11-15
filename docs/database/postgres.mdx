@@ -44,3 +44,17 @@ relnamespace = (
     ) order by cnt desc ;
 
 ```
+
+## 业务相关
+
+查看每月新增用户/项目
+
+- 注意 `date_trunc` 的使用
+
+```sql
+select date_trunc('month', date_joined) as dt, count(date_joined) as total
+from [table name]
+group by date_trunc('month', date_joined)
+order by date_trunc('month', date_joined)
+
+```

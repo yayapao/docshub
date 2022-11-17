@@ -24,6 +24,7 @@ const fte = {
       collapsed: false,
       items: [
         'project/sentry/sentry',
+        'project/sentry/structure',
         'project/sentry/self_hosted',
         'project/sentry/development',
         'project/sentry/features',

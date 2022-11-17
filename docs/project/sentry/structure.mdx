@@ -1,0 +1,66 @@
+---
+id: structure
+title: ''
+sidebar_label: Structure
+---
+
+import { DocsHeader } from '/src/components/Layout/DocsHeader'
+import {
+  HighlightWithCode,
+  HighlightWithText,
+} from '/src/components/Highlights/TextContent'
+import { ResolvedTag } from '/src/components/Highlights/CustomizedTag'
+
+<DocsHeader
+  title="Sentry Structure"
+  description="Sentry server & SDK structure."
+  tags={['structure']}
+  links={[
+    {
+      label: `Snuba Structure`,
+      link: 'https://getsentry.github.io/snuba/architecture/overview.html',
+    },
+    {
+      label: `Sentry: Event Ingestion Pipeline`,
+      link: 'https://getsentry.github.io/event-ingestion-graph/',
+    },
+  ]}
+/>{' '}
+
+## Snuba
+
+在 Sentry 架构中，snuba 扮演者 Clickhouse 代理服务的角色（**或者说它是一个基于 Clickhouse 的时序数据库**），它能够向 Clickhouse tables 或者物化视图内插入数据，同时提供查询服务。
+
+Clickhouse tables 如下：
+
+```
+
+sessions_raw_local
+
+errors_raw_local
+
+transactions_raw_local
+
+outcomes_raw_local
+
+```
+
+snuba 整体架构如图：
+
+![structure-overview](https://getsentry.github.io/snuba/_images/overview.png)
+
+consumer 消费回 `events` topic 的数据，并将其插入到 Clickhouse 内。客户端可以主动发起查询请求，snuba 的查询引擎对其进行解析后生成 SnQL，向 Clickhouse 拉取数据。
+
+这里值得注意的是，snuba 建立了 stream 监听的机制，用来向 client 主动推数据（**主要是告警数据**）。它将 `event` topic 数据消费回来，通过一定的处理后写入到 `errors-subscriptions-consumer` 等队列，由 Sentry 服务对其进行消费。
+
+这里我们对 errors 和 transactions 的数据链路进行解读，其他包括 sessions 和 outcomes 的数据可以在官网上进行理解。
+
+![errors-deployment](https://getsentry.github.io/snuba/_images/errors_transactions_deployment.png)
+
+snuba-consumer 消费由 Sentry 的 `save-task` 写入 `events` topic 的数据，将其按照不同数据类型写入 CK，同时将事件写入 `snuba-commit-log` topic。
+
+Sentry 内的 `post-process-forwarder` 同步消费 `events` 和 `snuba-commit-log` topic，生成任务提交给 celery，执行生产逻辑，比如 webhooks 发送等。
+
+`snuba-subscriptions-consumer` 同步消费 `events` 和 `snuba-commit-log` topic，并且从 CK 内读取原数据进行处理，将处理结果写入 `subscriptions-results` topic 内，由 Sentry 内消费者进行订阅，并处理数据。
+
+`replacements-topic` 主要针对 reprocessing/merge/unmerge 的事件（**即一部分非常规处理事件**），由 `replacements-consumer` 对其进行消费处理后写入 redis，并被 `snuba-subscriptions-consumer` 统一处理。

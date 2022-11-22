@@ -1,0 +1,67 @@
+---
+id: faq
+title: ''
+sidebar_label: FAQ
+---
+
+import { DocsHeader } from '/src/components/Layout/DocsHeader'
+
+<DocsHeader
+  title="JOY Tool Chain FAQ"
+  description="FAQ about build or use toolchain."
+  github="related github"
+  tags={['Issues']}
+  links={[
+    {
+      label: 'Bundler fails on string_decoder for NodeJs',
+      link: 'https://github.com/evanw/esbuild/issues/1680',
+    },
+  ]}
+/>{' '}
+
+## CLI 工具创建
+
+### Rollup string_decoder is not supported resolving ES modules
+
+如果第三方应用了 `string_decoder`，通过 rollup 打包并输出 ESM 文件，通常会出现问题，类似：`string_decoder/ is not a module`
+
+原因在于 Node.js 内置了一个硬编码的核心模块标识符列表（通过 `require('module').builtinModules` 查看），只有当路径完全匹配标识符才会替换核心模块，那么 `string_decoder/` 并不在核心模块标识符列表内，因此 `require('string_decoder/')` 会产生 crash。
+
+解决方案：通过 `@rollup/plugin-replace` 对 `string_decoder/` 路径进行替换，如下：
+
+:::caution prework
+
+在替换之前需要 `yarn add string_decoder` 添加依赖，它是发布在 npm 上，对于 Node.js string_decoder 模块的镜像
+
+:::
+
+```js
+plugins: [
+  replacePlugin({
+    values: {
+      "'string_decoder/'": "'string_decoder/lib/string_decoder.js'",
+    },
+    delimiters: ['', ''],
+  }),
+],
+```
+
+### [figlet] no such file or directory, open '/xxx/fonts/xxx.flf'
+
+在引入 figlet 并编译后找不到字体的资源文件。
+
+原因是在 figlet 内部会从相对路径去寻找字体。
+
+解决方案是在设置 `font` 参数时，先将字体资源加载，再写入配置。如下：
+
+```ts
+import figlet from 'figlet'
+import speed from 'figlet/importable-fonts/Speed.js'
+
+// regist fonts
+figlet.parseFont('Speed', speed)
+
+const text = figlet.textSync('JOYLINT', {
+  font: 'Speed',
+})
+```

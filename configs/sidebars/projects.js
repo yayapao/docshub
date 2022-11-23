@@ -25,6 +25,7 @@ const fte = {
       items: [
         'project/sentry/sentry',
         'project/sentry/structure',
+        'project/sentry/discussion',
         'project/sentry/self_hosted',
         'project/sentry/development',
         'project/sentry/features',
@@ -42,7 +43,7 @@ const ftc = {
       type: 'category',
       label: 'FTC',
       collapsed: false,
-      items: [`${ftcPrefix}ftc`],
+      items: [`${ftcPrefix}entry/ftc`, `${ftcPrefix}entry/faq`],
     },
   ],
   joycraSiderBar: [

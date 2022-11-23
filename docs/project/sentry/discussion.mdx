@@ -31,7 +31,7 @@ import { DocsHeader } from '/src/components/Layout/DocsHeader'
 Sentry 对于 issues 进行了更细致的分类：
 
 - **Definitely a bug in your app.** 就是一个规范的 issues，具备完整的 stacktrace、breadcrumbs、tags 等信息，并且确实影响了用户，这类问题能够被修复；
-- **Operational Errors - you care only if they spike** 该类 issues 通常不能被修复，当其出现达到峰值时才需要去注意和处理。比如网络错误。
+- **Operational Errors - you care only if they spike** 该类 issues 通常不能被修复，**当其出现达到峰值时才需要去注意和处理，**比如网络错误。
 - **Un-actionable low-quality Issues**，这类 issues 通常没有相应的上下文，即用户无法改善，并且没有实际影响的 issues。
 
 因此，为了获取更多 un-actionable low-quality issues，Sentry 在社区内寻找相关案例，在回答之前，先要辨别清楚：
@@ -59,7 +59,7 @@ tommilligan 则提出了两个案例：
 
 经过和 Sentry 的讨论，他提出了针对 Operational Issues 的一个理想工作流
 
-:::note Logic
+:::info Logic
 
 核心思想是异常 Issues 的确认是跟随处理的服务活动/流量而变化的
 _The logic of what consitutes "abnormal" should scale with service activity/traffic handled_
@@ -74,3 +74,19 @@ _The logic of what consitutes "abnormal" should scale with service activity/traf
 - 之后，Sentry 仅针对 Issues 量或者趋势达到标准进行告警
 
 ```
+
+### My Answer
+
+我从实际项目的 issues 列表和经验出发，开始重新思考对 issues 的看法，即：是否有必要处理该 issues 以及如何减少不必要 isseus 的“噪音”？
+
+1. `Uncaught NetworkError, scripts failed to load`
+
+如上面关于网络错误的描述，对于这类错误，我认为还可以从影响面来确定其是否应该被通知，而不仅仅是数量或者数量的趋势。如果该类 issues 是由同一个用户大量产生，那么其极有可能是爬虫，那么该类错误是没有意义的。但是，如果该类错误被很多人触发，即使每个用户仅触发一次，那么我觉得它也应该被记录，因为它的影响面大。
+
+2. `CanceledError`
+
+对于 CanceledError，我觉得它是 un-actionable issue，它是正常表现，没有动力去修复它。
+
+3. `ResizeObserver loop limit exceeded`
+
+这类问题出现的原因是 ResizeObserver 在一次动画帧内没有提交所有的观测信息，它并不会对你的网站造成不良影响。因此不必在意它，但是仍然可以对其进行改善。这类问题更像是一个 warning。

@@ -8,7 +8,7 @@ import { GithubRepoHeader } from '/src/components/Layout/GithubRepoHeader'
 
 <GithubRepoHeader
   title="joylint"
-  description="Genki Dama OF Frontend's Lint!"
+  description="Genki dama of frontend's code grammar and dev process!"
   shields={[
     {
       link: '#requirements',
@@ -21,23 +21,24 @@ import { GithubRepoHeader } from '/src/components/Layout/GithubRepoHeader'
       imgSrc: 'https://img.shields.io/badge/code%20style-prettier-%23ff69b4',
     },
   ]}
-  avatar="/assets/showcase/joylint.jpg"
+  avatar="/assets/showcase/joylint.png"
 />
 
 <!-- -->
 
 Joylint is the simplest way to enable lint-power for your project. Once installed, this:
 
-- 👍 **Enable ESLint, Prettier, Stylelint, husky and lint-staged.**
-- 🥰 **Includes powerful shortcodes** to execute on your dev process. It's based on husky and lint-staged.
+- 👍 **Compose ESLint, Prettier, Stylelint, TypeScript => normalized rules**
+- ✨ **Standardized Git process**
+- 🥰 **Powerful .\*rc code snippets**
 
 ## Installation
 
-### Requirements
+### Prerequisites
 
-- Node.js 8.0.0+
+If you want to **enable ESLint**, then Node.js (^12.22.0, ^14.17.0, or >=16.0.0) built with SSL support. (If you are using an official Node.js distribution, SSL is always built in.)
 
-Choose your favorite package manager:
+Choose your preferred package manager:
 
 ```bash
 # npm
@@ -49,16 +50,26 @@ yarn add joylint -D
 
 ## Usage
 
-Once you have installed joylint in your project. You can exec `npx joylint` to get some info. You will need to
+Then excute `yarn joylint` to decide which task to do.
+
+- Install lint tools, will auto install lint-tools and their dependencies, if you have installed, we will skip these packages.
+- Init Husky Task will help you complete husky-realted process and create a rules's script in local.
 
 ```bash
-# Install Eslint, Prettier and Stylelint for your project.
-pnpx joylint lint
 
-# Install husky and lint-staged for your project.
-# Generate executable scripts in .joylint directory.
-# Default to enable commit-msg and pre-commmit githooks.
-pnpx joylint husky
+> joylint
+_________________  ___________________   _________
+______  /_  __ \ \/ /__  /____  _/__  | / /__  __/
+___ _  /_  / / /_  /__  /  __  / __   |/ /__  /
+/ /_/ / / /_/ /_  / _  /____/ /  _  /|  / _  /
+\____/  \____/ /_/  /_____/___/  /_/ |_/  /_/
+
+
+? What do you want to do next? (Use arrow keys)
+  Install lint tools, includes: Eslint, Prettier, Stylelint
+  Init husky and generate githooks scripts, inclued: commit-msg, pre-commit
+❯ All Above Task
+
 ```
 
 ### config \*rc.js
@@ -83,7 +94,8 @@ module.exports = {
 - eslint4Vue3
 - eslint4Vue2
 - eslint4TS
-  :::
+
+:::
 
 ```js
 // customized options
@@ -131,9 +143,3 @@ It's highly recommmanded to refer to its content.
   "include": ["src", "types/**/*", "configs/**/*", "vite.config.ts"]
 }
 ```
-
-## Todos
-
-1. review commandline interface
-2. preset .git judgement
-3. add update commandline

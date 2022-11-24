@@ -61,7 +61,7 @@ const ftcProject: Application[] = [
     key: 'joylint',
     title: 'joylint',
     description: `Genki Dama OF Frontend's Lint tool chain!`,
-    preview: `${imgPrefix}/joylint.jpg`,
+    preview: `${imgPrefix}/joylint.png`,
     website: '/docs/project/frontend-toolkit-chain/joylint',
     tags: ['ESLint', 'Prettier'],
   },

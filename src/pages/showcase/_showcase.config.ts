@@ -35,7 +35,7 @@ const ftcProject: Application[] = [
     title: 'FTC',
     description: 'Frontend toolkit chain!',
     preview: `${imgPrefix}/ftc.jpg`,
-    website: '/docs/project/frontend-toolkit-chain/ftc',
+    website: '/docs/project/frontend-toolkit-chain/entry/ftc',
     isCore: true,
     tags: ['core'],
   },

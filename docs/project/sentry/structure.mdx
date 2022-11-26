@@ -24,12 +24,113 @@ import { ResolvedTag } from '/src/components/Highlights/CustomizedTag'
       label: `Sentry: Event Ingestion Pipeline`,
       link: 'https://getsentry.github.io/event-ingestion-graph/',
     },
+    {
+      label: '单体系统时代',
+      link: 'http://icyfenix.cn/architecture/architect-history/monolithic.html',
+    },
   ]}
 />{' '}
 
+## Background
+
+通过对 Sentry 架构进行深入研究，充分利用其基于队列的设计模式，对服务、worker 均进行细致拆分，输出一套微服务架构的部署方案。
+
+在开始介绍之前，我们先聊聊背景。
+
+![sentry_structure_background](/img/fte/sentry/sentry_structure_background.png)
+
+旧版本的 Sentry 是一个巨石应用(Monolithic Application)。**它天然存在着隔离和自治能力上的缺陷，如果一部分代码导致进程资源被过度使用，最终会影响到整个程序。** 因此 old sentry 存在严重的性能瓶颈，同时为了能够 cover 住业务的量，我们不得不去部署多套，为此造成了更严重的资源浪费。并且我们对平台功能定制也无能为力 👐。
+
+:::tip Monilithic Apploication - wikipedia
+
+Monolith means composed all in one piece. The Monolithic application describes a single-tiered software application in which different components combined into a single program from a single platform.
+
+单体意味着自包含。单体应用描述了一种由同一技术平台的不同组件构成的单层软件。
+
+:::
+
+为此，我提出了升级计划。经过调研我发现，在 Sentry 社区内提供了 [self_hosted](https://github.com/getsentry/self-hosted) 方案，**它最终输出 docker-compose。**这意味着我不得不去申请一个高规格的 pod 将所有服务跑起来，根据测试在 42C128G 的情况下，QPS 达到 30 服务就无法正常运行了，这显然无法满足需求，同时其表现为一个类巨石应用，并没有解决 old sentry 的遗留问题。
+
+## Microservices Structure
+
+为此，通过对 Sentry 架构进行深入研究和理解，我提出了一套微服务架构的部署方案。**巨石应用和微服务架构最大的区别在于：巨石应用是进程内调用，而微服务架构是进程间通信。**这里我利用其基于队列的设计模式，将服务进行拆分，同时将 big worker 拆分成更细粒度的 worker，worker 之间基于 celery 进行通信。
+
+## Relay
+
+在 Sentry 架构中，relay 扮演代理服务的角色（或者 Sentry 基础设施），它对 client 上报数据进行应答，同时向 Sentry 请求项目配置，以对 event 执行 parse、normalized、inbound filters、rate limits、datascrub、PII 等处理，最终将事件写入 kafka。
+
+![sentry_relay_diagram](/img/fte/sentry/sentry_relay_diagram.png)
+
+这里展示 relay 处理事件的内部时序图。
+
+:::caution
+
+In a highly concurrent burst of requests should quickly result in eventually consistent and correct status codes.
+
+**在高并发的场景下，应该迅速返回一致且正确的状态码（即 200）**
+
+:::
+
+按照此原则，可能出现我们返回 200，但是事件最终没有被处理的情况，因为真正开始处理事件是一个异步过程，这是一种在返回速率和数据准确率之间的妥协。
+
+1. 当请求到达 relay endpoint 时，会**执行预检查策略**，如果结果不符合预期，则迅速返回 4xx(429-rate_limit, 4xx-invalid_auth_information)，否则会将事件提交给 Redis 队列。在此过程会主动从 ProjectCache 内拉取项目配置。
+
+**注意，此时拉去不到项目配置或者配置过期，并不会继续向 Sentry 发送请求，而是认为事件不合法。**
+
+检查策略包括：
+
+- 当前项目是否存在？项目是否处于激活状态？
+- 当前是否正在执行速率限制？
+- 项目的 DSN 是否正确？
+
+2. EnvelopeManager 通过 Redis 队列消费数据，解析后返回 200（携带 EventID），随后开始真正处理事件（这是一个异步处理过程！）
+
+- EnvelopeManager 会向 ProjectCache 主动拉取项目配置。**如果项目配置被清除或者过期，Relay 会向 Sentry 发送获取项目配置请求，并尽可能一次拉取多个项目的配置，以减少 Sentry 服务的压力；**
+- 解析事件，对数据进行解压缩、检查 json 合法性、提取事件内的 eventID 并将其写入 response。**这里 relay 已经创建了 `Event` 结构体，这一步需要申请内存；**
+- 事件标准化处理。为 Event 结构体赋值，这是 relay 中最消耗 CPU 算力的一个任务单元，此时会丢弃不合法的数据；
+- 过滤事件（inbound-filter），在这一步会应用配置的过滤规则，比如 IP addresses, partterns 等。被过滤的事件会被丢弃；
+- 速率限制。这里所说的速率限制是指，为每一个项目建立配额（_quatos_），如果超过限额则会将配置写入内存中，以避免该项目的新增事件被写入 redis 队列，**配额通常发生在 Sentry sass 平台上；**
+- 清洗数据。根据 PII 和 datascrubbing config 对数据进行处理；
+
+3. 将事件写入 Kafka，写入 `outcomes` 和 `ingest-event` topic 供 Sentry consumer 消费，其中 outcomes 被处理后最终被 snuba 消费并写入 TSDB。
+
+- outcomes 主要对 Sentry 内的计数器负责，用来表达每个事件的处理结果，以及不是正常处理的原因，参考 [category 在 relay 内定义](https://github.com/getsentry/relay/blob/master/relay-common/src/constants.rs#:~:text=pub%20enum%20DataCategory,%7D)
+
+**outcomes 数据结构**
+
+```json
+
+{
+    "timestamp": timestamp,
+    "org_id": org_id,
+    "project_id": project_id,
+    "key_id": key_id,
+    "outcome": outcome.value, // 事件处理结果
+    "reason": reason,
+    "event_id": event_id,
+    "category": category, // 事件类型
+    "quantity": quantity,
+}
+
+```
+
+**outcomes 结果**
+
+```py
+
+class Outcome(IntEnum):
+    ACCEPTED = 0
+    FILTERED = 1
+    RATE_LIMITED = 2
+    INVALID = 3
+    ABUSE = 4
+    CLIENT_DISCARD = 5
+
+```
+
 ## Snuba
 
-在 Sentry 架构中，snuba 扮演者 Clickhouse 代理服务的角色（**或者说它是一个基于 Clickhouse 的时序数据库**），它能够向 Clickhouse tables 或者物化视图内插入数据，同时提供查询服务。
+在 Sentry 架构中，snuba 扮演 Clickhouse 代理服务的角色（**或者说它是一个基于 Clickhouse 的时序数据库**），它能够向 Clickhouse tables 或者物化视图内插入数据，同时提供查询服务。
 
 Clickhouse tables 如下：
 

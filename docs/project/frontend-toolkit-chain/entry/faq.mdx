@@ -19,7 +19,18 @@ import { DocsHeader } from '/src/components/Layout/DocsHeader'
   ]}
 />{' '}
 
-## CLI 工具创建
+## CLI 工具开发
+
+### Yarn link doesn't link binaries globally
+
+在测试时，我通过 `yarn add [local address]` 来引入本地包，但是发现无法执行包内的 bin 命令。参考[Yarn link doesn't link binaries globally](https://github.com/yarnpkg/yarn/issues/891)
+
+这可能是 yarn 设计本身的一个缺陷，使用 npm 或者 pnpm 来安装本地包能够解决上述问题，这里推荐使用 pnpm。
+
+```bash
+# PNPM 安装本地包
+pnpm add [relative directory path]
+```
 
 ### Rollup string_decoder is not supported resolving ES modules
 

@@ -272,6 +272,42 @@ processing:
 
 相关 Dockerfile 参考 [Dockerfile.relay.start]
 
+### 是否启用 processing 配置？
+
+在 relay 内，我们可以配置 processing 来增强其对于数据链路的处理能力。如果未启用，则：
+
+- Event normalization 会执行更少的处理
+- 不会从 Sentry 拉取项目配置，而是从本地获取或者直接默认处理（与 `mode` 的值相关）
+- Event 会通过 HTTP 转发而不是写入 Kafka
+- 速率限制不再是使用 Redis 进行计算
+- 不会进行事件过滤
+
+这里提供一份完整的 relay config.yaml 帮助理解：
+
+```yaml
+relay:
+  mode: managed
+  upstream: '[sentry web endpoint]'
+  host: 0.0.0.0
+  port: 3000
+logging:
+  level: error
+  log_failed_payloads: true
+processing:
+  enabled: true
+  kafka_config:
+    - { name: 'bootstrap.servers', value: '[kafka host]:[kafka port]' }
+    - { name: 'message.max.bytes', value: 50000000 } # 50MB
+  redis: redis://[redis host]:[redis port]
+  geoip_path: '[geoip file address].mmdb'
+limits:
+  max_event_size: 10MiB
+  max_envelope_size: 100MiB
+  max_api_payload_size: 100MiB
+cache:
+  envelope_buffer_size: 30000
+```
+
 ## Database
 
 初始化服务之后，Sentry 在分别在 PG、ClickHouse 创建表，在 Kafka 内创建 Topics

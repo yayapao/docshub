@@ -69,7 +69,7 @@ beforeSend(event, hint) {
 
 ### 设计采样策略的难点？
 
-采样的难点不在于实现采样本身，而在于如何如何最大化利用上报数据的价值和采样规则的制定。
+**采样的难点不在于实现采样本身，而在于如何如何最大化利用上报数据的价值和采样规则的制定。**
 
 在实际业务场景中，如果采样率设置过高，会有成本压力；设置过低又会失去分析数据的准确性。因此这个问题的挑战在于：如何在保证数据准确性的基础上尽力降低成本。
 
@@ -83,7 +83,7 @@ Sentry 的采样方案经过 3 次进化。
 
 :::note
 
-所谓采样启发式（sampling heuristics）就是一系列配置的静态规则。
+所谓采样启发式（sampling heuristics）就是应用一系列静态规则。
 
 :::
 
@@ -128,7 +128,9 @@ Sentry 通过在平台内配置后，将采样的策略通过 Realy 推送到各
 ## Grouping Issues
 
 :::note
+
 错误事件的聚合
+
 :::
 
 在本章，我们将会在[Issue Grouping](https://docs.sentry.io/product/data-management-settings/event-grouping/#grouping-by-stack-trace)的基础上介绍 Sentry 内置聚合规则以及如何自定义聚合规则。

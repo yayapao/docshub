@@ -409,3 +409,51 @@ SENTRY_FEATURES["organizations:performance-view"] = True
 
 - 查看源码发现程序需要读取 `integration-docs` 目录下的文件，返回静态页面
 - 通过执行 `sentry repair --with-docs` 拉取最新的集成列表，安装在本地的 sentry 内
+
+## [DEV] pycharm debugger: UnicodeEncodeError 导致 process exit 1
+
+通过配置 pycharm 的 python server 来配置项目启动服务以在开发时启动 debugger 模式，但是在升级 pycharm 之后发现会因为**UnicodeEncodeError 而导致 debugger 进程退出**
+
+```
+
+//...
+File "/[path]/sentry/runner/formatting.py", line 102, in monkeypatch_honcho_write
+    self.output.write(f"{prefix}{line}\n")
+UnicodeEncodeError: 'ascii' codec can't encode character '\u2139' in position 61: ordinal not in range(128)
+
+```
+
+期待的结果是：**honcho 引起的错误并不会导致 debugger 进程退出**
+
+通过对 honcho 的 issues 进行查看，在启动时添加环境变量 `PYTHONIOENCODING=utf-8` 解决
+
+```xml
+
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="sentry-worker" type="PythonConfigurationType" factoryName="Python">
+    <module name="sentry" />
+    <option name="INTERPRETER_OPTIONS" value="" />
+    <option name="PARENT_ENVS" value="true" />
+    <envs>
+      <env name="PYTHONIOENCODING" value="utf-8" />
+      <env name="PYTHONUNBUFFERED" value="1" />
+    </envs>
+    <option name="SDK_HOME" value="$PROJECT_DIR$/.venv/bin/python" />
+    <option name="SDK_NAME" value="Python 3.6 (sentry)" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/.venv/bin" />
+    <option name="IS_MODULE_SDK" value="false" />
+    <option name="ADD_CONTENT_ROOTS" value="true" />
+    <option name="ADD_SOURCE_ROOTS" value="true" />
+    <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+    <option name="SCRIPT_NAME" value="$PROJECT_DIR$/.venv/bin/sentry" />
+    <option name="PARAMETERS" value="devserver --workers --pretty --styleguide --debug-server" />
+    <option name="SHOW_COMMAND_LINE" value="false" />
+    <option name="EMULATE_TERMINAL" value="false" />
+    <option name="MODULE_MODE" value="false" />
+    <option name="REDIRECT_INPUT" value="false" />
+    <option name="INPUT_FILE" value="" />
+    <method v="2" />
+  </configuration>
+</component>
+
+```

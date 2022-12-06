@@ -396,48 +396,136 @@ async doAssigned(
 ## Source Maps
 
 :::note Source Maps
-Source Maps 是构建时的产物，用来映射源文件，定位源码位置。
+
+Source Maps 是构建时的产物，用来映射源文件，定位源码位置。在 Sentry 内能够展示更具可读性的错误堆栈信息。
+
 :::
 
-Sentry 支持在查看 issues frames/event details 时通过匹配 Stack Trace + Source Files + Source Maps 来定位源码信息。
+在 Sentry 内部支持通过以下两种方式来匹配 Source Maps:
 
-在 Sentry 内部支持通过以下两种方式来使用 Source Maps:
+1. **将源文件和 Source Maps 文件上传至平台**，process-worker 在文件系统内寻找 Source Maps 文件进行匹配、替换；
+2. process-worker 解析错误堆栈文件名 -> 从线上拉取目标文件 -> 解析 sourceMappingURL -> 拉取 Source Maps -> 执行匹配、替换（此过程需要开启 `Allow JavaScript Source Fetching`）；
 
-1. 将源文件和 Source Maps 文件上传至平台，在文件系统内寻找 Source Maps 文件进行匹配；
-2. 开启 `Allow JavaScript Source Fetching` 开关，由 Sentry 去线上寻找源文件及其 Source Maps 文件，进行匹配；
-
-针对第一点，我们介绍上传的关键步骤，对于第二点，我们会从 Sentry 的实现方面对其核心点进行阐述，同时也会介绍增大请求容忍度的解决方案。
+针对第一点，我们介绍多种上传方案，包括在工程化阶段、通过 CLI 或者接口。对于第二点，我们会从 Sentry 的实现方面对其核心点进行阐述，同时也会介绍提升请求容忍度的解决方案。
 
 ### Upload Source Maps
 
-目前 sentry 支持三种上传方式：
-
-- 通过 Sentry API 上传
-- 配置 webpack 在构建时上传
-- 通过 SENTRY-CLI 上传
-
-:::caution
+:::caution Before Upload
 
 1. 需要申请指定权限的 token
 2. 需要配置 SDK 和上传时 release 一致
-3. 源文件和 Source Maps 都需要上传
+3. 开启 SourceMap，并且源文件和 Source Maps 都需要上传
+4. 一般不要暴露 Source Maps 到线上（与打包产物同域）
 
 :::
 
-#### 通过 API 接口
+Sentry 支持三种上传方式：
 
-参考[Upload a New Project Release File](https://docs.sentry.io/api/releases/upload-a-new-project-release-file/)的上传接口，参考 [🔒 上传工具](https://github.com/YaYaPao/docscripts/blob/main/sentry/scripts/upload_source_file.py)
+- 在工程构建阶段，通过构建工具插件上传
+- 通过 Sentry API 上传
+- 通过 SENTRY-CLI 上传
 
-快速例子：
+**请记住，我们执行上传动作时，只是介质不同，最终都是调用上传接口上传文件。**因此，配置通常是通用的：
 
-```bash
-curl -X POST \
-  'https://sentry.io/api/0/projects/[org]/[projectName]/releases/[releaseName]/files/' \
-  --header 'Authorization: Bearer [token]' \
-  --form '[filePath].map'
+```ts
+const upload_config = {
+  // 必传参数
+  org: '[organization name]',
+  project: '[project name]',
+  include: '[output directory]',
+  authToken: '[token]',
+  url: 'https://sentry.io/',
+  release: '[release name]',
+  // 可选，上传前清除之前的 artifacts
+  cleanArtifacts: true,
+  // 避免上报错误信息到 Sentry
+  telemetry: false,
+}
 ```
 
-#### 通过 webpack 插件
+#### vite-plugin
+
+```bash
+
+yarn add --dev @sentry/vite-plugin
+
+```
+
+配置 `vite.config.ts`
+
+```typescript
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import path from 'path'
+import type { PluginOption } from 'vite'
+import sentryVitePlugin from '@sentry/vite-plugin'
+import childProcess from 'node:child_process'
+
+export const run = (cmd: string, { unify = false } = {}) => {
+  return new Promise((resolve, reject) => {
+    childProcess.exec(cmd, {}, (err, stdout, stderr) => {
+      let output = ``
+      if (unify) {
+        output = stdout.toString() + stderr.toString()
+      } else {
+        output = stdout.toString()
+      }
+      if (err) {
+        reject(err)
+      }
+      resolve((err ? '' : output).trim())
+    })
+  })
+}
+
+// 这里为了测试，我写了个插件用来在打包完成后删除所有 sourceMap 文件，读者可以自己按需使用或者使用社区方案
+// rollup 同样适用
+function cleanupSourceMaps(): PluginOption {
+  return {
+    name: 'cleanupSourceMaps',
+    apply: 'build',
+    closeBundle: async () => {
+      await run(`rm -f ./dist/assets/*.js.map`)
+    },
+  }
+}
+
+const plugins = [react()]
+
+if (process.env.NODE_ENV !== 'development') {
+  plugins.push(sentryVitePlugin(upload_config))
+}
+
+export default defineConfig({
+  // other options
+  build: {
+    sourcemap: true,
+  },
+  plugins: [...plugins, cleanupSourceMaps()],
+})
+```
+
+#### rollup-plugin
+
+rollup 与 vite 配置类似，注意开启 sourcemap 即可：
+
+```js
+import sentryRollupPlugin from '@sentry/rollup-plugin'
+
+export default {
+  input: './src/index.js',
+  plugins: [
+    // Put the Sentry rollup plugin after all other plugins
+    sentryRollupPlugin(upload_config),
+  ],
+  output: {
+    sourcemap: true, // Source map generation must be turned on
+    dir: './dist',
+  },
+}
+```
+
+#### webpack-plugin
 
 ```bash
 npm install --save-dev @sentry/webpack-plugin
@@ -473,21 +561,29 @@ module.exports = {
     if (process.env.NODE_ENV === 'production') {
       config.plugins = [
         ...config.plugins,
-        new SentryCliPlugin({
-          authToken: 'token',
-          include: './dist',
-          org: 'organization_slug',
-          project: 'project_slug',
-          // 注意与 SDK 配置的 release 一致
-          release: 'release version',
-          ignore: ['node_modules'],
-          // url 必须指定，不然就会去源地址寻找
-          url: 'https://sentry.io/',
+        new SentryCliPlugin(upload_config),
+        // 上传完毕之后删除 js.map 文件
+        new CleanWebpackPlugin({
+          cleanAfterEveryBuildPatterns: ['**/*.map'],
+          protectWebpackAssets: false,
         }),
       ]
     }
   },
 }
+```
+
+#### 通过 API 接口
+
+参考[Upload a New Project Release File](https://docs.sentry.io/api/releases/upload-a-new-project-release-file/)的上传接口，参考 [🔒 上传工具](https://github.com/YaYaPao/docscripts/blob/main/sentry/scripts/upload_source_file.py)
+
+快速例子：
+
+```bash
+curl -X POST \
+  'https://sentry.io/api/0/projects/[org]/[projectName]/releases/[releaseName]/files/' \
+  --header 'Authorization: Bearer [token]' \
+  --form '[filePath].map'
 ```
 
 #### 利用 sentry-cli 上传
@@ -528,7 +624,9 @@ sentry-cli releases finalize <release_name>
 对于**安全风险**，我们从两方面进行解决：
 
 - 对于开发者来说，我们必须将 Source Maps 文件放在线上指定位置（可以通过 rewriteFrame 来改变位置），这样存在源码暴露的风险
-- 更重要的是存在 CSRF 安全问题，如果存在攻击机在线上脚本内植入恶意脚本，Sentry 在去拉取线上文件时，会执行恶意脚本
+- 更重要的是存在 CSRF 安全问题，会将内网环境暴露，比如 Stack Trace 文件名替换成一个脚本地址等
+
+对于 CSRF，我通过自建的白名单机制对其进行解决。
 
 同时，Sentry 会启动 worker 来处理 events，当需要请求线上文件时，会阻塞当前的处理程序，等待拉取文件完毕并写入缓存后，才会继续执行其他任务。这里我们对 Sentry 拉取 Source Maps 内容进行深度解读。
 
@@ -536,4 +634,9 @@ sentry-cli releases finalize <release_name>
 
 Sentry 在处理 events 时，会根据 Stack Trace 信息去解析并请求源文件，在拉取回源文件之后，会解析文件内容，获取线上 Source Maps 的路由地址，<HighlightWithBadge label='拉取文件内容并进行缓存' />
 
-- Sentry 本身存在两种缓存机制，一种是 Setrny 自己的实现，即结合 Redis 进行缓存；一种是 Django 本身的缓存机制，即通过 memcached 进行缓存
+Sentry 本身存在两种缓存机制：
+
+- 一种是 Setrny 自己的实现，即结合 Redis 进行缓存；
+- 一种是 Django 本身的缓存机制，即通过 memcached 进行缓存，文件内容通常会放在 memcached 服务内进行存储
+
+因此当我们发现**文件内容过大导致不能存储**的错误时，可以从 memcached 配置入手进行改善。

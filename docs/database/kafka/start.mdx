@@ -41,6 +41,8 @@ conn, err := kafka.DialLeader(context.Background(), "tcp", "localhost:9092", top
 - partition：**为了保证扩展性，Kafka 会从逻辑上将一个 topic 分成多个 partition。**每次写入 topic 内的 message 会按照策略被分配到指定 partition。**每个 partition 内维护 message 的唯一 ID，即 offset**
 - broker：无论是 topic 还是 partition 都是逻辑概念，最终都需要将数据存储到物理磁盘。Kafka 作为一个分布式集群服务，broker 是每个集群的的节点（物理机/集群），也是 message 最终写入磁盘的位置。**为了保证高可用，需要将多个 partition 写到不同的 broker 上**
 
+![kafka-base](/img/database/kafka_base.svg)
+
 1. Kafka 对生产者不做限制，只需指定 topic 等基础信息即可；
 2. message 写入 topic 后，会将其分配到各个 partition，每个 partition 会管理自己的 offset（横向拓展），即通过 topic、partition 以及 offset 能够唯一确定指定 message；
 3. Broker 是集群内的节点，用来存储 message，每个 broker 内均匀分布以 parition 为维度的数据（高可用）；由 Zookeeper 推选出 Broker Leader，它会管理 message 的读写，同时其他 broker （replication）向其进行同步，保证数据一致性；

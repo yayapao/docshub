@@ -71,11 +71,16 @@ const sidebars = {
       collapsed: true,
       items: [
         'database/base',
-        'database/kafka',
         'database/redis',
         'database/mysql',
         'database/postgres',
       ],
+    },
+    {
+      type: 'category',
+      label: 'Kafka',
+      collapsed: true,
+      items: ['database/kafka/start'],
     },
   ],
   browserSiderbar: [

@@ -1,0 +1,71 @@
+---
+id: gin
+title: ''
+sidebar_label: GIN
+---
+
+import { DocsHeader } from '/src/components/Layout/DocsHeader'
+import { HighlightWithText } from '/src/components/Highlights'
+
+<DocsHeader
+  title="Gin"
+  description="The fastest full-featured web framework for Go. Crystal clear."
+  github="https://github.com/gin-gonic"
+  tags={['API']}
+  links={[
+    {
+      label: 'Gin Web Framework',
+      link: 'https://gin-gonic.com/zh-cn/docs/examples/',
+    },
+  ]}
+/>{' '}
+
+## Usage
+
+### 解析 Query/Body 参数
+
+`ShouldBind` 方法能够根据 **Content-Type** 来自定解析不同的字段吗，在使用过程中需要注意 FormData 和 JSON 的区别。
+
+#### GET 参数解析
+
+对于 Get 类请求，通常通过解析 `query` 获取其请求参数。对于此类场景需要注意：
+
+- `form:"[name]"` 形式来定义请求参数结构体
+- 通过 `c.ShouldBindQuery` 来解析其请求参数
+
+```go
+type FindObjectiveReq struct {
+	Name   string `form:"name" binding:"required"`
+}
+
+func GetObjectives(c *gin.Context) {
+	var findObjectives httpOperation.FindObjectiveReq
+	if err := c.ShouldBindQuery(&findObjectives); err != nil {
+		httpOperation.Failed(httpOperation.REQUEST_ERROR, err, c)
+		return
+	}
+  // else...
+}
+```
+
+#### Post Body 解析
+
+对于 Post 类请求，通过解析其 body 获取请求参数。注意：
+
+- `json:"[name]"` 形式来定义请求参数结构体
+
+```go
+type SaveObjectiveReq struct {
+	UUID      string          `json:"uuid" binding:"required"`
+	Objective string          `json:"objective" binding:"required"`
+}
+
+func PostObjective(c *gin.Context) {
+	var objective httpOperation.SaveObjectiveReq
+	if err := c.ShouldBind(&objective); err != nil {
+		httpOperation.Failed(httpOperation.REQUEST_ERROR, err, c)
+		return
+	}
+  // else...
+}
+```

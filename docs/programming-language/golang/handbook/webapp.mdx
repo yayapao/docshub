@@ -22,10 +22,6 @@ import { HighlightWithText } from '/src/components/Highlights'
       link: 'https://gorm.io/zh_CN/docs/index.html',
     },
     {
-      label: 'Gin Web Framework',
-      link: 'https://gin-gonic.com/zh-cn/docs/examples/',
-    },
-    {
       label: 'Stemming vs Lemmatization',
       link: 'https://towardsdatascience.com/stemming-vs-lemmatization-2daddabcb221',
     },
@@ -166,124 +162,6 @@ Highly Recommended using **Goland RUN Configurations** to start APP.
 6. Defined the mapping of GIN response handler and GIN routes, in DIR `router/routes/[module]`;
 7. Defined the mapping of router and GIN routes in `router/router.go`.
 
-## With Gorm
-
-在使用 Grom 时，明显感受是不如 Node.js 生态的 `typeorm`，主要体现在：
-
-- many2many 更新数据
-- 更改值时，不会主动变更零值
-
-我觉得根本原因在于 gorm 是基于 **upsert** 的模型实现的，以及 go 本身的默认值规则。
-
-### many2many update
-
-这里我们定义两个 models 来做具体说明：
-
-```go
-
-type Objective struct {
-	ID        uint           `gorm:"autoIncrement" json:"id"`
-	Enabled   uint8          `gorm:"comment:1-enable 2-disable;default:1;" json:"enabled"`
-	Tags      []Tag          `gorm:"many2many:objective_tag;" json:"tags"`
-}
-
-type Tag struct {
-	ID        uint      `gorm:"autoIncrement" json:"id"`
-	Name      string    `json:"name"`
-}
-
-```
-
-由此，我们定了三个表，objective、tag 以及其关联表 objective_tag，其中 objective_tag 表结构为：
-
-```DDL
-
-create table objective_tag
-(
-    objective_id bigint unsigned not null,
-    tag_id       bigint unsigned not null,
-    primary key (objective_id, tag_id),
-    constraint fk_objective_tag_objective
-        foreign key (objective_id) references objective (id),
-    constraint fk_objective_tag_tag
-        foreign key (tag_id) references tag (id)
-);
-
-```
-
-参考 [How to properly apply updates to associations](https://github.com/go-gorm/gorm/issues/3487) 我们可知 gorm 是基于 upsert，这将导致 gorm 在插入数据时遵循**如果当前存在则不会进行任何操作，如果不存在则将其插入的原则**。很明显，在这样的规则下，**我们无法更新已经存在的记录，因为它只会新增不会修改，更不会删除**。
-
-参考社区并未发现更好的解决方案，目前我的解决方案是在更新之前先删除之前的关联，做全量替换。
-
-```go
-// UpdateObjective 更新时剔除 id 字段
-// 如果存在 tags，则需要先清除其依赖关系，再进行更新
-// DBClient.Session(&gorm.Session{FullSaveAssociations: true}) == Model(&Objective{}) 但是其会更新关联数据
-func (o *Objective) UpdateObjective() error {
-	if len(o.Tags) != 0 {
-		err := DBClient.Model(&Objective{ID: o.ID}).Association("Tags").Clear()
-		if err != nil {
-			return err
-		}
-	}
-	err := DBClient.Session(&gorm.Session{FullSaveAssociations: true}).Updates(&o).Error
-	if err != nil {
-		return err
-	}
-	return nil
-}
-```
-
-## With Gin
-
-### 对于 Query/Body 参数解析
-
-实际上也是对于类 Get/Post 方法的解析
-
-#### GET 参数解析
-
-对于 Get 类请求，通常通过解析 `query` 获取其请求参数。对于此类场景需要注意：
-
-- `form:"[name]"` 形式来定义请求参数结构体
-- 通过 `c.ShouldBindQuery` 来解析其请求参数
-
-```go
-type FindObjectiveReq struct {
-	Name   string `form:"name" binding:"required"`
-}
-
-func GetObjectives(c *gin.Context) {
-	var findObjectives httpOperation.FindObjectiveReq
-	if err := c.ShouldBindQuery(&findObjectives); err != nil {
-		httpOperation.Failed(httpOperation.REQUEST_ERROR, err, c)
-		return
-	}
-  // else...
-}
-```
-
-#### Post Body 解析
-
-对于 Post 类请求，通过解析其 body 获取请求参数。注意：
-
-- `json:"[name]"` 形式来定义请求参数结构体
-
-```go
-type SaveObjectiveReq struct {
-	UUID      string          `json:"uuid" binding:"required"`
-	Objective string          `json:"objective" binding:"required"`
-}
-
-func PostObjective(c *gin.Context) {
-	var objective httpOperation.SaveObjectiveReq
-	if err := c.ShouldBind(&objective); err != nil {
-		httpOperation.Failed(httpOperation.REQUEST_ERROR, err, c)
-		return
-	}
-  // else...
-}
-```
-
 ## Features Design
 
 ### Sentence Module
@@ -293,6 +171,15 @@ Sentence 模块用来帮助我快速积累英语词汇。在阅读计算机相�
 ![sentence-module](/img/langs/go/sentence-module.svg)
 
 这里展示 sentence Model 在插入、查询时的处理过程。
+
+:::note packages
+
+- tokenizer - https://github.com/jdkato/prose
+- stemming - https://github.com/kljensen/snowball
+- lemmatization - https://github.com/aaaton/golem/
+- stopWords - https://en.wikipedia.org/wiki/Most_common_words_in_English
+
+:::
 
 1. 插入以 sentence 为主体，分别进行 sentence 插入、分词处理。
 
@@ -324,3 +211,76 @@ Stemming 和 lemmatization 都是将给定单词还原成基础单词的技术�
 - **stemming 并不能保证最后输出是一个真实存在的单词，但是 lemmatization 可以保证**
 
 ![stemming-vs-lemmatization](https://img.joyjoy.cc/docs/plang/go/stemming-vs-lemmatization.png)
+
+## Coding Skills
+
+### 聚合查询结果
+
+假定这样一个查询场景：根据 N 个 Person 查询其对应的银行卡信息。现在存在两种处理方式：
+
+1. 轮询 Person 列表，每个 Person 向数据库发起一次查询银行卡信息的请求；
+2. 通过 `IN` 获取一批 Person 的银行卡信息后，再在应用层进行分类；
+
+我们选择第二种方式来解决，因为数据库本身是很脆弱的，这里我们需要聚合查询结构。
+
+```go
+
+type Card struct {
+  ID     uint
+  Number uint
+}
+
+type Person struct {
+  ID   uint
+  Name string
+}
+
+type QueryResponse struct {
+  Person
+  Cards []Card
+}
+
+
+func FindPersonBindingCards(data []string) ([]QueryResponse, error) {
+  // 根据姓名查询 Person 列表，即 []Person
+	people, _ := models.QueryPeopleFromName(data)
+	var personID []uint
+  // mappings 用来表示 personID 和 QueryResponse 的对应关系
+	mappings := make(map[uint]*QueryResponse)
+  // 声明 res，作为最终返回结果，遍历 mappings 将 value 写入 res
+	var res []QueryResponse
+
+	for _, p := range people {
+		personID = append(personID, p.ID)
+		mappings[p.ID] = &QueryResponse{
+			ID:        p.ID,
+			Name:      p.Name,
+			Cards:     []Card{},
+		}
+	}
+  // 根据 personID 查询与其关联的所有 Card 信息，返回结果是包含 PersonID 和 Card 信息的切片
+	cards, _ := models.QueryCardByPersonIDSlice(personID)
+
+  // 遍历 cards 根据 card.PersonID 向 mappings.Cards 内进行填充
+	for _, card := range cards {
+		if _, ok := mappings[card.PersonID]; ok {
+			mappings[card.PersonID].Cards = append(mappings[card.PersonID].Cards, Card{
+				ID:       card.ID,
+				Number:   card.Number,
+			})
+		}
+	}
+
+  // 遍历 mappings 生成最终 result 进行返回
+	for _, value := range mappings {
+		res = append(res, *value)
+	}
+	return res, nil
+}
+
+```
+
+在实现过程中需要注意：
+
+- 声明 map 对象时需要将其实例化，比如 `var mappings map[uint]string` 并直接为其赋值会产生错误，需要 `mappings := make(map[uint]string)` 或者 `mappings := map[uint]string{}` 将其进行实例化
+- 在给 `mappings[card.PersonID].Cards` 进行赋值过程中，遇到过 [can't assign to xxx 错误](https://stackoverflow.com/questions/32751537/why-do-i-get-a-cannot-assign-error-when-setting-value-to-a-struct-as-a-value-i)，通过取址/取值操作符进行解决。原因在于 map 对象左侧操作必须是 **addressable**，而 `mappings[card.PersonID]` 并不能保证。

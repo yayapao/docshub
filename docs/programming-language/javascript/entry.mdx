@@ -1,0 +1,231 @@
+---
+id: entry
+title: ''
+sidebar_label: Nice JavaScript
+slug: entry
+---
+
+import { DocsHeader } from '/src/components/Layout/DocsHeader'
+
+<DocsHeader
+  title="Nice JavaScript"
+  description="JavaScript (JS) is a lightweight, interpreted, or just-in-time compiled programming language with first-class functions."
+  github="https://github.com/nodejs/node"
+  tags={['JavaScript', 'Runtime']}
+  links={[
+    {
+      label: 'Node.js topic',
+      link: 'https://github.com/topics/nodejs',
+    },
+  ]}
+/>{' '}
+
+## 执行机制
+
+:::note
+
+JavaScript 是一门单线程语言，事件循环（Event Loop）是 JavaScript 的执行机制
+
+:::
+
+首先明白两个概念：
+
+- 浏览器是多进程的
+- JavaScript 引擎是单线程执行的
+
+浏览器包含多个进程：
+
+- Browser 进程：浏览器的主进程（负责协调、主控），只有一个，即用来管理浏览器
+- 第三方插件进程：每种类型的插件对应一个进程，仅当使用该插件时才创建
+- GPU 进程：最多一个，用于 3D 绘制等
+- 浏览器渲染进程（浏览器内核）（Renderer 进程，内部是多线程的）
+
+浏览器渲染进程内就包含多个线程共同协作，完成渲染工作
+
+- GUI 渲染线程，用来绘制渲染最短路径，与 js 引擎线程互斥，即两者只能同时运行一个
+- js 引擎线程，负责解析，运行 js 脚本
+- 事件触发线程，归属于浏览器，用来控制事件循环，可以理解为 js 引擎忙不过来了，需要启动该线程来协助
+- 定时触发器线程，用来控制 setTimeout 和 setInterval，计时完毕后，将回调事件注册到事件触发线程内，等待 js 引擎线程去执行
+
+由于 JavaScript 引擎是单线程机制，它无法同时执行多段代码，当一段代码执行的时候，所有后续任务必须等待，从而形成一个任务队列。一旦当前任务完成，再从队列中取出下一个任务执行，这也被称为 ‘阻塞式执行’
+
+为什么 JavaScript 引擎被设计成阻塞式？
+
+想象一个场景：如果 js 可以是多线程的，在同一个时间内，一段代码删除指定节点，一段代码修改这个节点，那么究竟应该怎样对这个节点做出何种改变，此时 js 引擎也无法作出判断
+
+js 内函数异步执行的理解：
+
+- 在当前位置调用了某个方法
+- 但是在经过一段时间后才进行执行
+- 即调整函数的执行顺序，并且保证该函数一定执行，就实现了异步的基本概念
+- 从观察者的角度看，任务的完成顺序和交付它们的时间顺序无关
+- 比如在发起一个 http 请求时，其回调函数一般也定义好了，但是不会立即执行该回调函数，而是会等待到请求的参数返回时才进行执行，这就是一个典型的异步
+- 核心在于事件执行机制和消息队列
+
+js 内常见的异步场景：
+
+- 事件监听，比如`document.addEventListener('click', clickEvent)`等事件绑定
+- 回调，比如 ajax 请求完成的回调，读取文件等
+- 定时器任务，比如 `setTimeout`
+
+![eventLoop](/img/langs/javascript/eventLoop.png)
+
+`setTimeout()` 设置的延迟参数是从 EventTable 中注册回调函数到 EventQueue 的时延，所有**执行其回调函数的时延 >= 其设置的时延**
+
+延迟实现
+
+```js
+function sleep(t) {
+  var label = Date.now()
+
+  while (Date.now() - label < t) {
+    continue
+  }
+}
+```
+
+即使主线程执行栈为空，0ms 实际上也是达不到的，根据 HTML 标准，最低是 4ms
+
+`setInterval()` 会每隔指定的时延将回调函数注册进入 EventQueue 中，一旦 `setInterval` 的回调函数的执行时间超过其设置的延迟，那么完全看不出来有时间间隔
+
+除了广义的同步任务和异步任务，任务还有更加精细的定义
+
+- macro-task(宏任务)：正常执行 script、setTimeout()、setInterval()
+- mirco-task(微任务)：Promise、process.nextTick(类似 node.js 版的 setTimeout，其回调函数在事件循环的下一次循环中调用)
+
+整体 script 作为第一个宏任务执行结束，会在 EventQueue 中检查还有哪些微任务，并对其依次执行（后进先出），至此完成第一次 EventLoop，然后再在 EventQueue 内检查宏任务，进行 EventLoop
+
+总结来说，在 javascript 的事件循环内，优先级：同步任务，微任务，宏任务
+
+```javascript
+console.log('1') // 同步任务
+
+// 整体作为一个异步任务
+setTimeout(function () {
+  console.log('5')
+})
+
+// 异步任务-微任务，在下一次循环内执行
+process.nextTick(function () {
+  console.log('3')
+})
+
+// 微任务-微任务
+new Promise(function (resolve) {
+  console.log('2')
+  resolve()
+}).then(function () {
+  console.log('4')
+})
+
+// 输出结果
+// 即 Promise > nextTick > Promise.then
+1, 2, 3, 4, 5
+```
+
+## 执行环境
+
+执行环境定义了变量或函数有权访问的其他数据，决定了它们各自的行为，当函数被调用时，会创建一个执行环境及相应的作用域链
+
+当执行流进入一个函数时，函数的执行环境就会被推到一个环境栈中，当函数执行完毕之后，栈将其执行环境弹出，把控制权返回给之前的执行环境
+
+执行环境组成
+
+- 变量对象：每个执行环境都对应一个变量对象，我将这个变量对象理解为作用域，它用来保存执行环境中定义的所有变量和方法
+- 作用域链：作用域链的本质是指向变量对象的指针列表，它只引用但不实际包含变量对象，作用域链用来保证对执行环境有权访问的所有变量和函数定义的有序访问
+- this：指向当前执行环境
+
+理论上，声明一个函数之后，就形成了一个作用域链，因为存在全局执行环境，其变量对象被认为是 window 对象。某个函数执行完毕之后，则该执行环境被销毁，其变量对象也同时销毁，全局执行环境直到应用程序退出（比如关闭浏览器或者网页）时才会被销毁
+
+类似原型链，作用域链的标识符解析就是沿着作用域链一级一级搜索标识符的过程。**如果找不到指定标识符，会报 Reference Error，这点区别于原型链**
+
+在 ES6 中，通过 `{}` 就能创建一个块级作用域，而之前则要通过 lamda 表达式结合闭包来进行创建
+
+### 作用域链
+
+作用域链怎么形成呢？
+
+```js
+function Person() {
+  var a = '1'
+  function Teddy() {
+    console.log(a)
+  }
+  Teddy()
+}
+
+Person() // '1'
+```
+
+如上所示，定义了一个闭包，首先明确一定，存在全局作用域，其对象和方法存放在 winodw 对象内，ok，接下来解析作用域链怎么产生：
+
+- 每个函数在定义时，都会产生一个 `[[scope]]` 属性，它就是作用域链，里面存放着对活动对象的引用，并且没有访问器属性，外界访问不到
+- Person 方法定义时，会产生一个[[scope]]属性，其值为一个指向 window 对象的引用
+- Person 调用时，会产生一个执行环境，同时向[[scope]]内添加一个指向当前（自身）活动对象的引用，并且此时定义 Teddy() 方法
+- Teddy 方法定义时，会产生一个[[scope]]属性（可以看作是复制 Person 的该属性），里面存放着指向 Person 和全局的活动对象
+- Teddy 方法调用时，会产生一个执行环境，同时向[[scope]]内添加一个指向当前（自身）活动对象的引用，所以当使用 a 时，会沿着作用域链向上寻找
+
+### 闭包
+
+闭包是指有权访问另一个函数作用域中的变量的函数，闭包的常见形式就是在一个函数内部创建一个函数。实际上，所有的 JavaScript 函数都是闭包
+
+```javascript
+function a() {
+  var b = 1
+  return (function () {
+    return (b += 1)
+  })()
+}
+var val = a()
+
+// 通知垃圾回收进程将其清除
+val = null
+```
+
+![scope](/img/langs/javascript/scope.png)
+
+在创建 a() 函数前，会创建一个预先包含全局变量对象的作用域链，这个作用域链被保存在内部 [[Scope]] 属性中
+
+当调用 a() 时，会为函数创建一个执行环境，然后通过复制 [[Scope]] 属性构建其作用域链，并且创建当前执行环境的变量对象，并将其推入作用域链的前端
+
+再对匿名函数进行调用时，会重复上述动作，此时 [[Scope]] 属性内，包含当前变量对象、a() 的变量对象以及全局变量对象的引用
+
+在 a() 执行完毕之后，其作用域链会被销毁，但是其变量对象不会被销毁，仍然存在在内存中，因为匿名函数的作用域链仍然在引用这个变量对象
+
+直到匿名函数被销毁时，a() 的变量对象才会被销毁，比如通过 `val = null` 的方式解除该函数的引用，通知垃圾回收进程将其清除
+
+### 函数柯里化
+
+函数柯里化通过一个例子来意会一下，它的基本思路和函数绑定是一样的，通过一个闭包来返回一个新的函数，实际上就是利用闭包来保存传参
+
+例如将 `add(1,2,3)` 封装成 `add(1)(2)(3)`
+
+```js
+function add(x, y, z) {
+  return x + y + z
+}
+
+function curry(fn, args) {
+  var that = this
+  var args = args ? args : []
+  // len 表示原函数的形参个数
+  var len = fn.length
+
+  return function () {
+    // 封装形参，因为arguments不是真正的数组，所以需要进行转换
+    let newArr = Array.prototype.slice.apply(arguments)
+    // 将之前的形参进行合并
+    newArr = args.concat(newArr)
+    // 判断是否为最后一个调用
+    if (args.length < len) {
+      // 如果不是，则将 add 继续传递
+      return curry.call(that, fn, newArr)
+    }
+    // 如果是最后一项，则直接执行
+    return fn.apply(that, newArr)
+  }
+}
+
+var curryAdd = curry(add)
+add(1)(2)(3) // 6
+```

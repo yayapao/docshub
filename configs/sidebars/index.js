@@ -14,6 +14,7 @@ const projectSiderbarsConfig = require('./projects')
 // const toolkitSiderbarsConfig = require('./configs/sidebars/toolkit')
 const nodejsProgrammingSidebarConfig = require('./programming-nodejs')
 const goProgrammingSidebarConfig = require('./programming-go')
+const javascriptProgrammingSidebarConfig = require('./programming-javascript')
 /** @type {import('@docusaurus/plugin-content-docs').SidebarsConfig} */
 const repoSiderbarsConfig = {
   handbookSiderBar: [
@@ -122,17 +123,6 @@ const sidebars = {
     },
     {
       type: 'category',
-      label: 'React',
-      collapsed: true,
-      items: [
-        'library/react/handbook',
-        'library/react/concept',
-        'library/react/libs',
-        'library/react/qa',
-      ],
-    },
-    {
-      type: 'category',
       label: 'Vue',
       collapsed: true,
       items: ['library/vue/concept', 'library/vue/libs'],
@@ -156,16 +146,6 @@ const sidebars = {
     },
   ],
   languageSiderBar: [
-    {
-      type: 'category',
-      label: 'JavaScript',
-      collapsed: true,
-      items: [
-        'langs/javascript/concept',
-        'langs/javascript/grammar',
-        'langs/javascript/project',
-      ],
-    },
     {
       type: 'category',
       label: 'TypeScript',
@@ -199,6 +179,7 @@ const sidebars = {
   // programming language
   ...nodejsProgrammingSidebarConfig,
   ...goProgrammingSidebarConfig,
+  ...javascriptProgrammingSidebarConfig,
   ...repoSiderbarsConfig,
   ...projectSiderbarsConfig,
 }

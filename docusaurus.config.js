@@ -45,7 +45,7 @@ const metaConfig = {
   tagline: 'Nice to doc, nice to code!',
   organizationName: 'YaYaPao', // Usually your GitHub org/user name.
   projectName: 'docshub', // Usually your repo name.
-  url: 'https://docs.7k7k.life/',
+  url: 'https://doc.joyjoy.cc/',
   baseUrl: '/',
   favicon: '/img/favicon.png',
 }

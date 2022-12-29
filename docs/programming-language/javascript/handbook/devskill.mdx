@@ -1,23 +1,20 @@
 ---
-id: project
-title: Project Experience
-sidebar_label: project
-slug: project
+id: devskill
+title: ''
+sidebar_label: devskill
 ---
 
-## setTimeout
+import { DocsHeader } from '/src/components/Layout/DocsHeader'
+import { HighlightWithText } from '/src/components/Highlights'
 
-`setTimeout` 是异步执行函数，但是其并不是真正的异步操作
+<DocsHeader
+  title="JavaScript Dev Skill"
+  description="STAR."
+  tags={['web']}
+  links={[]}
+/>{' '}
 
-可以简单理解为：只有在 JavaScript 线程中没有任何同步代码要执行的前提下才会执行异步代码，所以 `setTimeout` 只会在 JavaScript 线程空闲状态下执行
-
-如果调用了 `setTimeout` 方法，那么浏览器会在合适的时间将代码插入任务队列，如果这个时间为 0，则代表立即插入队列，但是此时并不代表执行，执行取决于当前 JavaScript 线程是拥挤还是空闲
-
-由 `setTimeout()` 调用的代码运行在与所在函数完全分离的执行环境上，这会导致代码中包含的 `this` 在非严格模式下指向 `window` 对象，在严格模式为 undefined
-
-在浏览器中，`setTimeout()` 最小时延为 4ms
-
-### 交互中双击时屏蔽单击事件
+## 交互中双击时屏蔽单击事件
 
 场景：一个元素同时绑定双击和单击事件，如果如果触发双击事件则会先触发一次单击事件
 
@@ -39,7 +36,7 @@ element.addEventListener('doubleClick', () => {
 })
 ```
 
-### 解决递归导致的堆栈溢出
+## 解决递归导致的堆栈溢出
 
 堆栈溢出被消除，因为通过事件循环处理递归，而不是调用堆栈
 
@@ -67,7 +64,7 @@ var nextListItem = function () {
 }
 ```
 
-### 按序输出
+## 按序输出
 
 使用闭包或者块级作用域来按序输出
 
@@ -175,3 +172,7 @@ async function getDateRange() {
   }
 }
 ```
+
+## 获取指定元素节点的样式
+
+`window.getComputedStyle(document.getElementsByTagName('body')[0]).getPropertyValue('font-size')`

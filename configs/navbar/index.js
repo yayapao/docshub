@@ -60,8 +60,8 @@ const navbarConfig = {
         },
         {
           label: 'JavaScript',
-          to: '/docs/langs/javascript/concept',
-          activeBaseRegex: '/docs/langs/javascript',
+          to: '/docs/programming-language/javascript/entry',
+          activeBaseRegex: '/docs/programming-language/javascript/entry',
         },
         {
           label: 'TypeScript',

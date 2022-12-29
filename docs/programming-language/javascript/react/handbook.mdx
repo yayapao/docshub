@@ -36,7 +36,7 @@ React 的工作之一就是保持 React state 和 application UI 同步。
 
 :::
 
-React 每次 render 实际上就是一次**快照**，snapshot 的 React state 表示 application UI 应该如何展示。React 需要从前后两次 snapshot 找出**差异**。
+React 每次 render 实际上就是一次**快照**，snapshot 的 React state 表示 application UI 应该如何展示。React 需要从前后两次 snapshot 找出**差异**，整理出代码提交给浏览器执行。
 
 _What triggers a re-render in React?_
 
@@ -51,7 +51,17 @@ _What triggers a re-render in React?_
 
 因为 `props` 变更是果，父组件 re-render 才是根。即使子组件没有任何接受任何 `props`，当父组件发生 re-render 时，该子组件仍然会 re-render。很大程度上是因为 React 并不能 100% 确定 state 的改变是否会间接影响到其子（孙）组件，因此它选择全部 re-render。这是 React 基本的执行标准，但是我们可以通过 `memoization` 来避免该行为！
 
-## Before meme
+### 函数式组件在 re-render 时发生了什么？
+
+函数组件本质还是函数，因此在 re-render 时，函数组件内部：
+
+- 所有 hooks 按照规则进行调用
+- 所有状态变量被重新初始化
+- 重新声明所有函数
+
+**很重要的是，如果一个嵌套函数内部保留状态变量，那么形成的闭包会即时创建当前状态并将其写入内存。**
+
+## Before memo
 
 React 作者 Dan 发布过一篇文章，用来讨论在使用 `memo` 进行性能优化之前应该尝试和确认的事情。一般来说，React 应用在**生产环境的性能表现远优于其在开发环境。**
 

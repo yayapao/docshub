@@ -21,6 +21,7 @@ const javascriptProgrammingSidebar = {
       items: [
         `${reactPrefix}/concept`,
         `${reactPrefix}/handbook`,
+        `${reactPrefix}/solution`,
         `${reactPrefix}/libs`,
         `${reactPrefix}/qa`,
       ],

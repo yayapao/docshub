@@ -1,0 +1,78 @@
+---
+id: solution
+title: ''
+sidebar_label: solution
+---
+
+import { DocsHeader } from '/src/components/Layout/DocsHeader'
+import { HighlightWithText } from '/src/components/Highlights'
+
+<DocsHeader
+  title="React Solutions"
+  description="对 React 生产问题的深度思考🤔。"
+  tags={['React']}
+  links={[
+    {
+      label: 'Why does useRef solve the problem of stale state?',
+      link: 'https://stackoverflow.com/questions/66622967/why-does-useref-solve-the-problem-of-stale-state',
+    },
+  ]}
+/>{' '}
+
+## React Closure
+
+:::caution closure
+
+闭包问题一直困扰着 JavaScript 开发者，因为它往往不会产生报错，但是实际影响了程序正确执行。
+
+:::
+
+在 React 内，函数组件简化了组件状态和 side effect 的管理，因此组件取代 class 成为我们的开发主力。Hooks 高度依赖闭包，闭包问题的风险也随之而来。
+
+观察下面这段程序，我们在 `mounted` 时建立了一个事件监听器，用来监听键盘事件，在键入 enter 时，调用 `onSearch` 方法，打印当前 value。
+
+![react-closure](https://img.joyjoy.cc/docs/plang/react/react-closure.jpg)
+
+事实上，无论我们输入什么，键入 enter 时都会打印 `undefined`，**它代表 value 的初始状态**。那么此时，我们已经掉入了 **闭包陷阱。**
+
+### 闭包是如何发生的呢？
+
+我们希望在函数组件 mounted 时，建立对键盘事件的监听。
+
+```tsx
+useEffect(() => {
+  window.addEventListener('keydown', handleKeyDown, false)
+  return () => {
+    window.removeEventListener('keydown', handleKeyDown, false)
+  }
+}, [])
+```
+
+此时 useEffect 回调函数的环境是一个匿名函数，在该函数内执行 `window.addEventListener` 操作（同理还有 setTimeout/setInterval 等操作），此时 `handleKeyDown` 内形成 stale colsure，其一个很重要的特性是保留旧的变量状态。
+
+当 value 变化引起 SearchBar 发生 re-render 后，不再触发 `mounted` hook，即不会再次声明/执行上文中 useEffect 内的代码。**当我们键入 enter 后，会调用“旧的” handleKeyDown 方法，它的变量对象仍为首次定义的值。**因此，最终输出为 undefined。
+
+### 如何解决？
+
+原因是在函数组件 re-render 之后，触发方法仍会访问旧的变量对象，导致异常表现。这里我们提供两种解决方案：
+
+1. 👍 通过 `useRef` 保证访问对象始终为最新；
+2. 保证每次 re-render 时，重新声明调用函数**（不推荐，会导致事件频繁发生绑定/解绑操作，消耗浏览器内存）**；
+
+```tsx
+// code snippets
+const [value, setValue] = useState<string>()
+const valueRef = useRef<string>()
+
+const onSearch = () => {
+  console.log(valueRef.current)
+}
+
+useEffect(() => {
+  valueRef.current = value
+}, [value])
+```
+
+为什么 `useRef` 行之有效？
+
+因为 useRef 在发生 re-render 时，总是返回相同的对象引用，这保证在不同内部函数内能够访问到一致的数据。同时，每次函数组件重新执行时，会将最新的 value 赋值给 ref.current，从而保证每次访问的都是最新的值。

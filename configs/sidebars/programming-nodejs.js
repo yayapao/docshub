@@ -19,9 +19,7 @@ const nodejsProgrammingSidebar = {
       collapsed: true,
       items: [
         `${toolkitPrefix}/npm`,
-        `${toolkitPrefix}/zx`,
         `${toolkitPrefix}/pm2`,
-        `${toolkitPrefix}/axios`,
         `${toolkitPrefix}/puppeteer`,
       ],
     },

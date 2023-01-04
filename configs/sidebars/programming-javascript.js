@@ -16,6 +16,12 @@ const javascriptProgrammingSidebar = {
     },
     {
       type: 'category',
+      label: 'JavaScript Toolkits',
+      collapsed: true,
+      items: [`${toolkitPrefix}/zx`],
+    },
+    {
+      type: 'category',
       label: 'React Framework',
       collapsed: true,
       items: [

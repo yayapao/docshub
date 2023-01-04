@@ -31,7 +31,7 @@ pnpx husky add .husky/commit-msg 'node scripts/verifyCommit.mjs'
 
 **如何获取？**
 
-在 commit-msg.sh 内，通过读取 `$1` 传参可以获取提交信息的保存路径，之后通过读取该路径的文件信息，获取提交信息，通常保存在 `./.git/COMMIT_EDITMSG` 
+在 commit-msg.sh 内，通过读取 `$1` 传参可以获取提交信息的保存路径，之后通过读取该路径的文件信息，获取提交信息，通常保存在 `./.git/COMMIT_EDITMSG`
 
 **如何验证？**
 
@@ -45,9 +45,7 @@ pnpx husky add .husky/commit-msg 'node scripts/verifyCommit.mjs'
 // verifyCommit.mjs
 const chalk = require('chalk')
 const msgPath = require('path').resolve('./.git/COMMIT_EDITMSG')
-const msg = require('fs')
-  .readFileSync(msgPath, 'utf-8')
-  .trim()
+const msg = require('fs').readFileSync(msgPath, 'utf-8').trim()
 
 const commitRE = /^(revert: )?(feat)(\(.+\))?: .{1,50}/
 
@@ -60,14 +58,13 @@ if (!commitRE.test(msg)) {
       chalk.red('invalid commit message format.') +
       '\n\n' +
       chalk.red(
-        'Proper commit message format is required for automated changelog generation. Examples:\n\n',
+        'Proper commit message format is required for automated changelog generation. Examples:\n\n'
       ) +
       '    \n    ' +
       chalk.green("\uD83D\uDCA5 feat(compiler): add 'comments' option")
   )
   process.exit(1)
 }
-
 ```
 
 一个规范的 commit 不仅能够帮助我们方便地生成 changelog，同时能够在 review 或者排查问题时提供便利！
@@ -103,14 +100,24 @@ pnpx husky add .husky/pre-commit 'pnpm run lint-staged'
 ```js
 module.exports = {
   '*.{js,jsx,ts,tsx}': ['eslint --fix', 'prettier --write'],
-  '{!(package)*.json,*.code-snippets,.!(browserslist)*rc}': ['prettier --write--parser json'],
+  '{!(package)*.json,*.code-snippets,.!(browserslist)*rc}': [
+    'prettier --write--parser json',
+  ],
   'package.json': ['prettier --write'],
   '*.vue': ['eslint --fix', 'prettier --write', 'stylelint --fix'],
   '*.{scss,less,styl,html}': ['stylelint --fix', 'prettier --write'],
   '*.md': ['prettier --write'],
-};
+}
 ```
 
-### 匹配策略
+## Q&A
 
-`lint-staged`
+### 提交后的文件应用默认格式化配置，而不是自定义的配置？
+
+我们在 husky 内结合 lint-staged 对修改文件应用 eslint、prettier、stylelint 等格式化工作以保证最终提交的内容统一格式。
+
+但是发现，文件格式化应用的是默认配置，**即我们自定义配置内容在 lint-staged 这个流程没有生效（比如 .eslintrc 等）**
+
+解决方案：
+
+- 配置文件的后缀不符合规范，比如目前并不支持 `.prettierrc.mjs`，参考[Configuration File](https://prettier.io/docs/en/configuration.html)，替换文件后缀解决

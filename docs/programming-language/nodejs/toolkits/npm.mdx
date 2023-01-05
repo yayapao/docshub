@@ -12,7 +12,7 @@ import {
 import { ResolvedTag } from '/src/components/Highlights/CustomizedTag'
 
 <DocsHeader
-  title="npm"
+  title="NPM Guidebook"
   description="npm 是一个 Node.js 的包管理工具，也是基于 Node.js 开源项目的仓库，同时也是一个 cli 工具"
   tags={['Node.js']}
   links={[
@@ -33,89 +33,31 @@ import { ResolvedTag } from '/src/components/Highlights/CustomizedTag'
 
 <!-- -->
 
-## Guidebook
-
-### 执行 `npm run X` 的过程？
+## 执行 `npm run X` 的过程？
 
 `npm run` 是 `npm run-scripts` 的代称，用来执行 package.json 内 `scripts` 字段所对应的脚本。
 
 那么当我们在执行 `npm run X` 时，实际发生了什么？
 
-**一言以蔽之：`npm run` 的本质是执行脚本，而 npm 帮我们处理了寻找可执行脚本的过程。**
+**In one word：`npm run` 的本质是执行脚本，并且 npm 处理了寻找可执行脚本的过程。**
 
 假设我们在 package.json 内有如下配置：
 
 ```json
+
 "scripts": {
   "dev": "umi dev",
 },
+
 ```
 
 当执行 `npm run dev` 时，npm 会先在 **本地 `node_modules/.bin`目录下找寻 `umi` 命令**，找到之后立即执行，相当于 `node_modules/.bin umi dev`。如果没有找到，会在全局安装的 node_modules 内继续寻找。
 
 `node_modules/.bin` 内存放的实际上是各个执行脚本的软链接（Symbolic link），`umi` 实际指向 `node_modules/umi/bin/umi.js`
 
-- 这里的实际指向路径由 `node_modules/umi/package.json` 的 `bin` 属性决定
+- 这里的实际指向路径由 **node_modules/umi/package.json** 的 `bin` 配置决定
 - 当执行 `npm install umi` 时，npm 会读取 umi 内的 `bin` 声明，并将相应文件（这里指 `node_modules/umi/bin/umi.js`）软链接到 `node_modules/.bin` 目录下
 - 同时，npm 会将 `node_modules/.bin` 加入到 **$PATH**，从而可以直接作为命令运行依赖程序和开发依赖程序
-
-## Troubleshooting
-
-<HighlightWithText>
-  Q: 执行脚本时，`usr/bin/env: bad interpreter: No such file or directory`？
-</HighlightWithText>
-
-<!-- -->
-
-当发布一个 package 后，准备执行脚本，发现报错 `usr/bin/env: bad interpreter: No such file or directory`.
-
-原因：脚本文件的 shell 声明错误
-
-```js
-// error declare
-#!usr/bin/env node
-
-// correct declare
-#!/usr/bin/env node
-```
-
-<HighlightWithText>
-  Q: 安装 pm2 时，npm install 卡在 sill install loadIdealTree？
-</HighlightWithText>
-
-<!-- -->
-
-```
-1. 更换 npm 源 `https://registry.npm.taobao.org/`
-2. 删除 package-lock.json, node_modules 后，重新安装
-```
-
-<HighlightWithText>
-  Q: NPM not installing package. Hostname/IP address doesn't match certificate's
-  altnames?
-</HighlightWithText>
-
-<!-- -->
-
-参考 [NPM not installing package. Hostname/IP address doesn't match certificate's altnames?](https://stackoverflow.com/questions/52128212/npm-not-installing-package-hostname-ip-address-doesnt-match-certificates-altn)，问题在于当前拉取的 npm 源不对。
-
-```shell
-# 获取 www.npmjs.com ip
-dig www.npmjs.com @1.1.1.1
-# 配置 hosts 文件
-vim /etc/hosts
-
-104.16.92.83 registry.npmjs.org
-
-# 或者更换源，注意 http/https 区别
-npm config set registry http://registry.npmjs.org
-```
-
-## package.json
-
-package.json 要点
-
-![package](/img/server/package.json.png)
 
 ## npm 常用命令
 
@@ -147,7 +89,27 @@ npm 默认执行根目录下，package.json 内的命令，可以通过配置：
 2. 通过设置 `.npmignore` ，其设置语法和 `.gitignore` 一致，但是**优先级更高！**
 3. 通过设置 `package.json` 内的 [files](https://docs.npmjs.com/cli/v7/configuring-npm/package-json#files) 字段来选择发布的文件或者目录，其优先级在同级目录下时更高！
 
-### 通过 `yarn` 来指定依赖包的依赖包版本
+## package.json
+
+package.json 要点
+
+![package](/img/server/package.json.png)
+
+## How to manage Dependencies?
+
+### `ncu` 升级依赖
+
+通过 `yarn upgrade | upgrade-interactive` 升级依赖版本时，仅会更新 _yarn.lock_ 文件，_package.json_ 并不会被更新，为了解决此问题，我们选择社区解决方案 - [npm-check-updates](https://www.npmjs.com/package/npm-check-updates)
+
+```bash
+# 检查所有依赖，更新 package.json 文件，之后执行 `yarn install` 更新依赖
+ncu -u
+
+# 升级指定文件
+ncu -f @tanstack/react-query -u
+```
+
+### `yarn resolution` 来管理包的依赖包版本
 
 通俗来说，就是我们通过 `yarn add` 引入的依赖包内可能同时依赖其他包（即**次级依赖包**），如果在依赖包内没有指定版本的话，默认会拉取其最新版本，这样做会产生问题，因为 yarn 通过支持 `resolutions` 字段来显式指定依赖包的版本（之前会更改 yarn.lock 文件）
 
@@ -170,4 +132,52 @@ npm 默认执行根目录下，package.json 内的命令，可以通过配置：
   "@types/react": "17.0.0",
   "@types/react-dom": "17.0.0"
 }
+```
+
+## Troubleshooting
+
+### bad interpreter: No such file or directory
+
+当发布一个 package 后，准备执行脚本，发现报错 `usr/bin/env: bad interpreter: No such file or directory`.
+
+原因：脚本文件的 shell 声明错误
+
+```js
+// error declare
+#!usr/bin/env node
+
+// correct declare
+#!/usr/bin/env node
+```
+
+### sill install loadIdealTree
+
+<HighlightWithText>
+  Q: 安装 pm2 时，npm install 卡在 sill install loadIdealTree？
+</HighlightWithText>{' '}
+
+```
+1. 更换 npm 源 `https://registry.npm.taobao.org/`
+2. 删除 package-lock.json, node_modules 后，重新安装
+```
+
+### Hostname/IP address doesn't match
+
+<HighlightWithText>
+  Q: NPM not installing package. Hostname/IP address doesn't match certificate's
+  altnames?
+</HighlightWithText>{' '}
+
+参考 [NPM not installing package. Hostname/IP address doesn't match certificate's altnames?](https://stackoverflow.com/questions/52128212/npm-not-installing-package-hostname-ip-address-doesnt-match-certificates-altn)，问题在于当前拉取的 npm 源不对。
+
+```shell
+# 获取 www.npmjs.com ip
+dig www.npmjs.com @1.1.1.1
+# 配置 hosts 文件
+vim /etc/hosts
+
+104.16.92.83 registry.npmjs.org
+
+# 或者更换源，注意 http/https 区别
+npm config set registry http://registry.npmjs.org
 ```

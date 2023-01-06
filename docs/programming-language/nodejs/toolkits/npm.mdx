@@ -9,12 +9,14 @@ import {
   HighlightWithCode,
   HighlightWithText,
 } from '/src/components/Highlights/TextContent'
+import { SolutionCard } from '/src/components/Highlights/SolutionCard'
 import { ResolvedTag } from '/src/components/Highlights/CustomizedTag'
 
 <DocsHeader
   title="NPM Guidebook"
-  description="npm 是一个 Node.js 的包管理工具，也是基于 Node.js 开源项目的仓库，同时也是一个 cli 工具"
+  description="NPM，即 npm package manager，Node.js 的包管理工具。它由 npm-cli 和 npm registry 两部分组成。"
   tags={['Node.js']}
+  github="https://github.com/npm/cli"
   links={[
     {
       label: `what's npm?`,
@@ -29,9 +31,92 @@ import { ResolvedTag } from '/src/components/Highlights/CustomizedTag'
       link: 'https://classic.yarnpkg.com/lang/en/docs/selective-version-resolutions/',
     },
   ]}
-/>
+/>{' '}
 
-<!-- -->
+## What is npx?
+
+:::info One word
+
+NPM is used as a package manager, NPX, on the other hand, is used to execute Javascript packages.
+
+:::
+
+NPX, 即 _Node Package eXecuter_，它用来执行 NPM package。**它的使用场景：当你需要临时执行某个 NPM package，使用 NPX 执行指定内容，并在完成后 NPX 会自动删除 package。**比如在使用 `create-react-app` 这类 cli 时，NPX 能够提供便利。
+
+### NPX 的执行过程？
+
+在用户执行 `npx X` 时，NPX 会经历如下处理流程：
+
+- 将 `npx` 替换为 `npm exec`，对参数进行解析、过滤、排序，并对当前执行环境进行校验
+- 如果没有显式传入 package，比如 `npx ./X.js`，则依次判断 local -> global 是否存在可执行文件，存在则获取可执行文件目录
+- 如果不存在，则将其当作 package 对待，并安装 package 到缓存目录，将 `${installDir}/node_modules/.bin` 写入可执行文件目录
+- 根据路径数组找到可执行文件的绝对路径，执行完毕后删除临时模块
+
+这里展示执行 `npx X` 的大致流程：
+
+![npx-cli-processor](https://img.joyjoy.cc/docs/plang/nodejs/npx-cli-processor.png)
+
+接下来，我们直接从源码一探端倪。
+
+```js
+// run the resulting command as `npm exec ...args`
+process.argv[1] = require.resolve('./npm-cli.js')
+process.argv.splice(2, 0, 'exec')
+```
+
+在 _npm/cli bin/npx-cli.js_ 内，将 `npx X` 转换为 `npm exec X`
+
+```js
+// 1
+const needPackageCommandSwap = args.length && !packages.length
+if (needPackageCommandSwap) {
+  let binExists = false
+  const dir = dirname(dirname(localBin))
+  const localBinPath = await localFileExists(dir, args[0])
+  if (localBinPath) {
+    pathArr.unshift(localBinPath)
+    binExists = true
+  } else if (await fileExists(`${globalBin}/${args[0]}`)) {
+    pathArr.unshift(globalBin)
+    binExists = true
+  }
+
+  if (binExists) return await _run()
+
+  packages.push(args[0])
+}
+
+// 2
+const manis = await Promise.all(
+  packages.map(async (p) => {
+    const spec = npa(p, path)
+    if (spec.type === 'tag' && spec.rawSpec === '') {
+      try {
+        const pj = resolve(path, 'node_modules', spec.name, 'package.json')
+        return await readPackageJson(pj)
+      } catch (er) {}
+    }
+    return await pacote.manifest(p, {
+      ...flatOptions,
+      preferOnline: true,
+    })
+  })
+)
+
+// 3
+if (needInstall) {
+  const { npxCache } = flatOptions
+  const installDir = cacheInstallDir({ npxCache, packages })
+  await mkdirp(installDir)
+  // ...
+}
+```
+
+在 _npm/libnpmexec lib/index.js_ 内：
+
+1. 如果没有显式传入 package，则依次从本地/全局的 bin 路径下寻找可执行文件，如果没有找到，则将单个传值当作 package 继续处理；
+2. 这里会将 package 与本地的 package.json 文件内的 deps 进行比对，如果存在 `X@latest` 这种，则 X 不需要重新安装，使用本地的即可；
+3. 如果存在 package 需要从网上拉取（通过 `add.length` 进行判断），则创建临时缓存目录，将 package 进行拉取、缓存，并将缓存目录的 bin 目录，写入 pathArr；
 
 ## 执行 `npm run X` 的过程？
 
@@ -94,6 +179,24 @@ npm 默认执行根目录下，package.json 内的命令，可以通过配置：
 package.json 要点
 
 ![package](/img/server/package.json.png)
+
+### devDependencies vs dependencies
+
+<SolutionCard
+  tag="场景一"
+  title="无论我将 package 放在 devDependencies 还是 dependencies 内，最终打包产物内均能找该 package"
+/>{' '}
+
+<SolutionCard
+  tag="场景二"
+  title="执行 `npm install --save-dev`, `npm install --save`, `npm install` 的产物没有区别"
+/>{' '}
+
+实际上，在通过 webpack 等工具进行打包时，dependencies 和 devDependencies 仅存在语义上的差别。**打包工具会根据入口文件的引用树来生成构建内容，与 package 放在哪个字段无关，只要该 package 被引用并存在于 node_modules 内，就会被打包到最终产物。**
+
+那么，为什么 NPM 还要支持通过不同参数将 package 对应到不同字段呢？
+
+主要原因是为了在开发 package 时做区分，我们拉取线上 package 时也会链式拉取 package 依赖。通常 NPM 会自动安装 dependencies 和 devDependencies 对应的依赖包，但是如果用户执行 `npm install --production` 则仅会安装 dependencies 对应的 package。
 
 ## How to manage Dependencies?
 

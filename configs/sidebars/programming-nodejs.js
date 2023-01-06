@@ -11,7 +11,11 @@ const nodejsProgrammingSidebar = {
       type: 'category',
       label: 'Node.js Handbook',
       collapsed: true,
-      items: [`${handbookPrefix}/practice`, `${handbookPrefix}/execution`],
+      items: [
+        `${handbookPrefix}/grammar`,
+        `${handbookPrefix}/practice`,
+        `${handbookPrefix}/execution`,
+      ],
     },
     {
       type: 'category',

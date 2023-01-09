@@ -12,7 +12,11 @@ const javascriptProgrammingSidebar = {
       type: 'category',
       label: 'JavaScript Handbook',
       collapsed: true,
-      items: [`${handbookPrefix}/grammar`, `${handbookPrefix}/devskill`],
+      items: [
+        `${handbookPrefix}/grammar`,
+        `${handbookPrefix}/closure`,
+        `${handbookPrefix}/devskill`,
+      ],
     },
     {
       type: 'category',

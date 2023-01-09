@@ -21,5 +21,3 @@ import { HighlightWithText } from '/src/components/Highlights'
 strean 和 buffer 的特征就决定了两者不同的使用场景，用 stream 可以同步传输，可以用来处理大的二进制内容；而 buffer 则需要将返回结果先写入缓存，再一次性返回，因此 buffer size 会成为限制因素（Node.js v19 默认为 1024 \* 1024kb），通常用来返回简单的文本信息。
 
 具体来说，`child_process.spwan` 返回一个包含 stdout 和 stderr stream 的对象，stdout 也有 `data, end` 等 stream 具备 hook，spwan 是 **asynchronously asynchronous**，即它会在子线程执行过程中，将数据以 stream 的形式传输回来。而 `child_process.exec` 则会在子线程执行完毕之后，将整个 buffer 进行传递，如果传输内容超过 buffer size，程序会报错并对内容进行截断，exec 是 **synchronously asynchronous**，即虽然执行命令这个动作是异步的，但是它会等到命令执行完毕拿到所有返回信息之后，再将信息一次性返回。
-
-## path.resolve vs path.join

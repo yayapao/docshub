@@ -36,6 +36,7 @@ import { HighlightWithText } from '/src/components/Highlights'
 - 使用 Gorm 作为连接数据库的客户端
 - 基于 Redis 使用请求缓存
 - 基于 JWT 作为用户 token 验证
+- 基于 COS 实现图床功能
 
 ## Preworks
 
@@ -130,11 +131,13 @@ GOOS=windows GOARCH=386 go build app.go
 │   ├── cacheStore # Cache store for request
 │   ├── core # Core methods(like Init())
 │   ├── settings # Read from .yaml settings
+│   ├── tcos # COS client
 │   ├── utils # Toolkits
 │   └── zaplog # Logger based on zap
 ├── router # Register routes and return the router
 │   ├── api # Mapping routes handler
-│   └── routes # Module's routes
+│   ├── routes # Module's routes
+│   └── router.go # Global router controller
 └── service # module's core handlers between model and api/routes
 
 
@@ -211,6 +214,14 @@ Stemming 和 lemmatization 都是将给定单词还原成基础单词的技术�
 - **stemming 并不能保证最后输出是一个真实存在的单词，但是 lemmatization 可以保证**
 
 ![stemming-vs-lemmatization](https://img.joyjoy.cc/docs/plang/go/stemming-vs-lemmatization.png)
+
+### ImageBed
+
+Imagebed 模块，相当于 cos 的代理，帮助我高效地管理图片（服务于 Docs APP）。
+
+#### 使用帮助
+
+在 cos 上传相同路径的文件，新文件会覆盖旧文件。
 
 ## Coding Skills
 

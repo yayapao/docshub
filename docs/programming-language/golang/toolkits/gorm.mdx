@@ -19,6 +19,17 @@ import { HighlightWithText } from '/src/components/Highlights'
 
 ## Usage
 
+### hasmany 使用
+
+在创建 hasmany 关联时，尤其需要注意：
+
+1. 创建 Table 时的顺序；
+2. 创建 Record 时的顺序；
+
+**均需要保持 `one Table` 在 `many Table` 之前**，比如一个人有多张信用卡，需要优先创建 User 表，再创建 Creditcard 表，在创建记录时同理。
+
+观察数据表结构会发现，虽然会在 User 表内定义 `Creditcards Creditcard[]`，但是实际创建时不会创建该字段，仅为语义上的保证。
+
 ### many2many update
 
 在使用 Grom 的关系模型时，体验是不如 Node.js 生态的 `typeorm`，主要体现在：

@@ -215,6 +215,10 @@ Stemming 和 lemmatization 都是将给定单词还原成基础单词的技术�
 
 ![stemming-vs-lemmatization](https://img.joyjoy.cc/docs/plang/go/stemming-vs-lemmatization.png)
 
+#### 全文搜索与 LIKE 谓词比较
+
+与全文搜索相比，LIKE 谓词仅适用于字符模式，比如 LIKE 不能查询格式化的二进制数据。此外，对于大量非结构化的文本数据，执行 LIKE 查询要比全文查询慢很多。
+
 ### ImageBed
 
 Imagebed 模块，相当于 cos 的代理，帮助我高效地管理图片（服务于 Docs APP）。

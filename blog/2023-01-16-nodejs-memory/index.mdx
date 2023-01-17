@@ -1,0 +1,74 @@
+---
+title: Node.js Memory Manage
+authors: y
+slug: nodejs
+tags: [nodejs, memory]
+---
+
+这篇 post 聊一聊**在容器内通过 PM2 启动 Node.js 服务后，运行时的内存管理。**
+
+<!--truncate-->
+
+import { SolutionCard } from '/src/components/Highlights/SolutionCard'
+
+通常，我们通过 PM2 来部署 Node.js 应用服务，并为其设置 `--max-memory-restart`。设置完成之后，PM2 会启动 internel worker 以 30s 步长对应用进程的内存使用情况进行监控，并对异常进程进行重启。
+
+但是，当我将其部署到容器内，并不断增大 `--max-memory-restart`，当其值 ≈ 容器内存/2 时，进程产生 OOM Crash，并生成 **core_files**，占据大量的磁盘空间。因此，我希望通过探究这一现象，来阐明以下问题：
+
+- 什么是 core_files，它如何产生？
+- Node.js 的内存管理机制
+- 如何分析 Node.js 应用的内存泄露问题？
+- Node.js 内存管理在容器内的变化？
+
+## What's core_files?
+
+:::info In One Word
+
+**core_files 是当应用程序崩溃时，由 Lunix 系统产生并记录运行时快照信息的 dump 文件**
+
+:::
+
+通常，core_files 以 `core*<processID>` 的形式命名，文件内记录崩溃时的内存分配信息、program counter、堆栈指针等关键信息。
+
+### core_files 在何时产生？
+
+<SolutionCard
+  tag="1"
+  title="当应用程序崩溃时，它会由操作系统自动产生，这种情况属于“死后验尸”"
+/>{' '}
+
+首先我们需要确认打开内核限制，即 `ulimit -u unlimited`，或者在启动 Node.js 应用程序的时候，添加 `--abort-on-uncaught-exception` 启动参数来对捕获异常进行自动 core dump
+
+<SolutionCard
+  tag="2"
+  title="在程序运行时，执行 `gcore <pid>` 主动生产，属于“活体检验”"
+/>{' '}
+
+该方式通常用于定位 **Node.js 进程假死**
+
+### 如何从 core_files 内提取信息？
+
+即如何解析 core_files。Node.js 在完善过程中，提供了 [llnode](https://github.com/nodejs/llnode) 来帮助开发者深入 JavaScript 运行状态，并了解 Node.js 进程和 core dumps 信息。
+
+准备工作（MacOS），通常 core 文件在 `/cores/` 目录下：
+
+- `ulimit -c unlimited` 开启操作系统内核限制
+- `brew update && brew install --with-lldb --with-toolchain llvm` llnode 前置准备
+- `volta install llnode` 全局安装 llnode
+- `sudo chmod 777 /cores/` 为文件授权
+
+我们编写一个脚本，并添加 `node --abort-on-uncaught-exception crash.js` 执行。
+
+```js
+const arr = new Array(1)
+arr.length = 0
+const b = arr[1].tell()
+```
+
+在 /cores 目录下我们能够找到 `core.<processID>` 文件。
+
+![core-files](https://img.joyjoy.cc/blog/core-files.png)
+
+执行 `llnode node -c /cores/core.<processID>` 进行解析，输入 `v8 bt` 查看程序运行时的 backtrace。
+
+![core-bt](https://img.joyjoy.cc/blog/core-bt.png)

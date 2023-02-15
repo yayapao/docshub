@@ -235,7 +235,23 @@ Imagebed 模块，相当于 cos 的代理，帮助我高效地管理图片（服
 
 #### 使用帮助
 
-在 cos 上传相同路径的文件，新文件会覆盖旧文件。
+在 COS 上传相同路径的文件，新文件会覆盖旧文件。
+
+#### 上传图片文件实现
+
+该模块的难点在于处理图片上传的流程，在这个过程中，我们需要注意：
+
+- 对图片大小、格式进行校验，**注意格式校验以读取文件内容进行判断**，参考[validateFileType](https://github.com/YaYaPao/docscripts/blob/main/go/utils/validateFileType.go)
+- 存储图片的长/宽，以保证图片的实际 ratio，参考[GetImageFileSize](https://github.com/YaYaPao/docscripts/blob/main/go/utils/GetImageFileSize.go)
+- **多次读取文件后，需要复位之后在进行操作**
+
+#### 图片不失真
+
+1. 👍 通过 CSS [`aspect-ratio`](https://developer.mozilla.org/en-US/docs/Web/CSS/aspect-ratio) 属性来设置父容器或者图片本身；
+
+2. 仅设置 img 的 height 或者 width 属性，让其按比例自动设置；
+
+3. 计算 ratio 后，通过 js 进行设置；
 
 ## Coding Skills
 

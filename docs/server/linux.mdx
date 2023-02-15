@@ -7,7 +7,7 @@ sidebar_label: Linux
 import { DocsHeader } from '/src/components/Layout/DocsHeader'
 
 <DocsHeader
-  title="Linux Handbook"
+  title="System && SHELL"
   description="Learning Linux from practice."
   tags={['Linux', 'Bash', 'Shell']}
   links={[
@@ -18,81 +18,41 @@ import { DocsHeader } from '/src/components/Layout/DocsHeader'
   ]}
 />{' '}
 
-## CommandLine
-
 :::tip
 
-从实战中积累 Linux 业务相关知识。
+明晰概念，积累系统相关速查表。
 
 :::
 
-### `ps` - process status
+## command 速查表
 
-`ps` 用于查看当前主机内运行的服务状态
+| command                    |                                             description |
+| :------------------------- | ------------------------------------------------------: |
+| ps -ef                     |                                  展示所有进程的详细信息 |
+| ps -xf                     |                          展示当前用户相关进程的详细信息 |
+| df -h                      |                                  展示系统内磁盘占用空间 |
+| du --max-depth=1 -h [path] | 查看指定目录下，每个目录占用空间 (macos: du -d 1 -h ./) |
+| du -sh [path]              |                                  查看指定目录的占用空间 |
+| date +"%s"                 |                                      返回系统当前时间戳 |
+| date +"%F %T"              |            输出执行格式时间字符串 “DDDD-YY-MM HH:mm:ss“ |
 
-```bash
-# 展示当前用户，在所有 ternimals 内的进程信息
-$ ps
+- `ps(process status)` 用于查看当前主机内运行的服务状态
+- `du(disk usage)` 用于展示文件/目录占用磁盘空间大小
+- `date` 用来设定或者展示系统时间
+- `top` 查看当前系统进程信息（但是在容器内，该命令并不准确，需要去文件内查看真是内存使用）
+  - M - 按照内存倒序
+  - P - 按照 CPU 使用率倒序
 
--e, -A # 展示所有的进程信息，不分用户，不分是否由 ternimals 启动
--a # 展示所有 ternimals 内启动的进程（不筛选当前用户）
--x # 展示所有进程信息，包括不是在 ternimals 内启动的
--f # 展示更多系统信息，uid, pid, parent pid, recent CPU usage, process start time, controlling tty, elapsed CPU usage, and the associated command
--u [username] # 指定用户
--m # 按照内存进行排序
-```
+## Shell 术语整理
 
-我们建立一个速查组合：
+在 Linux 内，我们通常混淆 Ternimal, Shell, zsh, CLI, GUI 等名词。
 
-- 查看所有进程信息执行 `ps -ef`
-- 查看与当前用户相关的进行信息 `ps -xf`
-- 查看特定用户的进程信息 `ps -u [username] -xf`
+![shell](https://img.joyjoy.cc/os/shell.png)
 
-### `du` - disk usage
-
-`du` 用于展示文件/目录占用磁盘空间大小。
-
-```shell
-# 展示各磁盘用量，容器上不推荐使用， -h 表示 human readable
-df -h
-
-# 查看指定目录下每个文件夹的占用（层级为1）
-# mac 下为 $`du -d 1 -h ./`
-du --max-depth=1 -h ./
-
-# 查看指定目录的磁盘占用
-du -sh ./
-```
-
-### `date`
-
-`date` 用来设定或者展示系统时间。
-
-```bash
-$ date # Wed Oct 12 10:53:47 CST 2022 展示当前系统时间
-
-# 输出当前时间戳
-$ date +"%s"
-
-# 输出指定格式时间 => "2022-10-12 10:58:26"
-date +"%F %T"
-```
-
-### `top`
-
-`top` 查看当前系统进程信息（但是在容器内，该命令并不准确，需要去文件内查看真是内存使用）
-
-- 按照内存占用排序：按下 `M`
-- 按照 CPU 占用排序，按下 `P`
-
-### wget
-
-wget 是一个从网络上自动下载文件的自由工具，支持通过 HTTP、HTTPS、FTP 三个最常见的 TCP/IP 协议 下载，并可以使用 HTTP 代理
-
-```bash
-# 查看版本
-$ wget --version
-```
+1. 相较于编译，**解释 = 编译 + 虚拟机**，编程语言没有编译和解释的说法，只能说某个编程语言是编译后执行还是通过解释器解释执行
+2. item2 => Ternimal, 也就是黑框框，通过配置 iterm2 配置，可以更改框框的表现
+3. bash,zsh => Shell，shell 运行在 ternima 中，shell 是一个命令解释器，通过内置解释器对输入命令进行解释，从而调用系统 API。**理论上，一个具有解释器的编程语言，都可以被称为 Shell，比如 Node.js**
+4. z,npm => CLI（Command Line Interface），通过参考其源码可以发现，CLI 表现为 Shell 脚本
 
 ## Shell Programming
 

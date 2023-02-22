@@ -1,10 +1,18 @@
 ---
-id: project
-title: HTML5 Project EXP
-sidebar_label: project
-slug: project
+id: km
+title: ''
+sidebar_label: KM
+slug: km
 ---
 
+import { DocsHeader } from '/src/components/Layout/DocsHeader'
+
+<DocsHeader
+  title="Browser KM"
+  description="浏览器相关知识整理"
+  tags={['Browser']}
+  links={[]}
+/>{' '}
 
 ## 跨域
 
@@ -90,29 +98,25 @@ getUrl () {
 },
 ```
 
-## Android 和 iOS 键盘弹起样式问题
+## 在浏览器输入 URL 的执行过程
 
-解决 android 机键盘弹起和 iOS 解析方式不同问题：
+URL 结构：
 
-- 描述：iOS 会将元素及元素内子元素一起顶起，android 只会顶起父元素，其内部元素会产生样式问题
-- 解决：判断机型，监听屏幕的 `onresize` 事件，对子元素进行显示或者隐藏
+- scheme: 通信协议，比如 https 等
+- host: 主机地址
+- port: 端口号，用来标志进程
+- path: 虚拟文件路径，说明资源位于服务器什么地方
+- query: 查询参数
+- hash: 信息片段字符串，锚点部分
 
-```javascript
-// andriod 兼容
-var u = navigator.userAgent
+明确一个概念，一个 URL 就是一个特定资源，该资源可能需要引用多个其他资源作为支撑
 
-if (u.indexOf('Android') > -1 || u.indexOf('Linux') > -1) {
-  //安卓手机
-  var oriH = document.body.offsetHeight
-  //  拿到获取焦点的input
-  function resize() {
-    var curH = document.body.offsetHeight
-    if (curH <= (oriH * 2) / 3) {
-      // 隐藏...
-    } else {
-      // 展示...
-    }
-  }
-  window.onresize = resize
-}
-```
+服务端交互获取渲染对象
+
+- DNS 解析
+- HTTP 请求（ TCP 三次握手，四次分手，请求/响应报文结构，Cookie，代理服务器）
+
+通过浏览器渲染指定的资源文件
+
+- 渲染关键路径
+- 重绘和回流

@@ -15,6 +15,7 @@ const projectSiderbarsConfig = require('./projects')
 const nodejsProgrammingSidebarConfig = require('./programming-nodejs')
 const goProgrammingSidebarConfig = require('./programming-go')
 const javascriptProgrammingSidebarConfig = require('./programming-javascript')
+const htmlProgrammingSiderbarConfig = require('./programming-html5')
 /** @type {import('@docusaurus/plugin-content-docs').SidebarsConfig} */
 const repoSiderbarsConfig = {
   handbookSiderBar: [
@@ -158,28 +159,12 @@ const sidebars = {
       collapsed: true,
       items: ['langs/python/concept', 'langs/python/grammar'],
     },
-    {
-      type: 'category',
-      label: 'HTML5',
-      collapsed: true,
-      items: [
-        'langs/html5/concept',
-        'langs/html5/project',
-        'langs/html5/element',
-      ],
-    },
-
-    {
-      type: 'category',
-      label: 'CSS3',
-      collapsed: true,
-      items: ['langs/css3/concept', 'langs/css3/layout', 'langs/css3/text'],
-    },
   ],
   // programming language
   ...nodejsProgrammingSidebarConfig,
   ...goProgrammingSidebarConfig,
   ...javascriptProgrammingSidebarConfig,
+  ...htmlProgrammingSiderbarConfig,
   ...repoSiderbarsConfig,
   ...projectSiderbarsConfig,
 }

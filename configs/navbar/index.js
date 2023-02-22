@@ -64,6 +64,11 @@ const navbarConfig = {
           activeBaseRegex: '/docs/programming-language/javascript/entry',
         },
         {
+          label: 'HTML5',
+          to: '/docs/programming-language/html5/entry',
+          activeBaseRegex: 'html5/*',
+        },
+        {
           label: 'TypeScript',
           to: '/docs/langs/typescript/concept',
           activeBaseRegex: '/docs/langs/typescript',
@@ -72,17 +77,6 @@ const navbarConfig = {
           label: 'Python3',
           to: '/docs/langs/python/concept',
           activeBaseRegex: '/docs/langs/python',
-        },
-
-        {
-          label: 'HTML5',
-          to: '/docs/langs/html5/concept',
-          activeBaseRegex: '/docs/langs/html5',
-        },
-        {
-          label: 'CSS3',
-          to: '/docs/langs/css3/concept',
-          activeBaseRegex: '/docs/langs/css3',
         },
       ],
     },

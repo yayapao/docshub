@@ -1,0 +1,42 @@
+---
+id: faq
+title: ''
+sidebar_label: FAQ
+slug: faq
+---
+
+import { DocsHeader } from '/src/components/Layout/DocsHeader'
+
+<DocsHeader
+  title="FAQ"
+  description="HTML5 使用常见问题"
+  tags={['HTML5']}
+  links={[]}
+/>{' '}
+
+## Android 和 iOS 键盘弹起样式问题
+
+解决 android 机键盘弹起和 iOS 解析方式不同问题：
+
+- 描述：iOS 会将元素及元素内子元素一起顶起，android 只会顶起父元素，其内部元素会产生样式问题
+- 解决：判断机型，监听屏幕的 `onresize` 事件，对子元素进行显示或者隐藏
+
+```javascript
+// andriod 兼容
+var u = navigator.userAgent
+
+if (u.indexOf('Android') > -1 || u.indexOf('Linux') > -1) {
+  //安卓手机
+  var oriH = document.body.offsetHeight
+  //  拿到获取焦点的input
+  function resize() {
+    var curH = document.body.offsetHeight
+    if (curH <= (oriH * 2) / 3) {
+      // 隐藏...
+    } else {
+      // 展示...
+    }
+  }
+  window.onresize = resize
+}
+```

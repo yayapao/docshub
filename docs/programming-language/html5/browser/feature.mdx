@@ -19,16 +19,38 @@ import { DocsHeader } from '/src/components/Layout/DocsHeader'
   ]}
 />{' '}
 
-## 下载文件
+## 文件下载 ⏬
 
 在浏览器使用过程中，会发现其对于不同文件有不同的处理方式：它既可以预览文件内容，比如查看图片或者 PDF 文件，也可以直接下载 .zip 包。
 
-通常而言，浏览器会根据文件内容自动进行判断，如果不能直接打开，则会将其下载。但是在某些场景下，我们需要主动去下载 image/PDF 文件。
+通常而言，**浏览器会根据文件内容自动进行判断，如果不能直接打开，则会将其下载**。但是在某些场景下，我们需要主动去下载 image/PDF 文件。
 
 我们在浏览器上能够实现两种下载文件的方式，这里我们将重点讨论第二种方式。
 
 1. 右键“另存为”；
 2. 点击按钮直接下载，比如在 unsplash 上下载图片；
+
+![browser-download.png](https://img.joyjoy.cc/html5/browser-download.png)
+
+通过审查元素，我发现 unsplash 在处理文件下载时：
+
+- 通过 `<a>` 标签的 download 属性来表明该图片需要下载；
+- 图片地址和当前页面地址同源；
+
+`download` 属性不必多说，用来向浏览器表明被下载的超链接目标，通常表示下载文件的名称。**在实际场景下，如果图片地址和页面不同源，即使已经设置了 download 属性，文件仍然是直接打开，而不是下载。**
+
+**👆 是由于 HTTP Header `Content-disposition` 属性与其优先级决定的。**
+
+1. `content-disposition` 为服务端返回的请求报文头部字段，其值举例：`Content-Disposition: Attachment; filename=image.png`；
+2. `content-disposition` 和 `download` 属性都能够作用于下载文件的名称；
+3. 如果 HTTP response 内，Header 包含 `content-disposition` 字段，并且值为 `attachment`，则其拥有最高优先级；且无论文件类型如何，它都将被下载；
+4. 如果 `content-disposition` 被设置为 `inline`，不同浏览器会存在差异，FireFox 浏览器会以它优先，但是 Chrome 则会以 download 优先；
+
+:::caution Exceptions
+
+上面讨论的是图片地址为 http 的形式，如果图片地址为 `blob` 或者 `base64` 的形式，则不存在跨域问题，可以直接下载。
+
+:::
 
 ## 跨域
 

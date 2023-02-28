@@ -31,7 +31,7 @@ import { HighlightWithText } from '/src/components/Highlights'
 
 观察下面这段程序，我们在 `mounted` 时建立了一个事件监听器，用来监听键盘事件，在键入 enter 时，调用 `onSearch` 方法，打印当前 value。
 
-![react-closure](https://img.joyjoy.cc/docs/plang/react/react-closure.jpg)
+![react-closure.jpg](https://img.joyjoy.cc/react/react-closure.jpg)
 
 事实上，无论我们输入什么，键入 enter 时都会打印 `undefined`，**它代表 value 的初始状态**。那么此时，我们已经掉入了 **闭包陷阱。**
 

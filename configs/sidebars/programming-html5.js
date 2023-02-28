@@ -23,7 +23,7 @@ const HTML5ProgrammingSidebar = {
       type: 'category',
       label: 'Browser',
       collapsed: true,
-      items: genSiderItem(browserPrefix, ['cache', 'km']),
+      items: genSiderItem(browserPrefix, ['feature', 'cache']),
     },
   ],
 }

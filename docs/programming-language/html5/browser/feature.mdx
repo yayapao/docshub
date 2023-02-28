@@ -1,18 +1,34 @@
 ---
-id: km
+id: feature
 title: ''
-sidebar_label: KM
-slug: km
+sidebar_label: Feature
+slug: feature
 ---
 
 import { DocsHeader } from '/src/components/Layout/DocsHeader'
 
 <DocsHeader
-  title="Browser KM"
-  description="浏览器相关知识整理"
+  title="Browser Feature"
+  description="浏览器特性及其使用"
   tags={['Browser']}
-  links={[]}
+  links={[
+    {
+      label: 'Complete guide to file download in browsers',
+      link: 'https://cybercafe.dev/complete-guide-to-file-download-in-browsers/',
+    },
+  ]}
 />{' '}
+
+## 下载文件
+
+在浏览器使用过程中，会发现其对于不同文件有不同的处理方式：它既可以预览文件内容，比如查看图片或者 PDF 文件，也可以直接下载 .zip 包。
+
+通常而言，浏览器会根据文件内容自动进行判断，如果不能直接打开，则会将其下载。但是在某些场景下，我们需要主动去下载 image/PDF 文件。
+
+我们在浏览器上能够实现两种下载文件的方式，这里我们将重点讨论第二种方式。
+
+1. 右键“另存为”；
+2. 点击按钮直接下载，比如在 unsplash 上下载图片；
 
 ## 跨域
 

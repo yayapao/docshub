@@ -16,8 +16,76 @@ import { HighlightWithText } from '/src/components/Highlights'
       label: 'Why does useRef solve the problem of stale state?',
       link: 'https://stackoverflow.com/questions/66622967/why-does-useref-solve-the-problem-of-stale-state',
     },
+    {
+      label: 'Rename A File With JavaScript In The Browser',
+      link: 'https://pqina.nl/blog/rename-a-file-with-javascript/',
+    },
   ]}
 />{' '}
+
+## 在 React 内处理文件
+
+:::caution Before we start
+
+[File](https://developer.mozilla.org/en-US/docs/Web/API/File) 可以看作是 Blob 的一种特殊实现，因此它具备 Blob 的所有属性和方法，除此之外，它还 `name`, `lastModified` 以及 `webkitRelativePath` 等属性
+
+**正是由于 File 的属性为 readonly，使我们在试图改变它时遇到麻烦。**
+
+:::
+
+本章节，我将基于 React 结合 [filepond](https://pqina.nl/filepond/docs/) 来介绍在现代框架内**处理上传文件的需求**，同时提供设计上传组件的思路和细节。
+
+观察 filepond 我发现，它在处理文件上传时，支持：
+
+- 在文件对象被发送到服务器之前，通过内置和自定义插件，更改文件对象，比如重命名、预览等操作
+- 对于已上传文件，支持默认删除操作，会同时删除服务端和客户端文件对象
+
+![file-handler.png](https://img.joyjoy.cc/react/file-handler.png)
+
+1. 当用户上传一个文件时，会产生一个 File 对象，该 File 对象只读；
+2. filepond 插件基于原 File 对象，创建新的 File 对象来规避只读的限制 🚫；
+3. 通过 File 对象生成本地 URL 来预览图片；
+4. 服务端和客户端需要达成某种约定，即当上传成功后，将文件 ID 以约定形式返回，组件从结果内取出后放去内存，从而进行后续删除等操作；
+5. 不同浏览器在处理 File 对象时，可能会将其转换为 Blob 对象，**服务端接收 Blob 对象后，会将其 filename 解析成 blob**。因此，需要确保上传数据为 File。
+
+### 重命名 File
+
+以重命名为例，当我们需要更改 File 的属性时，**目前标准的解决方案时，以原 File 对象为基础，生产一个新的 Blob 对象，并将其转换为 File 对象。**
+
+_为什么不是直接生产 File 对象？_
+
+- 不同浏览器对于 File 对象的处理存在差异
+- `Blob.slice` 会返回一个 Blob 对象
+
+```js
+const renameFile = (file, name) => {
+  // 新建一个 Blob 对象，指定开始/结束位置和数据类型，并为其重命名
+  const renamedFile = file.slice(0, file.size, file.type)
+  renamedFile.lastModifiedDate = file.lastModifiedDate
+  renamedFile.name = name
+  // 将 Blob 对象转换为 File
+  const form = new FormData()
+  form.set('file', renamedFile, name)
+  return form.get('file')
+}
+```
+
+### 本地预览文件
+
+这里特指浏览器可以打开的文件，比如 image/\*, SVG, 以及 PDF 等格式文件。
+
+1. 通过 `window.URL.createObjectURL(file)` 方法，创建一个链接，将返回值放入 img.src 属性内；
+2. 通过 `FileReader` 将文件内容转为 base64 格式，进行读取；
+
+```js filereader
+var fileReader = new FileReader()
+
+reader.onload = function (e) {
+  // base64 编码
+  const res = e.target.result
+}
+reader.readAsDataURL(file)
+```
 
 ## React Closure
 

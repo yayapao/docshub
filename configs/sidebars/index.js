@@ -85,20 +85,6 @@ const sidebars = {
       items: ['database/kafka/start'],
     },
   ],
-  browserSiderbar: [
-    {
-      type: 'category',
-      label: 'WPM',
-      collapsed: true,
-      items: ['browser/chromeperf', 'browser/navigator'],
-    },
-    {
-      type: 'category',
-      label: 'Devtools',
-      collapsed: true,
-      items: ['browser/devtools'],
-    },
-  ],
   toolkitSiderbar: [
     {
       type: 'category',

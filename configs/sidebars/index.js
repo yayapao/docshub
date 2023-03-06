@@ -85,14 +85,6 @@ const sidebars = {
       items: ['database/kafka/start'],
     },
   ],
-  toolkitSiderbar: [
-    {
-      type: 'category',
-      label: 'Toolkit',
-      collapsed: true,
-      items: ['toolkit/vscode'],
-    },
-  ],
   interviewSiderbar: [
     {
       type: 'category',

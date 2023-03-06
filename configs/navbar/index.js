@@ -28,11 +28,6 @@ const navbarConfig = {
           activeBaseRegex: '/docs/library',
         },
         {
-          label: 'Toolkit',
-          to: '/docs/toolkit/vscode',
-          activeBaseRegex: '/docs/toolkit',
-        },
-        {
           label: 'Interview',
           to: '/docs/interview/js',
           activeBaseRegex: '/docs/interview',

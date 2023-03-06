@@ -1,0 +1,146 @@
+---
+id: macosapp
+title: ''
+sidebar_label: MacOS essential Apps
+---
+
+import { DocsHeader } from '/src/components/Layout/DocsHeader'
+
+<DocsHeader
+  title="MacOS essential Apps"
+  description="MacOS 装机必备"
+  tags={['MacOS']}
+  links={[
+    {
+      label: 'Complete guide to file download in browsers',
+      link: 'https://cybercafe.dev/complete-guide-to-file-download-in-browsers/',
+    },
+  ]}
+/>{' '}
+
+本章对基于 MacOS 开发时的好用好玩的软件进行记录，便于装机和迁移。
+
+在开始之前，我们需要安装 Xcode 来集成基本开发环境，[homebrew](https://brew.sh/) 来安装管理 CLI 和 App。
+
+安装 app
+
+```bash
+brew install --cask \
+alfred \
+docker \
+iterm2 \
+google-chrome \
+obsidian \
+another-redis-desktop-manager \
+```
+
+安装 CLI
+
+```bash
+brew install \
+z \
+tree \
+sshpass \
+sshs \
+```
+
+## 文档类
+
+### Obsidian
+
+[Obsidian](https://obsidian.md/) 是一个知识管理利器，诚如它所描述的 `A second brain, for you, forever.` 它将零碎的知识点当作一个个主题，以模仿神经网络的形式将主题关联起来，从而形成记忆网络。
+
+社区插件：
+
+- Excalidraw，用来画草稿图的神器
+
+它本身没有云端 ☁️ 功能，因此通过将文件存储位置放到 iCloud 上来使不同机器进行同步
+
+### Notion
+
+[notion](https://www.notion.so/desktop) 好用的文字编辑器，用来记笔记很不错。配合 notionai 能做很多生产力的内容。
+
+## 编程
+
+我习惯使用 JetBrain 来编写 Golang 和 Python，JetBrain 的系列产品可以通过 [JetBrains Toolbox App](https://www.jetbrains.com/toolbox-app/?_gl=1*xlqnle*_ga*MTk4MTQxMTkwMS4xNjYyNDU4MzYx*_ga_9J976DJZ68*MTY3Nzc1MDMwNC4xMS4wLjE2Nzc3NTAzMDQuMC4wLjA.&_ga=2.8736949.1692906778.1677750305-1981411901.1662458361) 来安装和管理。
+
+除此之外，我还安装以下工具 🔧：
+
+- [volta](https://github.com/volta-cli/volta) 管理 Node.js 版本和插件
+
+### vscode
+
+vscode 不必多说，微软推出的强大的文本编辑器。记录一下我常用的插件：
+
+- Gitlens, Supercharge Git within VS Code，方便在 vscode 内查看和管理代码提交记录
+- Git History, View git log, file history
+- Intellicode AI-assisted development，基于 AI 帮助编码
+- One Dark Pro 最近很喜欢的一款主题
+- Thunder Client 轻量的 REST API 客户端，日常使用中已经取代 Postman
+- Wakatime DDDD
+- Xmind Viewer 预览 .xmind 文件
+- Remote SSH + Remote - SSH: Editing Configuration Files + Remote Explorer
+- Draw.io Integration draw.io 插件，可以在 vscode 上画流程图
+
+其他的编程语言类插件根据实际情况安装即可。
+
+#### Debugger Nest.js App
+
+VSCode 支持 N 种方式进行 debug
+
+- 设置 `Debug: Toggle Auto Attach` 为 `smart`，当每次打开 vscode 的 ternimal 时，会自动进入 debug 模式
+- 通过 `Debug: Create JavaScript Debug Terminal` 创建一个命令行窗口，在其内部执行命令，从而进行 debug
+- 配置 `launch.json` 来编写 debug 脚本，在 vscode debug 模块内启动
+
+##### Attach vs Launch
+
+Attach: 依附当前进程
+
+Launch: 另起一个新的进程
+
+#### Remote Development Over SSH
+
+:::note
+
+- 安装官方插件 - `remote SSH`
+- 配置本地/服务器 SSH，参考 [SSH 远程登录](https://doc.joyjoy.cc/docs/server/cloudServer#%E8%AE%BE%E7%BD%AE-ssh-%E8%BF%9C%E7%A8%8B%E7%99%BB%E5%BD%95)
+
+:::
+
+## 实用工具
+
+- snipaste，截图工具
+- DeepL，翻译工具，`ctrl-c-c` 超方便的
+- Office365，在 AppStore 上下载，在咸鱼购买账号 🐶
+
+### Git
+
+Git 相比不会陌生，这里记录安装之后的使用技巧。
+
+全局设置用户名和账号，如果需要区分公司/个人，则在本地项目内更改设置即可（`--local`）
+
+```bash
+
+git config --global user.name "Your Name"
+git config --global user.email "you@your-domain.com"
+
+```
+
+避免 `no upstream branch` 的报错
+
+```bash
+
+git config --global --add push.default current
+git config --global --add push.autoSetupRemote true
+
+```
+
+修改全局 `~/.gitignore` 避免项目内重复修改，尤其是处理开源项目
+
+```
+
+*~
+.DS_Store
+.idea
+
+```

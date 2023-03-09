@@ -1,73 +1,51 @@
 ---
 id: husky
-title: Use Husky
+title: Husky
 sidebar_label: Husky
 ---
 
 import { HighlightWithCode } from '/src/components/Highlights'
 
-:::info Husky
-Modern native git hooks made easy!
+:::info Husky - Modern native git hooks made easy!
+
+[Husky](https://typicode.github.io/husky/#/?) 能够让我们在项目内轻松使用 [githooks](https://git-scm.com/docs/githooks)!
+
 :::
 
-[Husky](https://typicode.github.io/husky/#/?) 能够让我们在项目内轻松使用 [githooks](https://git-scm.com/docs/githooks)
+在介入 git 生命周期，我们能够控制团队内提交代码的流程，比如**格式化代码、统一提交信息、执行测试脚本、检测敏感信息**等等
 
-介入 git 生命周期之后，我们可以对团队统一规范做出贡献，比如格式化代码、统一提交信息、执行测试脚本、检测敏感信息等等
-
-这里以 pnpm 为例进行记录安装过程：
+这里记录 husky 的常用操作：
 
 ```shell
 # 1. 引入 husky
-pnpm add husky -D
+npm install husky --save-dev
 
 # 2. 启用 githooks
-pnpx husky install
+npx husky install
 
-#3. 创建 githooks，下面代码相当于创建一个指定执行脚本的 commit-msg 钩子， 后续可以自己在 .husky 内进行修改
-pnpx husky add .husky/commit-msg 'node scripts/verifyCommit.mjs'
+# 3. 创建 githooks，下面代码相当于创建一个指定执行脚本的 commit-msg 钩子， 后续可以自己在 .husky 内进行修改
+npx husky add .husky/commit-msg 'node scripts/verify_commit.mjs'
 ```
 
-## 规范 git commit message
+## Commit Message
 
-**如何获取？**
+一个好的 Commit Message 需要足够简洁，但是又不失可读性，并且能够让开发者快速回溯提交历史记录。
 
-在 commit-msg.sh 内，通过读取 `$1` 传参可以获取提交信息的保存路径，之后通过读取该路径的文件信息，获取提交信息，通常保存在 `./.git/COMMIT_EDITMSG`
+### 验证 Commit Message 流程？
 
-**如何验证？**
+1. 在 commit-msg.sh 内，通过读取 `$1` 传参可以获取提交信息的保存路径，之后通过读取该路径的文件信息，获取提交信息，通常保存在 `./.git/COMMIT_EDITMSG`
 
-1. 获取提交信息；
-2. 开发正则验证；
-3. 验证不通过时，输出提示信息；
+2. 通过处理 Commit Message 内容，通过正则匹配等手段，将预制定的规则进行验证，验证不通过则给出错误提示；
 
-这里我们给一个例子，大家可以根据其进行扩展：
+3. 对于规则，能够简明扼要地输出给用户；
 
-```javascript
-// verifyCommit.mjs
-const chalk = require('chalk')
-const msgPath = require('path').resolve('./.git/COMMIT_EDITMSG')
-const msg = require('fs').readFileSync(msgPath, 'utf-8').trim()
+### 制定 Commit Message 规则
 
-const commitRE = /^(revert: )?(feat)(\(.+\))?: .{1,50}/
+我将记录 Commit Message 的验证规则，至于如何实施和匹配，这里不展开解释。
 
-if (!commitRE.test(msg)) {
-  console.log()
-  console.error(
-    '  ' +
-      chalk.bgRed.white(' ERROR ') +
-      ' ' +
-      chalk.red('invalid commit message format.') +
-      '\n\n' +
-      chalk.red(
-        'Proper commit message format is required for automated changelog generation. Examples:\n\n'
-      ) +
-      '    \n    ' +
-      chalk.green("\uD83D\uDCA5 feat(compiler): add 'comments' option")
-  )
-  process.exit(1)
-}
-```
+**General Rules**
 
-一个规范的 commit 不仅能够帮助我们方便地生成 changelog，同时能够在 review 或者排查问题时提供便利！
+1.
 
 ## 结合 lint-staged 使用
 

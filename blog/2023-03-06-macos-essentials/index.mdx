@@ -2,6 +2,7 @@
 id: macosapp
 authors: y
 title: ''
+slug: macosapp
 sidebar_label: MacOS essential Apps
 tags: [MacOS]
 ---
@@ -152,3 +153,21 @@ git config --global --add push.autoSetupRemote true
 .idea
 
 ```
+
+### Charles
+
+[charles](https://www.charlesproxy.com/) 是一个支持 HTTP 代理、监控以及反向代理的抓包工具。基于它，我们可以在线对本地脚本进行测试等。
+
+1. 替换线上脚本，执行本地脚本，并抓取特定结果？
+
+设置 charles 客户端：
+
+- Proxy -> Start SSL Proxying
+- Help -> SSL Proxying -> Install Charles Root Ceritificate -> 信任所有
+- Proxy -> macOS proxy
+- Proxy -> Proxy Setting -> enable HTTP Proxy Mode
+
+代理指定文件:
+
+- 过滤后选取指定文件，右键 Map local，选择指定文件进行替换
+- 避免跨域问题，在拦截后 response 内添加 `Access-Control-Allow-Origin: *`

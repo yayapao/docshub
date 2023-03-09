@@ -65,18 +65,16 @@ const ftc = {
       ],
     },
   ],
-  joyutilsSiderBar: [
+  joydev: [
     {
       type: 'category',
-      label: 'joyutils',
+      label: '🔥Joyutils',
       collapsed: false,
       items: [`${ftcPrefix}joyutils/readme`, `${ftcPrefix}joyutils/ECharts`],
     },
-  ],
-  joylintSiderBar: [
     {
       type: 'category',
-      label: 'joylint',
+      label: '⭐️Joylint',
       collapsed: false,
       items: [
         `${ftcPrefix}joylint/readme`,

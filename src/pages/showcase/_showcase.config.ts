@@ -50,21 +50,21 @@ const ftcProject: Application[] = [
   },
   {
     key: 'joyutils',
-    title: 'joyutils',
-    description: `Every developer should have their own utils!`,
+    title: 'joydev',
+    description: `Aims to help developers cultivate good coding practices and style.`,
     preview: `${imgPrefix}/joyutils.jpg`,
     github: 'https://github.com/YaYaPao/joydev/tree/main/packages/joyutils',
     website: '/docs/project/frontend-toolkit-chain/joyutils',
     tags: ['personal'],
   },
-  {
-    key: 'joylint',
-    title: 'joylint',
-    description: `Genki Dama OF Frontend's Lint tool chain!`,
-    preview: `${imgPrefix}/joylint.png`,
-    website: '/docs/project/frontend-toolkit-chain/joylint',
-    tags: ['ESLint', 'Prettier'],
-  },
+  // {
+  //   key: 'joylint',
+  //   title: 'joylint',
+  //   description: `Genki Dama OF Frontend's Lint tool chain!`,
+  //   preview: `${imgPrefix}/joylint.png`,
+  //   website: '/docs/project/frontend-toolkit-chain/joylint',
+  //   tags: ['ESLint', 'Prettier'],
+  // },
 ]
 
 export const getRepos: () => Application[] = () => {

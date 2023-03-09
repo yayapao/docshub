@@ -41,11 +41,33 @@ npx husky add .husky/commit-msg 'node scripts/verify_commit.mjs'
 
 ### 制定 Commit Message 规则
 
-我将记录 Commit Message 的验证规则，至于如何实施和匹配，这里不展开解释。
+首先需要明确，每次 Commit Message 都应该是单一职责和稳定的改变。这里我将记录 Commit Message 的验证规则，至于如何实施和匹配，这里不展开解释。
 
-**General Rules**
+**General Rules** 参考 [sentry commit message](https://develop.sentry.dev/commit-messages/)
 
-1.
+![commit-message.png](https://img.joyjoy.cc/software/commit-message.png)
+
+👆 展示一个经典的 Commit Message，它需要满足：
+
+- 主旨句用来总结内容，body 内容用来表达原因、解决方案或者进一步说明
+- 主旨行小于 70 个字符
+- 如果有 body 内容，需要以换行符和主旨行隔开
+- **body 内容都需要首字母大写，主旨行不需要**
+- body 内用要以英文句号结束，主旨行则不需要
+- 主旨行使用祈使句，即通常以动词开始
+
+对于 keyword，可以参考 [angular conventional commits](https://www.conventionalcommits.org/en/v1.0.0-beta.4/#summary)，同时需要支持 [gitemoji](https://gitmoji.dev/)
+
+```
+<type>(<scope>): <short summary>
+  │       │             │
+  │       │             └─⫸ Summary in present tense. Not capitalized. No period at the end.
+  │       │
+  │       └─⫸ Commit Scope: Effected module
+  │
+  │
+  └─⫸ Commit Type: build|ci|docs|feat|fix|perf|refactor|test... | Or gitemoji
+```
 
 ## 结合 lint-staged 使用
 
@@ -60,7 +82,7 @@ npx husky add .husky/commit-msg 'node scripts/verify_commit.mjs'
 首先，我们通过 husky 暴露 pre-commit，并为其钩子配置执行脚本：
 
 ```bash
-pnpx husky add .husky/pre-commit 'pnpm run lint-staged'
+npx husky add .husky/pre-commit 'npm run lint-staged'
 ```
 
 在 `package.json` 内配置启动脚本（能够支持手动执行）：
@@ -73,7 +95,7 @@ pnpx husky add .husky/pre-commit 'pnpm run lint-staged'
 }
 ```
 
-在 `./husky` 内创建 lint-staged 的执行配置，这里我们提供一个简单的参考：
+在 `./husky` 内创建 lint-staged 的执行配置，实际上就是**筛选文件规则：foramt 命令**，这里提供一个参考：
 
 ```js
 module.exports = {

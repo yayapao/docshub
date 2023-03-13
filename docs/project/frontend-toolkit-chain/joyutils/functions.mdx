@@ -1,0 +1,147 @@
+---
+id: functions
+title: Functions
+sidebar_label: Functions
+---
+
+## Browser Runtime Related
+
+一系列在浏览器运行时内能够执行的工具函数
+
+### exeCopy
+
+`exeCopy` 用于通过 Javascript 的方式将文本内容写到粘贴板上，**⚠️ 该动作必须由用户交互触发**
+
+**Parameters**
+
+- `data: string`: 需要写入的内容
+- `callback: () => void [optional]`: 写入完成后的回调
+
+```js
+import { exeCopy } from '@nofun/joyutils'
+
+btn.onClick = () => exeCopy('hey!', () => alert('copied!'))
+```
+
+### geuuid(todo)
+
+`geuuid` 生成 xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx 的加密字符串，**⚠️ 仅适用于浏览器环境，因为其实现基于 window 对象**
+
+**Returns**
+
+A string containing a randomly generated, 36 character long v4 UUID.
+
+```js
+import { geuuid } from '@nofun/joyutils'
+
+geuuid()
+// => '17c5549d-3df4-49b2-a7ce-9e3ea461e919'
+```
+
+## Handle Array
+
+### isValidArray
+
+`isValidArray<T>(data: unknown)` 判断数据是否为 JavaScript Array 类型，其元素不为空，返回时为 `Boolean`
+
+```js
+import { isValidArray } from '@nofun/joyutils'
+const res = isValidArray(['a', 'b', 'c'])
+// => True
+```
+
+### shuffledata(todo)
+
+`shuffledata(data: unknown)` 对数组内元素进行洗牌，**⚠️ 直接改变原数组，而不是返回新数组**
+
+**Parameters**
+
+- `data: unknown`: any data, if it's not a valid Array, will return data
+
+### isArrayValueEqual(todo)
+
+`isArrayValueEqual(arr1, arr2)` 判断两个数组的元素是否一致
+
+## Echarts Common Function
+
+一系列用于处理 Echarts 的方法，包含构建不同类型 chart 的虚拟数据、加工返回数据等。
+
+### genPieMockData
+
+`genPieMockData(names: string[])` 生成 ECharts 的饼图 series
+
+**Parameters**
+
+- `names string[]`: the Array maps series name
+
+**Returns**
+
+- `Array`: [series-pie.data](https://echarts.apache.org/zh/option.html#series-pie.data)
+
+```js
+import { genPieMockData } from '@nofun/joyutils'
+const series = genPieMockData(['a', 'b', 'c'])
+// => [{ a: 100, b: 299, c: 500 }]
+```
+
+### genLineMockData
+
+`genLineMockData(names: string[], count: number)` 生成 ECharts 的折线图（柱状图）series
+
+**Parameters**
+
+- `names string[]`: the Array maps series name
+- `count: number`: the length of data
+
+**Returns**
+
+- `Array`: [series-line.data](https://echarts.apache.org/zh/option.html#series-line.data)
+
+```js
+import { genLineMockData } from '@nofun/joyutils'
+const series = genLineMockData(['a', 'b'], 2)
+// => [{ name: 'a', data: [100, 200] }, { name: 'b', data: [200, 300] }]
+```
+
+### genCategory
+
+`genCategory(count: number, step: number = 86400)` 生成横坐标的 category
+
+**Parameters**
+
+- `count: number`: the length of data
+- `step: number(Default 86400)`: step of time series
+
+**Returns**
+
+- `Array`: [xAxis.data](https://echarts.apache.org/zh/option.html#xAxis.data)
+
+```js
+import { genCategory } from '@nofun/joyutils'
+const category = genCategory(2)
+// => [1664519723735, 1664519810135]
+```
+
+### calcObjectPercent
+
+`calcObjectPercent(data, key, value, decimals)` 计算每项的值占比，常用于渲染饼图的 legend
+
+**Parameters**
+
+- `data: Record<string, any>[]`: pie series
+- `key: string`: alias of key name
+- `value: string`: alias of value name
+- `decimals: number`: preserved decimals
+
+**Returns**
+
+- `Array`: series data with `percent`, also see [series-pie.tooltip.formatter](https://echarts.apache.org/zh/option.html#series-pie.tooltip.formatter)
+
+```js
+import { calcObjectPercent } from '@nofun/joyutils'
+const series = [
+  { name: 'a', count: 100 },
+  { name: 'b', count: 200 },
+]
+const res = calcObjectPercent(series, 'name', 'count', 2)
+```

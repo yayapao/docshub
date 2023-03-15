@@ -8,6 +8,29 @@ sidebar_label: Functions
 
 一系列在浏览器运行时内能够执行的工具函数
 
+### createScript
+
+`createScript` 用原生 JavaScript 来动态创建 script 标签并加载脚本
+
+**Parameters**
+
+- `src: string`: 脚本地址
+- `options?: Partial<HTMLScriptElement>`: script 标签的其他属性
+
+**Returns**
+
+Promise 对象
+
+```js
+import { createScript } from '@nofun/joyutils'
+
+createScript('url', { type: 'module' }).then((ele) => console.log(ele))
+```
+
+### checkBrowser
+
+`checkBrowser` 检查当前运行时环境是否为**浏览器运行时**，如果不是，则会直接抛出错误
+
 ### exeCopy
 
 `exeCopy` 用于通过 Javascript 的方式将文本内容写到粘贴板上，**⚠️ 该动作必须由用户交互触发**
@@ -15,7 +38,7 @@ sidebar_label: Functions
 **Parameters**
 
 - `data: string`: 需要写入的内容
-- `callback: () => void [optional]`: 写入完成后的回调
+- `callback: () => void [optional]`: 完成后的回调
 
 ```js
 import { exeCopy } from '@nofun/joyutils'
@@ -23,7 +46,27 @@ import { exeCopy } from '@nofun/joyutils'
 btn.onClick = () => exeCopy('hey!', () => alert('copied!'))
 ```
 
-### geuuid(todo)
+### parents
+
+`parents` 用来寻找给定元素的父节点，直到寻找到祖先节点为止，同时支持过滤
+
+**Parameters**
+
+- `el`: 目标元素
+- `selector?: string`: 过滤器
+
+**Returns**
+
+节点数组
+
+```js
+import { parents } from '@nofun/joyutils'
+
+const elements = parents(document.querySelector('.deep'), '.high')
+// => []
+```
+
+### geuuid
 
 `geuuid` 生成 xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx 的加密字符串，**⚠️ 仅适用于浏览器环境，因为其实现基于 window 对象**
 
@@ -38,6 +81,14 @@ geuuid()
 // => '17c5549d-3df4-49b2-a7ce-9e3ea461e919'
 ```
 
+### addOutline
+
+`addOutline` 为当前页面所有元素添加 outline，并赋予其随意颜色
+
+### toggleFullScreen
+
+`toggleFullScreen` 实现浏览器的全屏切换
+
 ## Handle Array
 
 ### isValidArray
@@ -50,17 +101,40 @@ const res = isValidArray(['a', 'b', 'c'])
 // => True
 ```
 
-### shuffledata(todo)
+### shuffler
 
-`shuffledata(data: unknown)` 对数组内元素进行洗牌，**⚠️ 直接改变原数组，而不是返回新数组**
+`shuffler` 对数组内元素进行洗牌
 
 **Parameters**
 
-- `data: unknown`: any data, if it's not a valid Array, will return data
+- `data: T[]`: 如果不是数组，则直接返回原数据
+- `returnNew?: boolean` 是否返回新数组（即是否应该改动原数组）
 
-### isArrayValueEqual(todo)
+**Returns**
 
-`isArrayValueEqual(arr1, arr2)` 判断两个数组的元素是否一致
+重新排序后的数组或者 undefined
+
+```js
+import { shuffler } from '@nofun/joyutils'
+const res = shuffler(['a', 'b', 'c'], true)
+// => ['c', 'a', 'b']
+```
+
+### isArrayValueEqual
+
+`isArrayValueEqual` 判断两个数组的元素是否一致，支持元素乱序或者顺序
+
+**Parameters**
+
+- `arr1: any[]`: 比较数组
+- `arr2: any[]`: 被比较数组
+- `indexMatters?: boolean` 是否需要考虑 index 影响
+
+```js
+import { isArrayValueEqual } from '@nofun/joyutils'
+const res = shuffler(['a', 'b', 'c'], ['1', '2'])
+// => false
+```
 
 ## Echarts Common Function
 

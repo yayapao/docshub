@@ -70,7 +70,7 @@ const ftc = {
       type: 'category',
       label: '🔥Joyutils',
       collapsed: false,
-      items: [`${ftcPrefix}joyutils/readme`, `${ftcPrefix}joyutils/ECharts`],
+      items: [`${ftcPrefix}joyutils/readme`, `${ftcPrefix}joyutils/functions`],
     },
     {
       type: 'category',

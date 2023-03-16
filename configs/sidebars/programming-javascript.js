@@ -1,6 +1,7 @@
 const toolkitPrefix = 'programming-language/javascript/toolkits'
 const handbookPrefix = 'programming-language/javascript/handbook'
 const reactPrefix = 'programming-language/javascript/react'
+const rnPrefix = 'programming-language/javascript/react-native'
 
 const javascriptProgrammingSidebar = {
   javascriptProgrammingSidbar: [
@@ -26,7 +27,7 @@ const javascriptProgrammingSidebar = {
     // },
     {
       type: 'category',
-      label: 'React Framework',
+      label: 'React',
       collapsed: true,
       items: [
         `${reactPrefix}/concept`,
@@ -35,6 +36,12 @@ const javascriptProgrammingSidebar = {
         `${reactPrefix}/libs`,
         `${reactPrefix}/qa`,
       ],
+    },
+    {
+      type: 'category',
+      label: 'React Native',
+      collapsed: true,
+      items: [`${rnPrefix}/application`],
     },
   ],
 }

@@ -127,12 +127,6 @@ const sidebars = {
   languageSiderBar: [
     {
       type: 'category',
-      label: 'TypeScript',
-      collapsed: true,
-      items: ['langs/typescript/concept', 'langs/typescript/project'],
-    },
-    {
-      type: 'category',
       label: 'Python3',
       collapsed: true,
       items: ['langs/python/concept', 'langs/python/grammar'],

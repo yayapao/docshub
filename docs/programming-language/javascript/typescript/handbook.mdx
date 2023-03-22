@@ -1,0 +1,180 @@
+---
+id: handbook
+title: ''
+sidebar_label: Handbook
+---
+
+import { DocsHeader } from '/src/components/Layout/DocsHeader'
+import { HighlightWithText } from '/src/components/Highlights'
+
+<DocsHeader
+  title="TypeScript Handbook"
+  description="TypeScript is JavaScript with syntax for types."
+  github="https://github.com/microsoft/TypeScript/#readme"
+  tags={['Typed', 'JavaScript']}
+  links={[]}
+/>{' '}
+
+TypeScript 是 JavaScript 的超集，主要提供了类型系统和对 ES6 的支持。TypeScript 可以编译成纯 JavaScript 代码，运行在任何浏览器上，也可以在 Node.js 运行。
+
+我们会从 TypeScript 的基础物料开始，逐步深入了解其高级特性。
+
+## DataTypes
+
+在基础类型之外，TypeScript 额外定义了一些类型，用于描述更复杂的数据结构。
+
+- `any` allow anything，使用 any 会跳过类型检查，**不建议使用**
+- `unknown` like you can't predict the user input，用来通知编译器和未来的读者，这个变量可以是任意类型，**使用前必须做类型判断**
+- `never` it's not possible that this type could happen，用来表示永远不会发生的类型，比如函数抛出异常或者无限循环
+- `void` a function which returns undefined or has no return value
+
+此外，TypeScript 提供了自定义类型的能力，可以通过 `interface` 和 `type` 关键字来定义。通过 `union` 和 `generics(范型)` 来创建复杂的数据结构，`as` 关键字通过断言来告诉编译器 `trust me, I know what i am doing.`
+
+### interface
+
+:::info
+
+In JavaScript, some design patterns make it difficult for types to be inferred automatically.
+
+To cover this case, TypeScript supports an extension of the JavaScript language, which offers places for you to tell TypeScript what the types should be.
+
+:::
+
+在 TypeScript 内，提供了类似面向对象语言的**多态**类型验证，interface 用来描述 JavaScript 内丰富且灵活的类型。
+
+- `interface` 用来描述对象的形状，可以用来描述函数的参数和返回值
+- 某些属性只有在创建的时候才能够被修改，这时候可以通过 `readonly` 来实现，同时 `TypeScript` 提供 `ReadonlyArray<T>` 类型来处理不可变数组
+- 声明**不可变属性**时，使用 `readonly` ，当声明一个**不可变变量**时，使用 `const`
+
+传递的属性内含有 `interface` 内未定义的属性则会触发 TypeScript 内的过多属性检查，即对传递属性的数量、类型（不包括顺序）进行检查，会导致**过多属性检查**
+
+- 首选的解决方案：TypeScript 提供了一个好的解决方案 `[propname: string]:any` 或者 `Record<string, any>` 来允许任意键值对
+- 同时，通过断言也可以来绕过这种类型检查，同时还有一种比较 hack 方法，将值赋值给一个新的变量来进行传递也可以对该类型检查进行规避
+- 此外，`[index: number]: string` 可以用来表示可索引类型，你应该熟悉 `index` 签名模式，它在开发过程中确实能够带来很多便利
+
+`interface` 可以通过 `extends` 关键字来延伸**多个** `interface`（即实现多重继承），比如 `interface A extends B,C {}`
+
+### Function
+
+#### 关于 this
+
+> Arrow functions capture the `this` where the function is created rather than where it is invoked
+
+在 TypeScript 内，可以开启 `--noImplictThis` 来通知编译器去检查 `this` 在定义时可能出现的问题
+
+如果没有显示地定义 `this` 类型，会默认其类型为 `any`，因此你可以通过显示地定义 `this` 的类型来避免一些错误
+
+```typescript
+interface Demo {
+  name: string
+  setName(this: Demo): () => void
+}
+```
+
+#### overloads
+
+一个有趣的特性，由于 JavaScript 本质上是一个相当动态的语言，因此一个函数通常可以接受不同类型的参数并且输出不同类型的结果
+
+这个时候，我们如何为函数添加类型验证呢？来看一个官网的例子：
+
+```typescript
+// these two are overloads
+function pickCard(x: { suit: string; card: number }[]): number
+function pickCard(x: number): { suit: string; card: number }
+// this not the overload
+function pickCard(x: any): any {
+  // Check to see if we're working with an object/array
+  // if so, they gave us the deck and we'll pick the card
+  if (typeof x == 'object') {
+    let pickedCard = Math.floor(Math.random() * x.length)
+    return pickedCard
+  }
+  // Otherwise just let them pick the card
+  else if (typeof x == 'number') {
+    let pickedSuit = Math.floor(x / 13)
+    return { suit: suits[pickedSuit], card: x % 13 }
+  }
+}
+```
+
+编译器会根据顺序依次进行匹配，因此，通常将复杂的 overloads 放在前面，简单的放在后面
+
+#### Parameters && ReturnType
+
+针对函数，TypeScript 提供了两个内置的类型，分别用来描述函数的参数和返回值，即 `Parameters<Type>` 和 `ReturnType<Type>`
+
+```ts
+declare function f1(p: number, q: string): { a: number; b: string }
+
+// 这里注意使用 typeof 来获取其类型
+// 生成一个元组类型: [p: number, q: string]
+type ParamsType = Parameters<typeof f1>
+
+// ✅ success
+const p1: ParamsType = [1, 'a']
+
+// Type 'number' is not assignable to type 'string'.(2322)
+const p2: ParamsType = [1, 2]
+
+// ReturnType: 捕获返回值类型
+type ReturnParams = ReturnType<typeof f1>
+
+// success
+const r1: ReturnParams = {
+  a: 1,
+  b: 'hello',
+}
+
+// The expected type comes from property 'b' which is declared here on type '{ a: number; b: string; }'
+const r2: ReturnParams = {
+  a: 1,
+  b: 2,
+}
+```
+
+## Union
+
+Union 类型用来描述一个值可以是几种类型之一，比如 `string | number` 表示一个值可以是 `string` 或者 `number` 类型
+
+对于 Union，支持通过 `Exclude<Type, Union>` 和 `Extract<Type, union>` 来分别对两个集合求**差集和交集**
+
+参考下面这个例子进行理解：
+
+```typescript
+// Exclude<unionA, unionB>
+type A = 'a' | 'b' | 'c'
+type B = 'a' | 'f'
+
+// type C = "b" | "c"
+type C = Exclude<A, B>
+
+// error: Type '"a"' is not assignable to type '"b" | "c"'.(2322)
+let v1: C = 'a'
+
+// Extract<unionA, unionB>
+// type E = "a"
+type E = Extract<A, B>
+
+// Type '"b"' is not assignable to type '"a"'.(2322)
+let v2: E = 'b'
+```
+
+## Generics
+
+:::info
+
+A major part of software engineering is building components that not only have well-defined and consistent APIs, but are also reusable. Components that are capable of working on the data of today as well as the data of tomorrow will give you the most flexible capabilities for building up large software systems.
+
+In languages like C# and Java, one of the main tools in the toolbox for creating reusable components is generics, that is, being able to create a component that can work over a variety of types rather than a single one. This allows users to consume these components and use their own types.
+
+:::
+
+范型绝对是编程是语言中不可或缺的一块，TypeScript 也不例外，它提供了一种方式来让你在定义函数、接口或类的时候，能够适用于多种类型，而不是单一的一种类型。从而解决组件复用的问题。
+
+让我们从一个例子开始，对于 myPrint，我们希望它能够保持输出元祖和输入的类型、顺序保持一致，并且默认输入的 type 属性为 string 类型
+
+```typescript
+function myPrint<T = string, U>(type: T, info: U): [T, U] {
+  return [type, info]
+}
+```

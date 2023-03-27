@@ -98,7 +98,7 @@ const sidebars = {
       type: 'category',
       label: 'Library',
       collapsed: true,
-      items: ['library/nodejs', 'library/python'],
+      items: ['library/python'],
     },
     {
       type: 'category',

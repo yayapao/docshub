@@ -8,7 +8,7 @@ const navbarConfig = {
   items: [
     { to: '/blog', label: 'Blog', position: 'left' },
     {
-      label: 'Fullstack',
+      label: '🧿🧿',
       position: 'left',
       items: [
         {

@@ -1,0 +1,9 @@
+## NEL
+
+> [NEL](https://w3c.github.io/network-error-logging/) defines a mechanism that enables developers to declare a network error reporting policy for a web application
+
+页面错误最严重的一种情况就是完全获取不到特定的资源，这可能是网络错误、加载资源发生错误，DNS 解析错误等原因造成的，并且这种错误难以复现，因此我们需要一个机制来处理此类情况，即当一个网络错误发生时，客户端能够上报 <b>在何时何处发生了什么事件，以及该类事件为何发生</b>
+
+服务端无法完全处理此类错误，因为客户端可能还未与服务端建立连接就已经发生错误了，此时服务端根本无法察觉到
+
+NEL(network-error-logging) 就是用来处理这类问题的一个机制，当客户端请求错误发生时，客户端 agent 会将该错误的类型、时间戳等信息进行解析并放入队列，然后通过读取队列将错误日志上报到指定位置。同时，它也支持上报正常的请求，用来统计不同客户群体内的错误率

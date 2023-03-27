@@ -1,7 +1,7 @@
 ---
-id: pm2
+id: common
 title: ''
-sidebar_label: pm2
+sidebar_label: common
 ---
 
 import { DocsHeader } from '/src/components/Layout/DocsHeader'
@@ -9,20 +9,92 @@ import { HighlightWithCode } from '/src/components/Highlights/TextContent'
 import { ResolvedTag } from '/src/components/Highlights/CustomizedTag'
 
 <DocsHeader
-  title="pm2"
-  description="Advanced, production process manager for Node.js. It can keep your application online 24/7"
-  github="https://github.com/Unitech/pm2"
-  npm="https://www.npmjs.com/package/pm2"
-  tags={['Node.js']}
-  links={[{
-    label: 'NODE_APP_INSTANCE',
-    link: 'https://pm2.keymetrics.io/docs/usage/environment/'
-  }]}
-/>
+  title="Common Libraries"
+  description="NodeJS runtime common libraries."
+  tags={['NodeJS']}
+  links={[
+    {
+      label: 'puppeteer github',
+      link: 'https://github.com/puppeteer/puppeteer',
+    },
+    {
+      label: 'NODE_APP_INSTANCE',
+      link: 'https://pm2.keymetrics.io/docs/usage/environment/',
+    },
+  ]}
+/>{' '}
 
-<!-- -->
+## puppeteer
 
-PM2 是 Node.js 的进程管理器，在后台运行，扮演者 Daemon（守护进程） 的角色，能够保证你的 Node.js 应用始终在线。
+:::info
+
+Puppeteer is a Node library which provides a high-level API to control Chrome or Chromium over the DevTools Protocol.
+
+:::
+
+简单来说，puppeteer 就是一个在 Node.js runtime 内的浏览器组件库，提供浏览器内核和系统的底层支持
+
+## Ubuntu 依赖及字体安装
+
+参考 [https://developers.google.com/web/tools/puppeteer/troubleshooting#chrome_headless_doesnt_launch_on_unix](https://developers.google.com/web/tools/puppeteer/troubleshooting) 了解在 docker 或者真实 Lunix 环境下，我们需要安装的依赖
+
+但是在利用 puppeteer 进行截图服务时，发现截图字体是楷体，字体本身和标点符号效果不好
+
+![pp-before](/img/package/nodejs/pp-snapshot-1.png)
+
+因此我们希望能够采用字体 [Material 推荐的 Roboto](https://material-ui.com/zh/components/typography/#general) 和微软雅黑来对页面进行样式上的调整，最终呈现效果如下图：
+
+![pp-after](/img/package/nodejs/pp-snapshot-2.png)
+
+相关配置参考：
+
+- `fc-list` 查看以安装的字体
+- `fc-list :lang=zh` 查看中文字体依赖
+- `fc-cache -f -v` 刷新字体缓存
+
+```shell
+# 下载相关依赖和字体依赖
+RUN apt-get update && \
+    apt-get install -yq --no-install-recommends ca-certificates fonts-liberation libappindicator3-1 libasound2 libatk-bridge2.0-0 libatk1.0-0 libc6 libcairo2 \
+    libcups2 libdbus-1-3 libexpat1 libfontconfig1 libgbm1 libgcc1 libglib2.0-0 libgtk-3-0 libnspr4 libnss3 libpango-1.0-0 libpangocairo-1.0-0 libstdc++6 libx11-6 \
+    libx11-xcb1 libxcb1 libxcomposite1 libxcursor1 libxdamage1 libxext6 libxfixes3 libxi6 libxrandr2 libxrender1 libxss1 libxtst6 lsb-release \
+    xdg-utils xfonts-utils fonts-roboto;
+
+# 下载对应字体
+# mkfontscale 控制字体旋转缩放
+# mkfontdir 创建雅黑字体的fonts.dir文件，它用来控制字体粗斜体产生
+# fc-cache 建立字体缓存信息，也就是让系统认识雅黑
+RUN wget -P /tmp/ https://iyoyo.oss-cn-hangzhou.aliyuncs.com/mirror/fonts/msyh.ttf  && \
+    wget -P /tmp/ https://iyoyo.oss-cn-hangzhou.aliyuncs.com/mirror/fonts/msyhbd.ttf && \
+    wget -P /tmp/ https://iyoyo.oss-cn-hangzhou.aliyuncs.com/mirror/fonts/msyhl.ttf &&\
+    mkdir /usr/share/fonts/winFont && \
+    cp /tmp/*.ttf /usr/share/fonts/winFont/ && \
+    chmod 755 -R /usr/share/fonts/winFont/*.ttf && \
+    cd /usr/share/fonts/winFont/ && \
+    mkfontscale && mkfontdir && fc-cache -f -v;
+
+# 关键一步：删除系统默认字体，中文字体会按照 fontconfig 的顺序进行加载
+RUN apt-get purge -y fonts-arphic-ukai fonts-arphic-uming && fc-cache -f -v;
+```
+
+### 性能优化
+
+关于内存共享，Chrome 默认使用 /dev/shm 共享内存，但是 docker 默认 /dev/shm 只有 64MB（通过会在容器内发布应用），在不够用的情况下，解决方案：
+
+- 启用 docker 时添加启动参数 `--shm-size=1gb` 来增大 /dev/shm 的共享内存
+- 启动 Chrome 时添加参数 `-disable-dev-shm-usage` 来禁止使用共享内存
+
+一些性能优化思路：
+
+- 尽量使用同一个浏览器实例，实现缓存公用
+- 拦截不必要的资源
+- 有效控制同时打开 tab 的数量
+- 一个 Chrome 实例打开久了难免会产生内存泄漏，可以通过定时器任务来定时重启 Chrome 实例
+- 关闭没必要的配置：`-no-sandbox,--disable-extensions`
+
+## PM2
+
+M2 是 Node.js 的进程管理器，在后台运行，扮演者 Daemon（守护进程） 的角色，能够保证你的 Node.js 应用始终在线。
 
 **为什么需要使用 pm2 来管理 Node.js 应用呢？**
 
@@ -36,7 +108,7 @@ PM2 是 Node.js 的进程管理器，在后台运行，扮演者 Daemon（守护
 
 对于 PM2 的使用，参考[Quick Start](https://pm2.keymetrics.io/docs/usage/quick-start/)，我们重点对其在生产中的问题进行分析和记录。
 
-## Cluster mode
+### Cluster mode
 
 :::tip
 用来最大化使用 CPU 资源
@@ -62,9 +134,7 @@ PM2 的集群模式（cluster mode）利用 Node.js 提供的 cluster 来用来�
 
 分歧更加扩大，更致命的是 id 为 18 的子进程没有重启，这意味着 1/16 的概率我们会访问到旧的服务，不管怎样，各个进程间的不一致会造成程序的错误执行和返回，在生产上是不被允许的
 
-<ResolvedTag />
-
-<!-- -->
+<ResolvedTag />{' '}
 
 本质是由于设置的实例数大于机器本身，因此可以将参数设置为 `{instance: 'max'}` 或者小于主机的 CPU 核数来解决此问题
 
@@ -72,7 +142,7 @@ PM2 的集群模式（cluster mode）利用 Node.js 提供的 cluster 来用来�
 
 先说结论：**PM2 会以容器的宿主机核心数为基准，而不是该容器实例被分配的资源核心数**
 
-即如果容器配置为 4core 8G，宿主机为 64core 256G，程序在容器内用以上配置跑起来之后，实际上会启64个实例，平均一个实例占用 80mb 内存，总内存会占到容器的 50% 左右
+即如果容器配置为 4core 8G，宿主机为 64core 256G，程序在容器内用以上配置跑起来之后，实际上会启 64 个实例，平均一个实例占用 80mb 内存，总内存会占到容器的 50% 左右
 
 因此，如果在容器内通过 PM2 来部署 Node.js 项目时，在集群模式下要指定 `instance` 的具体数量
 
@@ -80,7 +150,7 @@ PM2 的集群模式（cluster mode）利用 Node.js 提供的 cluster 来用来�
 
 PM2 的集群模式是基于 Node.js 提供的[集群能力](https://nodejs.org/api/cluster.html#how-it-works)，而 Node.js 通过遍历 `os.cpus()` 来创建子进程，即执行 `child_process.fork()`
 
-在容器内，直接指定 `os.cpus()` 返回的是宿主机的 core 信息，如果需要访问当前容器的资源，需要通过[Linux资源管理之cgroups](https://tech.meituan.com/2015/03/31/cgroups.html)来读取
+在容器内，直接指定 `os.cpus()` 返回的是宿主机的 core 信息，如果需要访问当前容器的资源，需要通过[Linux 资源管理之 cgroups](https://tech.meituan.com/2015/03/31/cgroups.html)来读取
 
 ### 如何判断主线程？
 
@@ -94,13 +164,11 @@ if (process.env.NODE_APP_INSTANCE === '0') {
 }
 ```
 
-
-## pm2 IN Production
+### PM2 In Production
 
 通过配置 [CLI completion](https://pm2.keymetrics.io/docs/usage/auto-completion/) 安装自动补全插件
 
 PM2 在使用公有云时，可能没有 CLI 的权限，此时参考[Using PM2 on Cloud Providers](https://pm2.keymetrics.io/docs/usage/use-pm2-with-cloud-providers/)，将 pm2 安装为项目依赖并在 package.json 内修改启动脚本
-
 
 ### pm2-logrotate
 

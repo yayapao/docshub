@@ -17,11 +17,7 @@ const nodejsProgrammingSidebar = {
       type: 'category',
       label: 'Node.js Toolkits',
       collapsed: true,
-      items: [
-        `${toolkitPrefix}/npm`,
-        `${toolkitPrefix}/pm2`,
-        `${toolkitPrefix}/puppeteer`,
-      ],
+      items: [`${toolkitPrefix}/common`, `${toolkitPrefix}/npm`],
     },
   ],
 }

@@ -20,12 +20,6 @@ const javascriptProgrammingSidebar = {
         `${handbookPrefix}/devskill`,
       ],
     },
-    // {
-    //   type: 'category',
-    //   label: 'JavaScript Toolkits',
-    //   collapsed: true,
-    //   items: [`${toolkitPrefix}/zx`],
-    // },
     {
       type: 'category',
       label: 'React',

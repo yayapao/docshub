@@ -1,3 +1,35 @@
+---
+id: network
+title: ''
+sidebar_label: network
+---
+
+import { DocsHeader } from '/src/components/Layout/DocsHeader'
+
+<DocsHeader
+  title="Network"
+  description="Network respect the web."
+  tags={['network']}
+  links={[
+    {
+      label: 'WebSockets vs. Server-Sent events/EventSource',
+      link: 'https://stackoverflow.com/questions/5195452/websockets-vs-server-sent-events-eventsource',
+    },
+  ]}
+/>{' '}
+
+## SSE vs WebSocket
+
+**[SSE(Server-Side-Events)](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events) 是一种基于 HTTP 协议的推送技术，它的特点是服务端可以主动向客户端推送数据，而 WebSocket 是一种双向通信技术，客户端和服务端都可以主动向对方发送数据。**
+
+由于两种协议在底层技术实现上的差异，导致它们在使用上也存在不同：
+
+- SSE 不支持 binary，而 WebSocket 支持 binary，它们都支持 UTF-8
+- SSE 受限于浏览器连接限制
+- 由于 SSE 基于 HTTP，因此它具备重连、EventID 等能力，并且不必担心会被防火墙 Ban
+
+本质上，SSE 的场景，WebSocket 都可以实现，但是细分到具体场景，仍然有其适用性，比如股票、单向消息推送等使用更加简单的 SSE 即可
+
 ## NEL
 
 > [NEL](https://w3c.github.io/network-error-logging/) defines a mechanism that enables developers to declare a network error reporting policy for a web application

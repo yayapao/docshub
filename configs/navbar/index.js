@@ -27,6 +27,11 @@ const navbarConfig = {
           to: '/docs/interview/js',
           activeBaseRegex: '/docs/interview',
         },
+        {
+          label: 'Cloud',
+          to: '/docs/cloud/server/vercel',
+          activeBaseRegex: '/docs/cloud',
+        },
       ],
     },
     {

@@ -16,6 +16,8 @@ const nodejsProgrammingSidebarConfig = require('./programming-nodejs')
 const goProgrammingSidebarConfig = require('./programming-go')
 const javascriptProgrammingSidebarConfig = require('./programming-javascript')
 const htmlProgrammingSiderbarConfig = require('./programming-html5')
+const cloudSidebarConfig = require('./cloud')
+
 /** @type {import('@docusaurus/plugin-content-docs').SidebarsConfig} */
 const repoSiderbarsConfig = {
   handbookSiderBar: [
@@ -139,6 +141,7 @@ const sidebars = {
   ...htmlProgrammingSiderbarConfig,
   ...repoSiderbarsConfig,
   ...projectSiderbarsConfig,
+  ...cloudSidebarConfig,
 }
 
 module.exports = sidebars

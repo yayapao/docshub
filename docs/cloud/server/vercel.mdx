@@ -1,0 +1,60 @@
+---
+id: vercel
+title: ''
+sidebar_label: Vercel
+---
+
+import { DocsHeader } from '/src/components/Layout/DocsHeader'
+
+<DocsHeader
+  title="Vercel"
+  description="Vercel is the platform for frontend developers, providing the speed and reliability innovators need to create at the moment of inspiration."
+  github="https://github.com/vercel"
+  tags={['Serverless', 'Cloud']}
+  links={[
+    {
+      label: 'Vercel Docs',
+      link: 'https://vercel.com/docs',
+    },
+  ]}
+/>{' '}
+
+:::info What is Vercel?
+
+Vercel 是一个前端开发者的平台，能够快速部署 Severless 函数、静态生成的网站和动态网站。
+
+:::
+
+作为一个深度 Vercel 用户，这些是我在使用它的过程感受到的“爽点“，它将 🤪 傻瓜操作系统化，极大提升了我的使用体验。
+
+1. 一键部署。它在部署时支持选择多种模版，在选择合适模块后，它能够探测项目的语言、框架、数据库等，根据 `package.json` 或者 `go.mod` 自动配置好项目的环境、运行时版本、项目依赖等；
+2. 在发布之后，它能够自动分配域名，同时支持自定义域名，并且提供全球 CDN 服务；
+3. 自定义域名后，它能够自动配置 SSL 证书，同时支持自定义证书；
+
+## Go Serverless Function
+
+准备工作：
+
+- 创建需要关联的 Github Registry，**支持 private**；
+- Vercel 账号，可以使用 Github 账号登录；
+
+1. 在 [vercel](https://vercel.com/) 上创建项目，关联到指定 Github 仓库；
+   ![vercel-create-project.png](https://img.joyjoy.cc/server/vercel-create-project.png)
+2. 开发项目，参考 [Using the Go Runtime with Serverless Functions | Vercel Docs](https://vercel.com/docs/concepts/functions/serverless-functions/runtimes/go#)，⚠️ 需要重点关注 `go.mod` 文件，它会影响到项目的运行时版本和依赖；
+3. 在 `[project root directory]/api` 目录下新建文件，vercel 会将文件名作为路由路径，比如新建文件 `/api/hello.go`，当部署之后，可以通过 `https://[project name].vercel.app/api/hello` 访问到该函数；
+4. Go 项目内，函数名可以任意命名，但需**注意首字母大写，并遵循 http.HandlerFunc 规范，即 func Name(w http.ResponseWriter, r \*http.Request)**；
+5. 新建 `.env`，配置项目环境变量，**⚠️ 不要提交到 Github**，参考 [Environment Variables | Vercel Docs](https://vercel.com/docs/concepts/projects/environment-variables#)；
+6. 执行 `vercel dev` 本地调试，或者 `vercel` 部署到 Vercel 预发环境，或者 `vercel --prod` 部署到生产环境，如果需要使用环境变量，需要执行 `vercel env add [key]` 进行添加；其他命令参考 [Vercel CLI | Vercel Docs](https://vercel.com/docs/cli)，或者 `vercel --help`；
+7. 发布之后，可以通过 `https://[project name].vercel.app/api/hello` 访问到该函数；
+8. 自定义域名，在自己的域名的 DSN 内添加 vercel CNAME 的解析记录，参考 [Custom Domains | Vercel Docs](https://vercel.com/docs/custom-domains)；添加完毕之后，vercel 会自动为该域名添加 SSL 证书，并绑定到当前服务；
+   ![vercel-bind-ssl.png](https://img.joyjoy.cc/server/vercel-bind-ssl.png)
+
+## FAQ
+
+### 如何阻止每次提交后自动部署？
+
+**Vercel 默认在每次提交后（任意分支）都会自动部署**，并且如果你 push 到 Production Branch（默认为 main），它还会自动发布到生产环境，自定以域名都会更新。
+
+如果需要阻止 vercel 的默认行为，可以在项目根目录下新建 `vercel.json` 配置文件，并为其配置 [Git Configuration | Vercel Docs](https://vercel.com/docs/concepts/projects/project-configuration/git-configuration)
+
+除此之外，还可以配置 [github.slient](https://vercel.com/docs/concepts/projects/project-configuration/git-configuration#github.silent) 来阻止 Vercel 在 Github 上的评论。

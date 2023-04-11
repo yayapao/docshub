@@ -1,0 +1,73 @@
+---
+id: monorepo
+title: ''
+sidebar_label: Monorepo
+---
+
+import { DocsHeader } from '/src/components/Layout/DocsHeader'
+import { HighlightWithCode } from '/src/components/Highlights/TextContent'
+import { ResolvedTag } from '/src/components/Highlights/CustomizedTag'
+
+<DocsHeader
+  title="Monorepo Best Practices"
+  description="Monorepo 是一种将多个项目代码存储在一个代码仓库的软件开发策略."
+  tags={['monorepo']}
+  links={[
+    {
+      label: 'Monorepo，大型前端项目管理模式实践',
+      link: 'https://developer.aliyun.com/article/1067018#slide-11',
+    },
+    {
+      label: 'Turborepo QuickStart',
+      link: 'https://turbo.build/repo/docs',
+    },
+  ]}
+/>{' '}
+
+**repo，即 repository，是用来管理代码的基本单元，通常一个 repo 负责对一个项目或者一个模块的管理**。包括代码、文档、配置、开发和上线流程等。
+
+一个项目由一个仓库进行管理，称为单体应用架构，即 Monolithic。随着业务复杂度和技术的提升，我们会面临解耦和复用的挑战，Multirepo 管理模式会将一个项目拆分成多个项目，每个功能模块对应一个 repo，即组件化的思想。这种方式解决了部分问题，但是它存在依赖管理、代码和配置共享以及磁盘空间占用等问题。
+
+Monorepo 则是为了解决上述问题而提出的一种管理模式。**Monorepo 是一种将多个项目代码存储在一个代码仓库的软件开发策略**。
+
+![monorepo.png](https://img.joyjoy.cc/software/monorepo.png)
+
+## Situation
+
+在开发过程中，尤其是在大型项目中，或者发布 package 的时候，我们会遇到一些问题，比如：
+
+- 项目中的代码依赖于其他项目的代码，导致开发和发布的复杂度增加
+- 每个独立项目需要都要编写并引用相同的工具函数和依赖包
+
+通过将多个项目代码存储在一个代码仓库中，我们可以解决上述问题，这就是 monorepo 的由来。**monorepo 能够提升代码复用、代码重构、依赖管理的效率，同时保证工程标准化**，但是随之而来的是项目复杂度和维护成本的增加，同时还有权限管理和学习成本等。
+
+:::caution
+
+monorepo 是一种代码管理概念，并不是一种技术（框架），它可以通过多种方式实现，为了解决某一类场景问题。开发者需要结合实际项目情况、团队规模、技术栈等因素来选择合适代码管理方案以及实现方式。
+
+:::
+
+在系统学习之前，我接触过 monorepo 的项目，包括基于 [pnpm workspace](https://pnpm.io/workspaces) 的 joydev 和基于 [lerna](https://lerna.js.org/) 的 sentry-javascript。在这两个项目中，我发现了一些问题，比如：
+
+- 使用 lerna + yarn，publish 时需要将所有 package 的版本号一起更新，否则会报错
+- 需要额外编写脚本来控制 pnpm workspace 下 package 的版本号、开发以及发布流程
+- 在开发和构建时，两者均需重新构建，耗时较长
+
+为此，我们迫切需要一种基于 monorepo 模式解决方案，它需要具备：
+
+1. 构建快速；
+2. 依赖管理简单；
+
+经过调研，我选择了 turborepo + pnpm 的方式来实现 monorepo。
+
+**pnpm**
+
+pnpm 是一个能够优化磁盘占用空间、提升安装效率的包管理工具，它实现 workspace 来管理 package 依赖，天然支持 monorepo 的管理模式。
+
+**Turborepo**
+
+如它官网所说，**Turborepo is a high-performance build system for JavaScript and TypeScript codebases.**
+
+它能够极大地提升包构建效率，尤其是在处理 monorepo 时，它能够处理依赖包的构建。
+
+## Turborepo 使用

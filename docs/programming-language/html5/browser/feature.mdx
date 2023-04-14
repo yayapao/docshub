@@ -175,22 +175,44 @@ window.addEventListener(
 
 :::
 
-## 跨域
+## 同源策略和跨域
 
-出于浏览器的同源策略限制，协议，主机名，端口任一不同则形成跨域
+在开发过程中，跨域几乎是编程 100%会遇到的问题。
 
-解决跨域的办法：
+**为什么会出现跨域问题？**
 
-- 通过 Nginx 反向代理
-- 结合 src 属性，通过 jsonp 来处理跨域
-- iframe 通过 postMessage 和 addEventListener('message')
-- 通过 websocket 进行通信
+- 由于浏览器的同源策略，不同源的客户端脚本在没有明确授权的情况下，不能读写对方资源；
+- 所谓同源是指，协议、域名、端口相同；
 
-jsonp 缺点：
+**针对跨域问题的解决方案**
 
-- 只能使用 get 请求
-- 安全问题
-- 不能返回各种 http 状态码
+- Nginx 反向代理，将不同源的资源挂载到相同域名的不同路径下；
+- Nginx 配置 **CORS**；
+- 服务端通过返回 **CORS** 头部来解决跨域问题；
+- JSONP，通过动态创建 script 标签，通过 src 属性来请求数据；
+- WebSocket，通过 WebSocket 协议来进行通信；
+
+### CORS
+
+CORS 是 W3C 标准，全称是 Cross-Origin Resource Sharing，即跨域资源共享。它允许浏览器向跨源服务器，发出 XMLHttpRequest 请求，从而克服了 AJAX 只能同源使用的限制。
+
+:::caution
+
+CORS 不等于跨域，它是为了解决跨域问题而提出的一种 HTTP-header 标准。
+
+--The real magic happens on the browser.
+
+:::
+
+也就是说，CORS 不会阻止跨域请求，而是通过一些额外的 HTTP 头部来告诉浏览器，允许跨域请求。它不会阻止浏览器向服务端发送请求，只是控制在服务端返回响应时，做出选择。并且 CORS 仅针对浏览器请求，对于其他运行时发起的请求，它无能为力。**因此，CORS 仅仅是为了解决浏览器跨域问题提出的标准，并不是一种保护 web 服务端的机制。**
+
+### JSONP
+
+JSONP 方案在 web 早期较为流行，在互联网发展过程中逐渐被淘汰，它本身存在明显缺点：
+
+- 只支持 GET 请求
+- 存在安全性问题，容易被 CSRF 攻击
+- 无法获取响应状态码
 
 ```js
 // postMessage
@@ -211,21 +233,23 @@ window.addEventListener('message', function (e) {});
     }
 </script>
 
-// 服务器回传数据
+// 服务器回传数据，服务端也很难受😣
 dosomething({data: data});
+```
 
+### Websocket 解决跨域
 
-// websocket
+```js
 // 建立一个 websocket 实例对象
-var socket = new WebSocket("ws://www.test.com/service/data.do");
+var socket = new WebSocket('ws://www.test.com/service/data.do')
 // 只能够发送少量 string 类型的数据
-socket.send('hello');
+socket.send('hello')
 // 客户端接受服务端信息，通过监听 message
-socket.on('message', function(event) {
-    var data = event.data;
+socket.on('message', function (event) {
+  var data = event.data
 })
 // 关闭 socket 协议
-socket.close();
+socket.close()
 ```
 
 ### iframe 跨域问题

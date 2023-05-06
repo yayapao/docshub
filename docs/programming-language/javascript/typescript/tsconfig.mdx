@@ -25,13 +25,13 @@ tsc --build tsconfig.json
 ```js
 {
   "compilerOptions": {
-    "outDir": "build/dist",
-    // 编译后输出的模块，决定代码的组织形式
-    "module": "esnext",
-    // 编译后，输出代码的 ES 版本，决定代码的语法规范
-    "target": "esnext",
+    "outDir": "dist",
+    "module": "esnext", // 编译后输出的模块，决定代码的组织形式
+    "target": "esnext", // 编译后，输出代码的 ES 版本，决定代码的语法规范
     "lib": ["esnext", "dom"],
-    "sourceMap": true,
+    "sourceMap": true, // 生成 sourcMap 文件
+    "declaration": true, // 生成 .d.ts 的声明文件
+    "declarationMap": false, // 基于 .d.ts 生成 .d.ts.map 文件
     "baseUrl": ".",
     "jsx": "react",
     "allowSyntheticDefaultImports": true,

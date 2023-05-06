@@ -68,6 +68,75 @@ pnpm 是一个能够优化磁盘占用空间、提升安装效率的包管理工
 
 如它官网所说，**Turborepo is a high-performance build system for JavaScript and TypeScript codebases.**
 
-它能够极大地提升包构建效率，尤其是在处理 monorepo 时，它能够处理依赖包的构建。
+Turborepo 提出了一套构建系统，能够极大地提升包构建效率，尤其是处理 monorepo。
 
-## Turborepo 使用
+## Before Start to Use
+
+在开始使用 turborepo 之前，我们需要了解一些基本概念。任何 monorepo 内都存在两个基本成员：workspace 和 task。前者代表一系列文件，后者代表一系列命令。
+
+1. 什么是 workspace？
+
+   workspace 是 monorepo 内的构建块，buiding blocks of your monorepo。workspace 内任何文件的改变都被认定为 workspace 的更新。
+
+2. 什么是 internal package？
+
+   internal package 是指 monorepo 内的 package，它们可以被其他 package 引用，但是不能被外部引用。通过设置 `{ "packageName": "*"} `的方式能够解决开发时需要不断去更新版本号的问题。
+
+## Turborepo 缓存
+
+Turborepo 通过缓存设计来提升构建效率。
+
+![turbo-cache](https://turbo.build/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Fcache-miss.21d45e92.png&w=3840&q=75)
+
+如上图，当使用 `turbo run build` 启动构建任务时，它会根据 pipeline 配置计算当前任务的 hash 值，然后去缓存中查找是否存在该 hash 值，如果存在，则直接使用缓存中的结果（**包括构建包和任务日志**），否则执行构建任务。
+
+- 通过配置 `turbo.json` 的 pipeline，可以指定构建任务的 hash 值计算方式
+- 构建缓存内容被放置在 `./node_modules/.cache/.turbo/` 目录下
+
+### 影响 Hash 值的因素
+
+使用缓存系统设计至关重要的一环，就是**Hash 值的计算方式**，在 Turborepo 中，hash 值由以下几个因素决定：
+
+1. workspace 的文件内容，通过 `pipeline.[task].inputs` 能够指定需要计算的文件，这里可以将其看成更加具体的 workspace；
+2. 项目构建时的环境变量，通过 `pipeline.[task].env` 指定；
+3. 对于 workspace 更多的细节描述包括：package 内部依赖关系的 hash，package.json 内的依赖关系等；
+
+**package.json 和 turbo.json 始终被包含在 hash 值的计算中，因为它们是构建的基础，task 的启动依赖于 package.json 的 scripts 配置，而 pipeline 的配置则依赖于 turbo.json。**
+
+### 设置 Pipeline 环境变量
+
+Turborepo 会根据框架自动处理环境变量，但是我们仍然能够通过 [`eslint-config-turbo`](https://www.npmjs.com/package/eslint-config-turbo) 来帮助检测构建中不可见的依赖。
+
+由于 Turborepo 在执行构建命令之前计算 hash 值，因此以 `scripts: {"build": "ENV=value next build"}` 的方式设置环境变量是无效的，因为它会在构建时才设置环境变量，而此时 hash 值已经计算完成。
+
+我们可以通过 `dotenv` 的方式来设置环境变量。并且，**在指定 `pipeline.[task].env` 之前，先要设置 `globalDependencies` 将环境变量文件添加到全局依赖中**
+
+## FAQ
+
+### Can't find module 'next/babel'
+
+[Parsing error: Cannot find module 'next/babel' in Visual Studio Code · Issue #40687 · vercel/next.js](https://github.com/vercel/next.js/issues/40687)
+
+在 eslintrc 内 IDE 报上述错误，通过在根目录下 `pnpm add next` 解决
+
+### Definition for rule '@typescript-eslint/no-unused-vars' was not found
+
+[1:1 error Definition for rule '@typescript-eslint/no-unused-vars' was not found @typescript-eslint/no-unused-vars · Issue #379 · typescript-eslint/typescript-eslint](https://github.com/typescript-eslint/typescript-eslint/issues/379)
+
+在引入自定义的 eslint package 后，发现 IDE 报上述错误，通过设置 `plugins: ["@typescript-eslint"]` 解决
+
+### 根据开发内容选择打包方式
+
+1. **发布一个 React UI Library**
+
+   在踩坑 vite, rollup 等打包工具后，我发现当开发 React 组件时，我们并不需要经历寻找依赖、tree shake、打包、压缩等过程，我们仅需要将组建发布到 npm 上，当用户引用就像在本地引用一样。
+
+   为了更验证这个观点，我查看了 [material-ui](https://github.com/mui/material-ui.git) 和 [ant-design](https://github.com/ant-design/ant-design) 的产物，发现它们仅完成了编辑工作，并没有说将组件打包成一个文件。这点符合开发直觉，还有一个点在于，如果你基于 React（或者其他组件库）进行开发，通常我们在项目内会安装对应的依赖，这些依赖会被打包到最终产物内，因此我们不需要再次打包。
+
+   因此，在发布 React UI Library 时，我们只用 `tsc --project tsconfig.json` 将 ts 文件编译成 js 文件即可。
+
+   :::caution
+
+   使用 `.tsx` 来编写组件，避免出现错误 [javascript - Uncaught Error: Invariant Violation: Element type is invalid: expected a string (for built-in components) or a class/function but got: object - Stack Overflow](https://stackoverflow.com/questions/34130539/uncaught-error-invariant-violation-element-type-is-invalid-expected-a-string)
+
+   :::

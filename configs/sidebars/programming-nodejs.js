@@ -17,7 +17,11 @@ const nodejsProgrammingSidebar = {
       type: 'category',
       label: 'Node.js Toolkits',
       collapsed: true,
-      items: [`${toolkitPrefix}/common`, `${toolkitPrefix}/npm`],
+      items: [
+        `${toolkitPrefix}/monorepo`,
+        `${toolkitPrefix}/common`,
+        `${toolkitPrefix}/npm`,
+      ],
     },
   ],
 }

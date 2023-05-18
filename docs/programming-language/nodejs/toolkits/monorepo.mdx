@@ -1,7 +1,7 @@
 ---
 id: monorepo
 title: ''
-sidebar_label: Monorepo
+sidebar_label: monorepo
 ---
 
 import { DocsHeader } from '/src/components/Layout/DocsHeader'
@@ -36,8 +36,8 @@ Monorepo 则是为了解决上述问题而提出的一种管理模式。**Monore
 
 在开发过程中，尤其是在大型项目中，或者发布 package 的时候，我们会遇到一些问题，比如：
 
-- 项目中的代码依赖于其他项目的代码，导致开发和发布的复杂度增加
-- 每个独立项目需要都要编写并引用相同的工具函数和依赖包
+- 项目中的代码依赖于其他项目的代码，导致开发和发布的复杂度增加（依赖管理、版本管理、开发和发布流程管理）
+- 每个独立项目需要都要编写并引用相同的工具函数和依赖包（磁盘管理）
 
 通过将多个项目代码存储在一个代码仓库中，我们可以解决上述问题，这就是 monorepo 的由来。**monorepo 能够提升代码复用、代码重构、依赖管理的效率，同时保证工程标准化**，但是随之而来的是项目复杂度和维护成本的增加，同时还有权限管理和学习成本等。
 
@@ -55,10 +55,10 @@ monorepo 是一种代码管理概念，并不是一种技术（框架），它�
 
 为此，我们迫切需要一种基于 monorepo 模式解决方案，它需要具备：
 
-1. 构建快速；
+1. 构建效率高；
 2. 依赖管理简单；
 
-经过调研，我选择了 turborepo + pnpm 的方式来实现 monorepo。
+经过调研，我选择了 turborepo + pnpm 的方式来实现 monorepo。pnpm 能够实现 monorepo，Turborepo 能够提升构建效率。
 
 **pnpm**
 
@@ -72,15 +72,15 @@ Turborepo 提出了一套构建系统，能够极大地提升包构建效率，�
 
 ## Before Start to Use
 
-在开始使用 turborepo 之前，我们需要了解一些基本概念。任何 monorepo 内都存在两个基本成员：workspace 和 task。前者代表一系列文件，后者代表一系列命令。
+在开始使用 turborepo 之前，我们需要了解一些基本概念。任何 monorepo 内都存在两个基本成员：workspace 和 task。**前者代表资源，后者代表命令。**
 
 1. 什么是 workspace？
 
-   workspace 是 monorepo 内的构建块，buiding blocks of your monorepo。workspace 内任何文件的改变都被认定为 workspace 的更新。
+   workspace 是 monorepo 内的构建块，buiding blocks of monorepo。workspace 内任何文件的改变都被认定为 workspace 的更新。
 
 2. 什么是 internal package？
 
-   internal package 是指 monorepo 内的 package，它们可以被其他 package 引用，但是不能被外部引用。通过设置 `{ "packageName": "*"} `的方式能够解决开发时需要不断去更新版本号的问题。
+   internal package 是指仅用在 monorepo 内的 package，它们可以被其他 package 引用，但是不能被外部引用。通过设置 `{ "packageName": "*"} `的方式能够解决开发时需要不断去更新版本号的问题。**相比 external package，它不必进行打包、版本控制以及发布等工作。**
 
 ## Turborepo 缓存
 
@@ -111,6 +111,39 @@ Turborepo 会根据框架自动处理环境变量，但是我们仍然能够通�
 
 我们可以通过 `dotenv` 的方式来设置环境变量。并且，**在指定 `pipeline.[task].env` 之前，先要设置 `globalDependencies` 将环境变量文件添加到全局依赖中**
 
+## 设置语法规范
+
+根据不同 Lint 工具的扩展方式，我们可以进行相应设计。将各个工具的配置作为 internal package 进行导出，由其他项目进行引用。
+
+### tsconfig
+
+tsconfig 配置天然支持 extends 属性，其值为引入 JSON 文件地址。因此，tsconfig package 最终导出不同的配置文件即可，参考：
+
+```json
+{
+  "name": "config-tsconfig",
+  "version": "0.0.0",
+  "private": true,
+  "files": ["base.json", "react-library.json"]
+}
+```
+
+### ESLint
+
+由于 ESLint 的 `extends` 属性支持名称、路径，尤其是能够处理 `eslint-config-` 的引用，因此我们通常将 internal package 命名为 `eslint-config-` 的形式。
+
+:::info
+
+The eslint-config- prefix can be omitted from the configuration name. For example, airbnb resolves as eslint-config-airbnb.
+
+:::
+
+在 eslint 的 package.json 内，我们通常将 index.js 作为 main 属性值，它会导出通用的 eslint 配置。这样使我们不必在各个项目内重复安装 ESLint 相关的开发依赖。
+
+### Prettier
+
+prettier 用来规范代码风格，和 tsconfig 类似，我们直接将文件导出，在项目内通过 `require([path])` 进行导入
+
 ## FAQ
 
 ### Can't find module 'next/babel'
@@ -137,6 +170,6 @@ Turborepo 会根据框架自动处理环境变量，但是我们仍然能够通�
 
    :::caution
 
-   使用 `.tsx` 来编写组件，避免出现错误 [javascript - Uncaught Error: Invariant Violation: Element type is invalid: expected a string (for built-in components) or a class/function but got: object - Stack Overflow](https://stackoverflow.com/questions/34130539/uncaught-error-invariant-violation-element-type-is-invalid-expected-a-string)
+   使用 `.tsx` 来引入/导出组件，避免出现错误 [javascript - Uncaught Error: Invariant Violation: Element type is invalid: expected a string (for built-in components) or a class/function but got: object - Stack Overflow](https://stackoverflow.com/questions/34130539/uncaught-error-invariant-violation-element-type-is-invalid-expected-a-string)
 
    :::

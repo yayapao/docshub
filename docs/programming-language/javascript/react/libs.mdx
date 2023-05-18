@@ -1,9 +1,126 @@
 ---
 id: libs
-title: React Libraries
-sidebar_label: libraries
-slug: libs
+title: ''
+sidebar_label: Libraries
 ---
+
+import { DocsHeader } from '/src/components/Layout/DocsHeader'
+
+<DocsHeader
+  title="Node.js Libraries"
+  description="Libraries based on Node.js eco."
+  tags={['Node.js']}
+  links={[
+    {
+      label: 'How to write stories',
+      link: 'https://storybook.js.org/docs/react/writing-stories/introduction',
+    },
+    {
+      label: 'Storybook Control Annotations',
+      link: 'https://storybook.js.org/docs/react/essentials/controls#annotation',
+    },
+    {
+      label: 'Storybook argTypes available properties',
+      link: 'https://storybook.js.org/docs/react/api/argtypes#available-properties',
+    },
+  ]}
+/>{' '}
+
+## StoryBook
+
+### 使用 pnpm + vite
+
+:::caution CORE
+
+核心在于使 `npx storybook@latest init -f` 执行成功
+
+:::
+
+1. 在目录下创建基于 vite 的 React + TS 项目
+
+```bash
+
+$ pnpm create vite story --template react-ts
+
+```
+
+2. 进入 story 目录，配置 storybook
+
+```bash
+
+$ cd story && mkdir .storybook && touch .storybook/main.ts
+
+```
+
+3. 初始化 storybook 安装程序，会自动修改启动脚本、导入 example 组件、引入 storybook 相关依赖
+
+```bash
+
+$ npx storybook@latest init -f
+
+```
+
+**注意安装执行顺序，初始化完毕之后，查看 package.json.scripts 启动脚本**
+
+## 编写一个 story
+
+这里我们基于 React + TypeScript 项目展开，在开始前你需要准备好一个 React 组件。
+
+story 以 `[component name].stories.[js | ts | tsx | jsx | mdx]` 的形式进行命名， stories 基于 `Component Story Format(CSF)` 的标准进行编写，**即 export default meta 用于描述组件，named export 用于描述 story。**
+
+- stories 使用 UpperCamelCase 命名
+- **通常 story properties 可以定义在全局、组件或者 stories**， 其优先级为：named export > default export > global defination
+- ⚠️，全局 story properties 定义在 `.storybook/.preview.js` 内，其他定义在 `stories` 内
+
+举例说明（TS + React 项目）：
+
+```tsx
+import { Button } from 'Where/Component/Is/Defined'
+import type { Meta, StoryObj } from '@storybook/react'
+
+const meta = {
+  title: 'ui/Button', // storybook 中展示的标题，通过 / 进行分组，代表 [组件库]/[组件]
+  component: Button,
+  tags: ['autodocs'], // 用于描述/搜索 story
+  // argTypes 设置组件 props 的类型、默认值以及交互控制
+  argTypes: {
+    backgroundColor: { control: 'color' },
+    size: {
+      control: { type: 'select', options: ['small', 'medium', 'large'] },
+    },
+  },
+  decorators: [
+    (Story) => (
+      <div style={{ margin: '3em' }}>
+        <Story />
+      </div>
+    ),
+  ],
+} satisfies Meta<typeof Button>
+// export default meta
+export default meta
+
+// named export
+export const Primary: StoryObj<typeof Button> = {
+  args: {
+    primary: true,
+    size: 'small',
+  },
+}
+```
+
+##### decorators
+
+`decorators` 用于设置 story 的装饰器，比如组件容器（全局）样式、全局状态等，是一个数组，可以设置多个装饰器
+
+- 对于框架内置的 Provider （比如 MUI 的 ThemeProvider） 可以在 `.storybook/.preview.js` 内设置 decorators
+- 可以在 decorators 内执行 side effect，比如加载数据等，而不用在 args 内进行设置
+
+##### play function
+
+`play` 可以定义组件渲染完成之后，执行的代码块，通常设置在 named export story，可以设置组件的交互行为或者测试场景。在 `play` 方法内，需要用 storybook 内提供的一套方法来获取、操作、交互页面元素。
+
+- 定义的操作流程可以在 `Interactions` 内检查
 
 ## Redux
 
@@ -367,7 +484,7 @@ webpack-dev-server 也实现了热加载，但是是在代码改动后，经过�
 
 ```javascript
 // webpackDevServer.config.js
-module.exports = function(proxy, allowedHost) {
+module.exports = function (proxy, allowedHost) {
   return {
     hot: true,
   }

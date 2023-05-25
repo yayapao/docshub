@@ -1,0 +1,62 @@
+---
+id: entry
+title: ''
+sidebar_label: Frontend
+---
+
+import { DocsHeader } from '/src/components/Layout/DocsHeader'
+
+<DocsHeader
+  title="Frontend Handbook"
+  description="This guide covers how we write frontend code."
+  tags={['frontend']}
+  links={[
+    {
+      label: 'Sentry Frontend Handbook',
+      link: 'https://develop.sentry.dev/frontend/',
+    },
+  ]}
+/>{' '}
+
+:::info what's source?
+
+基于 Sentry 的前端开发最佳实践和平时的工程经验。
+
+:::
+
+## Directory Structure
+
+目录名称使用**小写驼峰**，比如 `app/components/myTable/`
+
+## Folder && File Structure
+
+为文件命名时，需要注意：
+
+- 取一个有意义的名字，直观表达改文件的内容、使用用途
+- 不要使用前缀或者后缀来为文件分组，比如 `colorButton`，`colorTable`，应该创建目录来解决 `color/`
+
+**在前端项目内，使用 `index.(jsx|tsx|ts|js)`**，这样符合 Module 的直觉。关于 index 文件使用需要注意：
+
+- 将 index 文件作为组件或者模块的入口
+- 如果目录下的组件被其他应用模块使用，比如 store 或者 router，那么此时不要使用 index 文件
+- 如果仅仅为了重新导出模块，不要使用 index 文件
+
+## React Component
+
+### Event handlers
+
+为 React 组件绑定事件时，根据事件的来源分为：1. 组件内定义方法，使用 `handle` 前缀；2. 继承方法，使用 `props`
+
+```tsx
+// 1. 组件内定义方法
+<Button onClick={handleEdit} />
+
+// 2. 继承方法
+<Button onClick={props.onClose} />
+```
+
+## Package Dependencies
+
+### Lodash
+
+在项目内不要引用默认的 lodash 包，引用具体的方法，比如 `import pick from 'lodash/pick'`，避免引入不必要的代码。

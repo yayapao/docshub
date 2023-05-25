@@ -27,17 +27,17 @@ const navbarConfig = {
           to: '/docs/interview/js',
           activeBaseRegex: '/docs/interview',
         },
-        {
-          label: 'Cloud',
-          to: '/docs/cloud/server/vercel',
-          activeBaseRegex: '/docs/cloud',
-        },
       ],
     },
     {
       label: 'Programming',
       position: 'left',
       items: [
+        {
+          label: 'Before development',
+          to: '/docs/before-dev/frontend-handbook/entry',
+          activeBaseRegex: '/docs/before-dev',
+        },
         {
           label: 'Node.js',
           to: '/docs/programming-language/nodejs/entry',

@@ -1,0 +1,555 @@
+---
+id: entry
+title: ''
+sidebar_label: Database
+---
+
+import { DocsHeader } from '/src/components/Layout/DocsHeader'
+
+<DocsHeader
+  title="Database base"
+  description="Basic konwledge of database."
+  tags={['sql']}
+  links={[
+    {
+      label: 'MySQL 菜鸟教程',
+      link: 'https://www.runoob.com/mysql/mysql-tutorial.html',
+    },
+    {
+      label: 'Redis 运维实战',
+      link: 'https://www.w3cschool.cn/redis_all_about/redis_all_about-pf4826ua.html',
+    },
+    {
+      label: 'Redis 发布版本下载',
+      link: 'http://download.redis.io/releases/',
+    },
+    {
+      label: 'ClickHouse tutorial',
+      link: 'https://clickhouse.com/docs/zh/getting-started/tutorial',
+    },
+    {
+      label: 'Nestjs kafka',
+      link: 'https://docs.nestjs.com/microservices/kafka',
+    },
+    {
+      label: 'Kafka分区与消费者的关系kafka分区和消费者线程的关系',
+      link: 'https://cloud.tencent.com/developer/article/1953243',
+    },
+    {
+      label: 'Kafka in a Nutshell',
+      link: 'https://sookocheff.com/post/kafka/kafka-in-a-nutshell/',
+    },
+    {
+      label: 'Kafka入门介绍',
+      link: 'https://lotabout.me/2018/kafka-introduction/',
+    },
+  ]}
+/>{' '}
+
+## Term
+
+| 简称 | 全称                         | 名称         | 用途                                                 |
+| ---- | ---------------------------- | ------------ | ---------------------------------------------------- |
+| DQL  | Data Query Language          | 数据查询语言 | 从表中获取数据                                       |
+| DML  | Data Manipulate Language     | 数据操作语言 | 添加、修改、删除表中的行                             |
+| DDL  | Data Define Language         | 数据定义语言 | 创建、删除数据库和表                                 |
+| TPL  | Transaction Process Language | 事务处理语言 | 同时执行多条 SQL 的情况                              |
+| DCL  | Data Control Language        | 数据控制语言 | 获得许可，确定单个用户和用户组对数据库对象访问的限制 |
+| CCL  | Cursor Control Language      | 指针控制语言 | 用于对一个表或者多个表进行单独额操作                 |
+
+## MySQL
+
+### Linux 安装 MySQL
+
+在 Ubuntu 20.04 上，我们通过 `apt` 来管理系统依赖。
+
+```bash
+# 更新系统依赖
+$ apt update
+
+# 查看 MySQL 的可用版本
+$ apt-cache policy mysql-server
+
+# 安装 mysql 服务
+$ apt install mysql-server
+
+# 重启 MySQL 服务以保证服务被启动
+service mysql restart
+```
+
+安装完毕后，我们可以直接通过 `mysql` 进入服务。如果你需要执行安全相关操作，可以执行其自带脚本 `mysql_secure_installation` 来确保数据库安全。
+
+**如何退出 mysql_secure_installation？**
+
+如果设置为强密码，则密码内必须有数字、大小写字母混合，且密码中不允许有常见英文单词出现。在设置时这会带来一些困扰，因此我们可以在系统提示 **是否继续使用提供的密码？** 时，通过 `Ctrl - C` 退出设置（在输入密码时无法退出）
+
+同时在进入 MySQL 之后，将密码验证策略降级为 `LOW`：
+
+```bash
+# 查看密码相关配置
+$ SHOW VARIABLES LIKE 'validate_password%';
+
+# 更新 policy
+$ SET GLOBAL validate_password.policy = LOW;
+
+# 刷新系统相关权限
+$ FLUSH PRIVILEGES;
+```
+
+#### 调整用户权限
+
+MySQL v8 默认 root 用户通过 `auto_socket` 来连接，这意味着不能使用账号密码。在此我们需要将其设置更新为支持账号密码以便于客户端连接。
+
+```bash
+# 查看 user 表，此时 root 的 plugin 应为 auto_socket
+$ SELECT user,authentication_string,plugin,host FROM mysql.user;
+
+# 修改 root 用户字段，这里我们直接使用 mysql_native_password 来验证密码
+$ ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'YOUR_PASS_WORD';
+
+# 刷新系统相关权限
+$ FLUSH PRIVILEGES;
+```
+
+之后我们可以退出后，再次通过 `mysql -u root -p` 以账号密码的方式进入
+
+#### 修改服务全局配置
+
+**wait_timeout** 表示非交互式连接时，连接处于空闲状态多久后被 mysql 切断掉。默认为 28800（8 小时）
+
+```bash
+# 查看 wait_timeout 配置
+$ SHOW GLOBAL VARIABLES LIKE 'wait_timeout';
+
+# 查看 MySQL 端口
+$ SHOW GLOBAL VARIABLES LIKE 'port';
+
+# 修改配置为 7 天
+SET GLOBAL wait_timeout=604800;
+```
+
+#### 支持远程 client 连接
+
+进入 `/etc/mysql/mysql.conf.d` 修改 `bind-address`
+
+```
+# Instead of skip-networking the default is now to listen only on
+# localhost which is more compatible and is not less secure.
+# 将 127.0.0.1 改为 0.0.0.0
+bind-address		= 0.0.0.0
+mysqlx-bind-address	= 0.0.0.0
+```
+
+如果仍不能成功连接，可以尝试修改 root 用户的 Host 为 `%` 来接受任意来源的连接请求。
+
+```bash
+$ UPDATE mysql.user SET Host='%' WHERE user='root';
+```
+
+### mysqlbinlog revert
+
+> mysqlbinlog 是 DB 附带的一个实用程序，用于处理 binary log 和 relay log.
+
+结合 binlog 和 mysqlbinlog 可以进行一些回滚操作，能够恢复表结构等
+
+进入 mysql 环境，这里的目的是为了方便查看 log
+
+- `show variables like '%bin_log%';` 查看 mysql 内 binlog 相关配置，包括位置等信息
+- `show master status;` 查看当前 binlog 文件的状态
+- `show binlog events in 'binlog.000336';` 查看指定文件的 log，在这里可以查看其 position id
+
+在 cmd 环境
+
+- `mysqlbinlog --version` 查看当前版本
+- `mysqlbinlog --start-position=124 --stop-position=24057 data/binlog.000336 | mysql -u root -p` 恢复指定 position id 之前的操作
+- `mysqlbinlog --start-datetime="2020-07-03 13:18:54" --stop-datetime="2020-07-03 13:21:53" --database=zyyshop binlog.000002 | mysql -uroot -p` 恢复指定数据库和指定时间段内的数据
+
+### Troubleshooting
+
+1. `The driver has not received any packets from the server.`
+
+在服务器上配置完成之后，我们通过 DataGrip 连接 MySQL 服务后发现报错：
+
+```
+DBMS:
+Case sensitivity: plain=mixed, delimited=exact
+Driver:  (ver. , JDBC)
+Effective version: MySQL (ver. 0.0)
+Communications link failure
+
+The last packet sent successfully to the server was 0 milliseconds ago. The driver has not received any packets from the server.
+```
+
+导致连接不上的原因通常为：
+
+- 服务器 MySQL 未开启远程连接
+- 配置错误，比如端口不对
+- 服务器防火墙设置
+- `wait_timeout` 超时
+
+## Postgres
+
+:::info
+
+The World's Most Advanced Open Source Relational Database.
+
+:::
+
+### 查看数据状态
+
+查看表大小，并对所有库内所有表按照大小进行排序
+
+![tabel_size](https://i.stack.imgur.com/9zfeC.png)
+
+```sql
+
+-- 查看表大小：table size
+select pg_size_pretty(pg_table_size('table_name'));
+
+-- 查看表大小：table size + index size
+select pg_size_pretty(pg_total_relation_size('table_name'));
+
+-- 按照 tabel size 对全部表进行排序
+-- pg_stat_user_tables 表示由用户创建的表，区别于系统表
+select relname, pg_size_pretty(pg_table_size(relid))
+from pg_stat_user_tables where schemaname='public' order by pg_table_size(relid) desc;
+
+```
+
+统计每张表的 row 数量
+
+```sql
+
+select relname as name, reltuples as cnt from pg_class where relkind = 'r' and
+relnamespace = (
+    select oid from pg_namespace where nspname = 'public'
+    ) order by cnt desc ;
+
+```
+
+### 业务相关
+
+查看每月新增用户/项目
+
+- 注意 `date_trunc` 的使用
+
+```sql
+select date_trunc('month', date_joined) as dt, count(date_joined) as total
+from [table name]
+group by date_trunc('month', date_joined)
+order by date_trunc('month', date_joined)
+```
+
+## Redis
+
+:::info
+
+The open source, in-memory data store used by millions of developers as a database, cache, streaming engine, and message broker.
+
+:::
+
+不同环境下安装 redis
+
+```sh
+# MacOS
+$ brew install redis
+
+# Linux （仅支持 v5.0.7 版本）
+apt update && apt install redis
+
+# CentOS
+yum install redis
+```
+
+在 Linux 下，apt 仅支持 v5.0.7 版本，如果需要安装更高版本 Redis，需要手动下载、编辑、安装。
+
+```sh
+# 编译需要用到 gcc，查看系统内是否已经安装
+apt list gcc
+
+# 下载指定版本源码
+wget http://download.redis.io/releases/redis-7.0.5.tar.gz
+
+# 解压下载产物，将其移动到 /usr/local
+tar -xvf redis-7.0.5.tar.gz && mv redis-7.0.5 /usr/local
+
+# 进入文件目录，编译
+cd /usr/local/redis-7.0.5 && make && make install
+
+# 在 src 目录下执行 redis-server redis-cli 等来执行命令
+# 默认会以 /usr/local/redis-7.0.5/redis.conf 配置启动，可以新建一个 conf 并将 redis.conf 拷贝到指定目录下
+# 通过 `./redis-server conf/redis.conf` 来指定配置文件
+```
+
+安装完成之后，通过 `redis-cli --version` 查看 cli 版本，`redis-server --version` 查看 redis 服务版本，验证安装是否成功。
+
+通过 `ps -ef | grep redis` 查看服务是否运行，或者在 Linux Ubuntu 上通过 `systemctl status redis` 来查看服务运行情况，v5 以上默认自动运行。
+
+### 启动 redis 服务
+
+#### 设置后台启动
+
+MacOS 下 `vim /usr/local/etc/redis.conf`，Linux 配置文件在 `/etc/redis/redis.conf`
+
+- 找到 `daemonize` 选项，将其值设置为 `yes`
+- MacOS 执行 `redis-server /usr/local/etc/redis.conf` 启动时添加配置
+- Linux 执行 `systemctl start redis` 来重启 redis 服务
+- `ps -ef | grep redis` 查看服务情况
+
+#### 设置开机启动
+
+MacOS
+
+- 执行 `ln -f /usr/local/Cellar/redis/6.0.10/homebrew.mxcl.redis.plist ~/Library/LaunchAgents` 建立软连接，加入到 launchd 进程，当用户登录系统后会自动执行
+- 执行 `launchctl load ~/Library/LaunchAgents/homebrew.mxcl.redis.plist` 加载任务
+
+#### 设置远程连接
+
+设置 `redis.conf` 的 bind 字段来支持网卡访问
+
+```sh
+# ifconfig(Linux) 查看本机网卡地址
+
+# 修改 redis.conf
+bind 127.0.0.1 [inet]
+```
+
+redis 默认没有密码，设置 `requirepass` 修改连接密码
+
+### 运维排障技巧
+
+#### 基于 `redis-cli` 排障
+
+通过 redis-cli 来查看服务运行情况
+
+- 连接 redis: `redis-cli -h [hots] -p [port] -a [auth/password]`
+- 查看内存占用: `redis-cli [connnection params] info memory`
+- 查看不同数据库内最大 key 等统计信息: `redis-cli [connection params] -n [db index] --bigkeys`
+
+#### 批量删除 redis key
+
+在 terminal 内执行 `redis-cli -h 127.0.0.1 -p 6379 keys "bull:q_perf:*" | xargs -r -t redis-cli -h 127.0.0.1 -p 6379 del`
+
+注意：
+
+- `|` 是管道符，需要在 shell 内执行
+- `xargs -r` 当 xargs 的输入为空的时候则停止 xargs，不用再去执行了
+- `xargs -t` 表示先打印命令，然后再执行
+
+## ClickHouse
+
+:::info
+
+ClickHouse® is a free analytics DBMS for big data.
+
+:::
+
+### 常用运维脚本
+
+**查看数据库内表、数据使用量**
+
+```sql
+
+SELECT
+    table,
+    sum(rows) AS total_rows,
+    formatReadableSize(sum(data_uncompressed_bytes)) AS uncompressed_bytes,
+    formatReadableSize(sum(data_compressed_bytes)) AS compressed_bytes,
+    round((sum(data_compressed_bytes) / sum(data_uncompressed_bytes)) * 100, 0) AS compressed_rate
+FROM system.parts
+WHERE active AND datebase='[database name]'
+GROUP BY table
+ORDER BY total_rows DESC
+
+```
+
+**查看数据库、表结构、数据**
+
+```sql
+
+SHOW DATABASES
+
+DESC TABLE [database name].[table.name]
+
+-- 选择一条数据进行查看
+SELECT * FROM [database name].[table.name] LIMIT 1
+
+```
+
+**查看指定数据库的资源用量、rows、日均数据**
+
+```sql
+
+select
+    database,
+    formatReadableSize(size) as size,
+    formatReadableSize(bytes_on_disk) as bytes_on_disk,
+    formatReadableSize(data_uncompressed_bytes) as data_uncompressed_bytes,
+    formatReadableSize(data_compressed_bytes) as data_compressed_bytes,
+    compress_rate,
+    rows,
+    days,
+    formatReadableSize(avgDaySize) as avgDaySize
+from
+(
+    select
+        database,
+        sum(bytes) as size,
+        sum(rows) as rows,
+        min(min_date) as min_date,
+        max(max_date) as max_date,
+        sum(bytes_on_disk) as bytes_on_disk,
+        sum(data_uncompressed_bytes) as data_uncompressed_bytes,
+        sum(data_compressed_bytes) as data_compressed_bytes,
+        (data_compressed_bytes / data_uncompressed_bytes) * 100 as compress_rate,
+        max_date - min_date as days,
+        size / (max_date - min_date) as avgDaySize
+    from system.parts
+    where active
+     and database = '[database name]'
+    group by
+        database
+)
+
+```
+
+## Kafka
+
+:::info
+
+Kafka is a distributed messaging system providing fast, highly scalable and redundant messaging through a pub-sub model.
+
+:::
+
+在本章节我将介绍 Kafka 的术语以及基础知识。
+
+让我们先从[kafka-go](https://github.com/segmentio/kafka-go#connection-)的示例中一探究竟。
+
+```go
+conn, err := kafka.DialLeader(context.Background(), "tcp", "localhost:9092", topic, partition)
+```
+
+不难看出，新建一个基本的 kafka client 实例需要**协议、地址、topic name 以及 partition 数量**，并确定当前的 Leader。**Leader 用于收发数据，并且作为其他 broker 冗余（replication）的母本。**
+
+因此我们有必要掌握 Kafka 内的核心概念：
+
+- topic：作为 Kafka 内的顶级概念，无论是生产还是消费都需要指定 topic，一个 topic 代表一个消息队列
+- partition：**为了保证扩展性，Kafka 会从逻辑上将一个 topic 分成多个 partition。**每次写入 topic 内的 message 会按照策略被分配到指定 partition。**每个 partition 内维护 message 的唯一 ID，即 offset**
+- broker：无论是 topic 还是 partition 都是逻辑概念，最终都需要将数据存储到物理磁盘。Kafka 作为一个分布式集群服务，broker 是每个集群的的节点（物理机/集群），也是 message 最终写入磁盘的位置。**为了保证高可用，需要将多个 partition 写到不同的 broker 上**
+
+![kafka-base](/img/database/kafka_base.svg)
+
+1. Kafka 对生产者不做限制，只需指定 topic 等基础信息即可；
+2. message 写入 topic 后，会将其分配到各个 partition，每个 partition 会管理自己的 offset（横向拓展），即通过 topic、partition 以及 offset 能够唯一确定指定 message；
+3. Broker 是集群内的节点，用来存储 message，每个 broker 内均匀分布以 parition 为维度的数据（高可用）；由 Zookeeper 推选出 Broker Leader，它会管理 message 的读写，同时其他 broker （replication）向其进行同步，保证数据一致性；
+4. 在 kafka 内支持两种消费模式：
+
+- 队列模式：即每个 message 被均匀分配到不同的 consumer，这样消费效率很高
+- pub/sub 模式：即订阅模式，每个 message 会被分配给所有已订阅该 topic 的 consumer，一条消息能被消费多次
+
+5. kafka 内提出了 consumer group 的概念，用来综合使用以上两种消费模式，即一条 message 会被均匀分配到 consumer group 内（pub/sub），在其内部会以队列模式快速对消息进行消费，我们需要在初始化 kafka client 时，指定 group name;
+6. kafka 会保证每个 partition 内的消息顺序，但是并不能保证全局的消息顺序；
+7. consumer 实例与 partition 数量的关系：
+
+- consumers == partitions，则一个消费者对应一个 partition
+- consumers > partitions，则会存在 consumer 空跑
+- consumers < partitions，则一个 consumer 节点消费多个 partition 的情况
+
+**在 Kafka 内，什么时候清除 message ?**
+
+从某种程度上，我们可以将 kafka 队列服务看作一个日志服务，partition 不会在指定时间之前删除消息。比如，你设置消息 7 天有效期，那么在这段时间内任意时刻，都可以通过 consumer 对消息进行消费，7 天后会自动删除。并且 partition 会记录每个 consumer group 的最新 offset。
+
+### 监测 Kafka 运行情况
+
+通过 Docker 进入控制台后，查看 Topic 相关信息
+
+```bash
+cd usr/bin
+
+# 查看 topics
+kafka-topics --zookeeper sentry_zookeeper:2181 --list
+
+# 查看 topic 详细信息
+kafka-topics --zookeeper sentry_zookeeper:2181 --describe --topic ingest-events
+
+# 查看 topic 内容
+kafka-console-consumer --bootstrap-server sentry_kafka:9092 --topic ingest-events --from-beginning
+
+# 创建一个 partition 为 1 且名为 mytopic 的 topic
+kafka-topics --zookeeper sentry_zookeeper:2181 --create --replication-factor 1 --partitions 1 --topic mytopic
+```
+
+查看 consumer-groups 相关信息
+
+```bash
+# 查看 groups
+kafka-consumer-groups --bootstrap-server sentry_kafka:9092 --list
+
+# 查看 group 详情
+kafka-consumer-groups --bootstrap-server sentry_kafka:9092 --describe --group ingest-consumer
+```
+
+### 手动提交 offsets vs 自动提交 offsets
+
+以下选自 sentry 关于 kafka consumer 的实现 `class BatchingKafkaConsumer`，它是手动提交 offset。
+
+- Messages are processed locally (e.g. not written to an external datastore!) as they are read from Kafka, then added to an in-memory batch
+- Batches are flushed based on the batch size or time sent since the first message in the batch was received (e.g. "500 items or 1000ms")
+- Kafka offsets are not automatically committed! If they were, offsets might be committed for messages that are still sitting in an in-memory batch, or they might _not_ be committed when messages are sent to an external datastore right before the consumer process dies
+- Instead, when a batch of items is flushed they are written to the external datastore and then Kafka offsets are immediately committed (in the same thread/loop)
+- Users need only provide an implementation of what it means to process a raw message and flush a batch of events
+- Supports an optional "dead letter topic" where messages that raise an exception during `process_message` are sent so as not to block the pipeline.
+
+### Consumer Group
+
+消费组(Consumer Group)是消费者的集合，它的出现可以解决：
+
+- 相比单节点消费的压力，可以扩容机器，因为现在消息交付以 group 为概念
+- 同一份 topic 可以被不同 consumer group 分别消费，维持各自的 offset
+
+![consumer-group](/img/database/consumer-group.png)
+
+:::caution
+
+- 一条消息只能被消费组内一个消费者实例消费
+- 一个 partition 只能被组内一个消费者实例负责(一对一)
+- 一个消费者实例能够负责多个 partition(一对多)
+
+:::
+
+消费者组是一种**广播模式**。一个消费者组内对 topic 的消费不会影响其他消费者组。
+
+**kafka 如何维护不同 group 提交的 offset？**
+
+如果一个 topic 被多个 consumer group 同时消费，直接将各个分组的 offset commit 到 Broker 服务器会产生很大的负载。因此 kafka 将 \_consumer_offsets 设定拥有 50 个分区，从而将其均匀分布到不同机器上，通过负载均衡来将不同的 commit offsets 请求交给不同的机器处理。
+
+### 分配策略
+
+分配策略要解决两个问题：
+
+1. partition 和 consumer 的关系？
+2. 当 topic 内一条数据到达时，应该交付给哪个 partition？
+
+分配策略：
+
+- range 默认策略，基于 topic。将 partition 排序后，依次指定。
+- roundrobin 策略，会将消费组内所有消费者以及消费者所订阅的所有 topic 的 partition 按照字典序排序，然后通过轮询算法逐个将分区以此分配给每个消费者。
+
+### partition
+
+**为什么一个 partition 只能被一个消费者实例消费？**
+
+因为必须保证 partition 下消息消费的顺序。如果多个消费者读取同一个 partition 消息，那么肯定会存在不同的 offset，这样会造成消息被重复处理，与主动推送无异了。
+
+因此，当出现消息积压时，当扩容超过 partition 个数时，多余的机器在空跑，并不会被分配到 partition。
+
+**Kafka 如何保证 topic 内的一条消息仅被一个消费者实例消费？**
+
+得益于 kafka 的 **partition 分配策略** 和 **offset 管理**
+
+**partition reblancing 的场景**
+
+- 有消费者退出/加入
+- 订阅 topic 的 partition 发生变化
+
+Rebalance 给消费者群组带来了高可用性与伸缩性，但是在 Rebalance 期间，消费者无法读取消息，整个群组一小段时间不可用，而且当分区被重新分配给另一个消费者时，消费者当前的读取状态会丢失

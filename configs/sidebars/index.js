@@ -68,25 +68,6 @@ const sidebars = {
       ],
     },
   ],
-  databaseSiderbar: [
-    {
-      type: 'category',
-      label: 'Database',
-      collapsed: true,
-      items: [
-        'database/base',
-        'database/redis',
-        'database/mysql',
-        'database/postgres',
-      ],
-    },
-    {
-      type: 'category',
-      label: 'Kafka',
-      collapsed: true,
-      items: ['database/kafka/start'],
-    },
-  ],
   interviewSiderbar: [
     {
       type: 'category',

@@ -55,8 +55,76 @@ import { DocsHeader } from '/src/components/Layout/DocsHeader'
 <Button onClick={props.onClose} />
 ```
 
-## Package Dependencies
+## Import Package Dependencies
 
 ### Lodash
 
 在项目内不要引用默认的 lodash 包，引用具体的方法，比如 `import pick from 'lodash/pick'`，避免引入不必要的代码。
+
+## Upgrade Dependencies
+
+在维护项目时，我们需要有妥善地处理依赖升级的问题，避免出现依赖升级导致的问题。
+
+**更新依赖的准则：**
+
+1. 只更新稳定的依赖，比如可以等待包发布一段时间后且没有继续更新，再进行升级；
+2. 对于系统内的核心依赖，比如 `react`, `emotion`, `typescript` 等，需要及时跟进官方的更新，保持最新的版本。因为这类依赖通常具备更加完善的文档和可靠的更新路径。还有一个原因是，核心依赖越往后越难以更新，因此需要及时跟进；
+3. 减少次级依赖，也就是减少升级错误的“分母”；
+4. 对于非核心包，比如 `eslint`, `jest` 等，有时间再更新；
+
+:::caution
+
+Understand that upgrading is a double-edged sword.
+
+:::
+
+在一个项目内更新依赖这件事，本身就是一把“双刃剑”。它的好处和风险并存，因此需要我们谨慎对待。
+
+一方面，如果你基本不升级依赖，让版本停滞不前，那么在某个时刻你不得不去升级依赖的时候，将会非常痛苦，你会发现版本落后几个 major version，或者当时为了解决问题写了很多 hardcode，此时你不但要去升级过期依赖，还要注意 hardcode 带来的影响。
+
+相反地，如果你积极地维护依赖更新，保持 major/minor version，这样在进行升级时的风险会降低很多。同时这样也有助于跟上最新的性能更新、错误修复以及安全补丁。同时开发者不必去寻找旧版本的文档。
+
+另一方面，如果你过于积极地维护依赖更新，那么你可能会遇到以下问题：
+
+- 可能引入具有安全风险的更新
+- 耗费精力，但是实际更新内容并没有获得边际收益
+
+因此，在决定是否升级依赖时，需要权衡利弊，做出正确的选择
+
+### 如何更新依赖
+
+我推荐使用 [ncu](https://www.npmjs.com/package/npm-check-updates) 来更新依赖，它可以帮助我们快速地更新依赖，同时也可以帮助我们检查依赖的安全性
+
+```bash
+
+# 检查可以更新的依赖，是一样 yarn outdated --color 也能达到效果
+ncu --color
+
+## 更新所有依赖
+ncu -u
+
+## 更新指定依赖
+ncu -f [package] -u
+
+```
+
+相比直接使用 yarn 工具进行更新，ncu 能够同步修改 package.json 和 yarn.lock 文件，避免出现依赖不一致的问题
+
+### 验证升级内容
+
+在升级依赖完毕之后，我们**可以根据依赖的不同类型，来针对性地执行不同的验证策略**，以确保没有造成破坏性的影响。
+
+1. Feature specific dependencies。这次依赖常用于系统内的指定模块，比如拓扑图这类组件，此时可以在指定模块进行验证；
+2. Framework style dependencies。框架级别的依赖，比如 react, emotion, typescript 等，会在整个项目进行进行引用，比较难验证；
+3. Testing dependencies。这类依赖容易验证，可以在 CI 内进行验证；
+4. Application build dependencies。打包依赖，比如 webpack, babel 等，可以在 CI 进行验证；
+5. Development dependencies。更新这类依赖也要保持警惕，避免因为更新影响开发环境，让团队的开发效率降低。
+
+同时，这里总结出一些通用验证步骤：
+
+1. 阅读升级依赖的 CHANGELOG
+2. CI 能够通过？CI 通过并不能保证依赖升级成功，是一个充分非必要条件；
+3. 应用内是否生效？通常在预发环境上进行验证；
+4. 开发环境是否生效？
+5. 阅读 yarn.lock diff，了解升级内容和影响；
+6. 在生成环境内进行验证；

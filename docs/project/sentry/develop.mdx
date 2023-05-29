@@ -23,13 +23,40 @@ import { HighlightWithText } from '../../../src/components/Highlights'
 将 DSN 写入环境变量
 
 ```bash
-export SENTRY_DSN='Project's DSN'
+export SENTRY_DSN=[Project DSN]
 ```
 
 发射事件
 
 ```bash
 sentry-cli send-event -m 'message'
+```
+
+## 前端开发
+
+在 Sentry v16.3 版本，使用 React 版本为 v17.0.2，因此可以使用 React Hooks 创建函数式组件（V16.8 之后支持 React Hook）。
+
+### 使用内置 API 调用接口
+
+在 Sentry 内，对于 **Class component**，使用 `withAPI` 传递 API 实例，在子组件内使用 `await this.props.api.requestPromise` 发起异步请求，对于请求异常情况通过 try/catch 进行处理。
+
+```tsx
+// 参考 redirectDeprecatedProjectRoute.tsx
+class ProjectDetailsInner extends React.Component<DetailsProps, DetailsState> {
+  fetchData = async () => {
+    try {
+      const project = await this.props.api.requestPromise(
+        `/projects/${orgId}/${projectSlug}/`
+      )
+
+      this.setState({ error: null })
+    } catch (error) {
+      this.setState({ error })
+    }
+  }
+}
+
+const ProjectDetails = withApi(ProjectDetailsInner)
 ```
 
 ## 基于 API 进行二次开发

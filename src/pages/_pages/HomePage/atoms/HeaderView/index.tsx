@@ -17,7 +17,7 @@ const HeaderView: React.FC = () => {
   return (
     <div
       className={styles.Container}
-      style={{ height: windowHeight > 800 ? windowHeight : undefined }}
+      style={{ height: windowHeight > 800 ? windowHeight - 106 : undefined }}
     >
       <div>
         <h1 className={styles.HeaderTitle}>

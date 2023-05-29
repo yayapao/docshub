@@ -1,5 +1,14 @@
 .Container {
   display: flex;
-  flex: 1;
+  /* flex: 1; */
+
   flex-direction: column;
+}
+
+.Footer {
+  height: 36px;
+  line-height: 36px;
+  font-size: 14px;
+  text-align: center;
+  width: 100%;
 }

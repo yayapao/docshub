@@ -29,7 +29,7 @@ const themeConfig = {
   navbar: navbarConfig,
   footer: {
     // style: 'dark',
-    copyright: `Copyright © ${new Date().getFullYear()} 粤ICP备20070108号`,
+    // copyright: `Copyright © ${new Date().getFullYear()} 粤ICP备20070108号`,
   },
   // code block highlight
   prism: {

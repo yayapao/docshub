@@ -10,13 +10,7 @@ const beforeDevelopmentSidebar = {
     },
     {
       type: 'category',
-      label: 'Cloud Infrastructure',
-      collapsed: true,
-      items: [`${cloudPrefix}/vercel/entry`],
-    },
-    {
-      type: 'category',
-      label: 'Data Services',
+      label: '数据服务',
       collapsed: true,
       items: [`${dataPrefix}/entry`],
     },

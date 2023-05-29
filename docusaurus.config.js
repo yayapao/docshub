@@ -40,12 +40,12 @@ const themeConfig = {
 
 /** @type {import('@docusaurus/types').Config} */
 const metaConfig = {
-  title: 'Docshub',
+  title: '个人学习经验笔记存放',
   // main page slogan
-  tagline: 'Nice to doc, nice to code!',
+  tagline: '学习 专注 沉淀 思考',
   organizationName: 'YaYaPao', // Usually your GitHub org/user name.
   projectName: 'docshub', // Usually your repo name.
-  url: 'https://doc.joyjoy.cc/',
+  url: 'https://www.joyjoy.cc',
   baseUrl: '/',
   favicon: '/img/favicon.png',
 }

@@ -1,13 +1,13 @@
 ---
 id: entry
 title: ''
-sidebar_label: Frontend
+sidebar_label: 前端手边书
 ---
 
 import { DocsHeader } from '/src/components/Layout/DocsHeader'
 
 <DocsHeader
-  title="Frontend Handbook"
+  title="前端手边书"
   description="This guide covers how we write frontend code."
   tags={['frontend']}
   links={[
@@ -24,11 +24,11 @@ import { DocsHeader } from '/src/components/Layout/DocsHeader'
 
 :::
 
-## Directory Structure
+## 目录结构
 
 目录名称使用**小写驼峰**，比如 `app/components/myTable/`
 
-## Folder && File Structure
+## 文件夹和文件结构
 
 为文件命名时，需要注意：
 
@@ -41,9 +41,9 @@ import { DocsHeader } from '/src/components/Layout/DocsHeader'
 - 如果目录下的组件被其他应用模块使用，比如 store 或者 router，那么此时不要使用 index 文件
 - 如果仅仅为了重新导出模块，不要使用 index 文件
 
-## React Component
+## React 组件
 
-### Event handlers
+### 事件处理
 
 为 React 组件绑定事件时，根据事件的来源分为：1. 组件内定义方法，使用 `handle` 前缀；2. 继承方法，使用 `props`
 
@@ -55,7 +55,7 @@ import { DocsHeader } from '/src/components/Layout/DocsHeader'
 <Button onClick={props.onClose} />
 ```
 
-## Package Dependencies
+## 应用依赖
 
 ### Lodash
 

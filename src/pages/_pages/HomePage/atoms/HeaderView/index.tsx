@@ -12,9 +12,7 @@ import styles from './styles.module.css'
 const HeaderView: React.FC = () => {
   const { siteConfig } = useDocusaurusContext()
   const { windowHeight } = useWindowSize()
-  const [toTypeWords] = useState(
-    shuffle(['documented', 'straightforward', 'understandable'])
-  )
+  const [toTypeWords] = useState(shuffle(['技术文档']))
 
   return (
     <div
@@ -23,8 +21,8 @@ const HeaderView: React.FC = () => {
     >
       <div>
         <h1 className={styles.HeaderTitle}>
-          <span className={styles.SeparatorText}>Nice</span> to doc ,
-          <span className={styles.SeparatorText}> Nice</span> to code!
+          <span className={styles.SeparatorText}>思考 </span>沉淀
+          <span className={styles.SeparatorText}> 学习 </span>分享
         </h1>
         <HeaderTyper
           className={styles.HeaderTyper}
@@ -32,18 +30,15 @@ const HeaderView: React.FC = () => {
           delay={5000}
           defaultText={toTypeWords[0] || 'simple'}
         />
-        <div className={styles.ButtonContainer}>
-          <PrimaryButton
-            className={styles.GetStartedButton}
-            to={'/blog'}
-          >
+        {/* <div className={styles.ButtonContainer}>
+          <PrimaryButton className={styles.GetStartedButton} to={'/blog'}>
             GET STARTED
           </PrimaryButton>
           <GithubButton
             className={styles.GithubButton}
             to={siteConfig.customFields.githubUrl as any}
           />
-        </div>
+        </div> */}
       </div>
       <Astronaut className={styles.AstronautImage} />
       {/* {windowHeight > 900 && windowHeight < 1200 && <MouseScroller />} */}

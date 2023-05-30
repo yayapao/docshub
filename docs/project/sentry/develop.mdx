@@ -36,6 +36,14 @@ sentry-cli send-event -m 'message'
 
 在 Sentry v16.3 版本，使用 React 版本为 v17.0.2，因此可以使用 React Hooks 创建函数式组件（V16.8 之后支持 React Hook）。
 
+在 Sentry 内通过 [Reflux](https://github.com/reflux/refluxjs) 来管理全局状态
+
+- Store 创建和存储全局状态，在 `app/store`
+- Action 通过 Store 的监听来触发状态更新，在 `app/action`
+- Action Creator 用来触发 actions，在 `app/actionCreators` 内定义
+
+Sentry 内通常通过以 `with` 作为前缀的高阶组件来包裹子组件，从而到达传递状态的效果，比如 `withAPI`, `withRouter` 等
+
 ### 使用内置 API 调用接口
 
 在 Sentry 内，对于 **Class component**，使用 `withAPI` 传递 API 实例，在子组件内使用 `await this.props.api.requestPromise` 发起异步请求，对于请求异常情况通过 try/catch 进行处理。
@@ -58,6 +66,28 @@ class ProjectDetailsInner extends React.Component<DetailsProps, DetailsState> {
 
 const ProjectDetails = withApi(ProjectDetailsInner)
 ```
+
+### 使用 StoryBook 来开发和管理组件
+
+在 Sentry 内，集成了 StoryBook 来开发、预览和发布组件库，[Getting Started - Page ⋅ Storybook](https://storybook.sentry.dev/?path=/story/getting-started--page)，除此之外，我们还可以在本地通过 `yarn storybook` 来开发 stories。
+
+### Frontend Development Server
+
+在本地可以通过 webpack proxy 技术，调用线上的所有接口，从而降低本地开发的资源消耗，同时能够使用线上的数据进行验证。
+
+:::caution
+
+使用该方式进行开发时，注意本地操作会影响到线上真实数据，需要保持谨慎！
+
+:::
+
+在开始之前，先要安装 [Get Cookie Sync for Chrome](https://chrome.google.com/webstore/detail/sentry-cookie-sync/ojbolbbmkndcafmblpelfdhkggpmdhnm?hl=en&authuser=0) 用来共享 Sentry 和本地开发环境 Cookie。
+
+同时，如果遇到 **"Your connection is not private"** 的问题，这是由于本地开发证书不被浏览器信任，可以通过 `brew install mkcert` 和 `yarn mkcert-install` 来安装本地开发信任证书解决。
+
+最后，执行 `yarn dev-ui` 启动本地开发服务，访问 `[org].dev.getsentry.net:7999` 即可
+
+**我们这里以 organization Name 的方式进行登录，来建立与 Sentry.io 的联系**
 
 ## 基于 API 进行二次开发
 

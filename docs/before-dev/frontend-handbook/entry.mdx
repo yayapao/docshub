@@ -45,7 +45,10 @@ import { DocsHeader } from '/src/components/Layout/DocsHeader'
 
 ### Event handlers
 
-为 React 组件绑定事件时，根据事件的来源分为：1. 组件内定义方法，使用 `handle` 前缀；2. 继承方法，使用 `props`
+为 React 组件绑定事件时，根据事件的来源分为：
+
+1. 组件内定义方法，使用 `handle` 前缀；
+2. 继承方法，使用 `on` 作为前缀，比如 `onClose`，`onEdit`；
 
 ```tsx
 // 1. 组件内定义方法

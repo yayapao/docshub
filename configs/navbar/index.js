@@ -25,11 +25,27 @@ const navbarConfig = {
     //   ],
     // },
     {
-      label: '编程',
+      label: '学习思考',
       position: 'left',
       items: [
         {
-          label: '开发前准备',
+          label: '计算机网络',
+          to: '/docs/network/network',
+          activeBaseRegex: '/docs/network',
+        },
+        {
+          label: '网络协议',
+          to: '/docs/network/http',
+          activeBaseRegex: '/docs/network',
+        },
+      ],
+    },
+    {
+      label: '经验笔记',
+      position: 'left',
+      items: [
+        {
+          label: '预开发阶段',
           to: '/docs/before-dev/frontend-handbook/entry',
           activeBaseRegex: '/docs/before-dev',
         },

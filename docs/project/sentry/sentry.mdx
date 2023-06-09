@@ -1,7 +1,7 @@
 ---
 id: sentry
 title: ''
-sidebar_label: Start Sentry
+sidebar_label: Before Start
 slug: sentry
 ---
 
@@ -9,7 +9,7 @@ import { DocsHeader } from '/src/components/Layout/DocsHeader'
 
 <DocsHeader
   title="Sentry"
-  description="Sentry 是我在研究前端可信赖工程的一个重要课题，它是一个 toB 商业化平台，能够支持应用在线上的错误追踪和性能监控，进而了解用户的真实使用情况。"
+  description="Sentry 是我在研究前端可信赖工程的一个重要课题，它是一个 toB 商业化平台，能够对线应用进行错误追踪和性能监控，进而了解用户的真实使用情况。"
   github="https://github.com/getsentry/sentry"
   tags={['Error', 'Performance']}
   links={[
@@ -22,23 +22,42 @@ import { DocsHeader } from '/src/components/Layout/DocsHeader'
       link: 'https://develop.sentry.dev/',
     },
     {
+      label: 'Sentry Integration',
+      link: 'https://docs.sentry.io/product/integrations/integration-platform/#internal-integrations',
+    },
+    {
       label: '抓 Bug 神器的工作原理——聊聊 Sentry 的架构',
       link: 'https://mp.weixin.qq.com/s?__biz=MzIzNzUzMDMyMg==&mid=2247484709&idx=1&sn=c92c8875c4a4bc6ec3a389bca3ce0519&chksm=e8c67898dfb1f18e1e7ecf6a024c3100b370df3b44a0cba59c67864dae19f3b3c5923aebb480&mpshare=1&scene=1&srcid=0804EkTqdYUD83GTilZi21uK&sharer_sharetime=1628050462144&sharer_shareid=7ea829c266ade297fbf226905a62adfa&version=3.1.12.70057&platform=mac#rd',
     },
   ]}
 />
 
-<!-- -->
+我在实践过程中，对 Sentry 服务和 SDK 侧进行了深度的研究和改造，以满足实际业务需求。在这个过程中，我对 Sentry 进行前置思考，并针对性地提出值得思考的问题。
 
-我们在实践过程中，对 sentry 进行了深度的研究和改造，使其更加贴近实际业务。在这个过程中，我们着重思考：
+**1.为什么要基于 Sentry （来做前端监控）？**
+
+第一个问题用来思考 Sentry 服务的价值，以及为什么要基于 Sentry 来做前端监控。基于它实现的可行性、可扩展性、可维护性、可用性等方面进行分析。
+
+- Sentry 社区是否活跃，以及是否对开发者友好？
+- Sentry 对比其他监控平台的优势？比如云厂商 RUM，datadog 等
+
+**2.如何开发、部署、运维？**
+
+第二个问题解决具体实现过程中可能遇到的问题。
 
 - 如何私有化部署 Sentry?
 - 如何理解 Sentry 架构
 - 如何改造 Sentry SDK?
 - 如何开发 Sentry server?
-- 如何使用 Sentry?
-- 如何进行贴近业务的设计？
-- 前端监控平台的 SDK/Server 架构设计方以及其难点、亮点？
+- 如何保持 Sentry 服务的高可用？
+- 如何升级 Sentry 服务，使其能够兼容官方的最新特性？
+
+**3.私有化的 Sentry 如何为业务赋能？**
+
+第三个问题，是我们将 Sentry 私有化部署之后，如何持续为业务赋能，提升价值。
+
+- 使用 Sentry 的最佳实践（场景）?
+- 如何从实际出发，做贴近业务的设计？
 
 这里，我们随着使用的深入来不断更新、优化思考内容，首先我们需要学会如何部署 Sentry 服务来支持基础业务，接着我们通过改造 SDK/Server 来使其适配公司业务，在产品化的过程中我们会将经典使用场景、问题进行文档化沉淀。
 

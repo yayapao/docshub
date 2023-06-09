@@ -89,6 +89,15 @@ const ProjectDetails = withApi(ProjectDetailsInner)
 
 **我们这里以 organization Name 的方式进行登录，来建立与 Sentry.io 的联系**
 
+## 插件开发
+
+Sentry 内置插件系统，可以通过插件来拓展 Sentry 的功能，比如自动 TAG、Webhooks 等。这里以 [sentry/src/sentry/plugins/sentry_webhooks at master · getsentry/sentry · GitHub](https://github.com/getsentry/sentry/tree/master/src/sentry/plugins/sentry_webhooks) 来学习 Sentry 的插件系统设计。
+
+学习目的在于：
+
+1. 了解 Sentry 插件系统的设计思路
+2. 实现一个插件，来拓展 Sentry 的功能
+
 ## 基于 API 进行二次开发
 
 ### FAQ

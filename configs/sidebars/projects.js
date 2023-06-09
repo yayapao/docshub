@@ -20,18 +20,24 @@ const fte = {
   sentrySiderBar: [
     {
       type: 'category',
-      label: 'Sentry',
+      label: 'Start Sentry',
       collapsed: false,
       items: [
         'project/sentry/sentry',
-        'project/sentry/structure',
         'project/sentry/discussion',
+        'project/sentry/troubleshooting',
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Build Sentry',
+      collapsed: true,
+      items: [
+        'project/sentry/structure',
         'project/sentry/self_hosted',
         'project/sentry/development',
         'project/sentry/features',
         'project/sentry/sourcecode',
-        'project/sentry/faq',
-        'project/sentry/highlights',
       ],
     },
   ],

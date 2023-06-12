@@ -12,7 +12,9 @@ import styles from './styles.module.css'
 const HeaderView: React.FC = () => {
   const { siteConfig } = useDocusaurusContext()
   const { windowHeight } = useWindowSize()
-  const [toTypeWords] = useState(shuffle(['技术文档', '学习思考']))
+  const [toTypeWords] = useState(
+    shuffle(['数据库', 'SQL学习', '数据系统设计', '大数据'])
+  )
 
   return (
     <div
@@ -21,7 +23,7 @@ const HeaderView: React.FC = () => {
     >
       <div>
         <h1 className={styles.HeaderTitle}>
-          <span className={styles.SeparatorText}>文档 </span>沉淀
+          <span className={styles.SeparatorText}>数据 </span>沉淀
           {/* <span className={styles.SeparatorText}> 学习 </span>分享 */}
         </h1>
         <HeaderTyper

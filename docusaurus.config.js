@@ -22,6 +22,7 @@ const announcementBar = {
 
 /** @type {import('@docusaurus/types').ThemeConfig} */
 const themeConfig = {
+  defaultMode: 'dark',
   colorMode: {
     respectPrefersColorScheme: true,
   },
@@ -45,7 +46,7 @@ const metaConfig = {
   tagline: '学习 专注 沉淀 思考',
   organizationName: 'YaYaPao', // Usually your GitHub org/user name.
   projectName: 'docshub', // Usually your repo name.
-  url: 'https://www.joyjoy.cc',
+  url: 'http://www.datawithoutworry.com.cn',
   baseUrl: '/',
   favicon: '/img/favicon.png',
 }

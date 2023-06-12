@@ -25,55 +25,25 @@ const navbarConfig = {
     //   ],
     // },
     {
-      label: '学习思考',
+      label: '数据库基础',
       position: 'left',
       items: [
         {
-          label: '计算机网络',
-          to: '/docs/network/network',
-          activeBaseRegex: '/docs/network',
-        },
-        {
-          label: '网络协议',
-          to: '/docs/network/http',
-          activeBaseRegex: '/docs/network',
+          label: '概念&应用',
+          to: '/docs/database/base',
+          activeBaseRegex: '/docs/database',
         },
       ],
     },
     {
-      label: '经验笔记',
+      label: '图数据库',
       position: 'left',
       items: [
         {
-          label: '预开发阶段',
-          to: '/docs/before-dev/frontend-handbook/entry',
-          activeBaseRegex: '/docs/before-dev',
+          label: '概念&应用',
+          to: '/docs/gdb/base',
+          activeBaseRegex: '/docs/gdb/',
         },
-        // {
-        //   label: 'Node.js',
-        //   to: '/docs/programming-language/nodejs/entry',
-        //   activeBaseRegex: '/docs/programming-language/nodejs',
-        // },
-        // {
-        //   label: 'Golang',
-        //   to: '/docs/programming-language/golang/entry',
-        //   activeBaseRegex: '/docs/programming-language/golang',
-        // },
-        // {
-        //   label: 'JavaScript',
-        //   to: '/docs/programming-language/javascript/entry',
-        //   activeBaseRegex: '/docs/programming-language/javascript/entry',
-        // },
-        // {
-        //   label: 'HTML5',
-        //   to: '/docs/programming-language/html5/entry',
-        //   activeBaseRegex: 'html5/*',
-        // },
-        // {
-        //   label: 'Python3',
-        //   to: '/docs/langs/python/concept',
-        //   activeBaseRegex: '/docs/langs/python',
-        // },
       ],
     },
     // {

@@ -9,10 +9,8 @@ const beforeDevelopmentSidebar = {
       id: 'before-dev/frontend-handbook/entry',
     },
     {
-      type: 'category',
-      label: '数据服务',
-      collapsed: true,
-      items: [`${dataPrefix}/entry`],
+      type: 'doc',
+      id: 'before-dev/frontend-handbook/http',
     },
   ],
 }

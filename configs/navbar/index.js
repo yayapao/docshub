@@ -6,26 +6,8 @@ const navbarConfig = {
     src: 'img/logo.svg',
   },
   items: [
-    // { to: '/blog', label: 'Blog', position: 'left' },
-    // {
-    //   label: '🧿🧿',
-    //   position: 'left',
-    //   items: [
-    //     {
-    //       label: 'Server',
-    //       to: '/docs/server/cloudServer',
-    //       // 设置高亮
-    //       activeBaseRegex: '/docs/server',
-    //     },
-    //     {
-    //       label: 'Interview',
-    //       to: '/docs/interview/js',
-    //       activeBaseRegex: '/docs/interview',
-    //     },
-    //   ],
-    // },
     {
-      label: '编程',
+      label: '编程预备',
       position: 'left',
       items: [
         {
@@ -33,31 +15,27 @@ const navbarConfig = {
           to: '/docs/before-dev/frontend-handbook/entry',
           activeBaseRegex: '/docs/before-dev',
         },
-        // {
-        //   label: 'Node.js',
-        //   to: '/docs/programming-language/nodejs/entry',
-        //   activeBaseRegex: '/docs/programming-language/nodejs',
-        // },
-        // {
-        //   label: 'Golang',
-        //   to: '/docs/programming-language/golang/entry',
-        //   activeBaseRegex: '/docs/programming-language/golang',
-        // },
-        // {
-        //   label: 'JavaScript',
-        //   to: '/docs/programming-language/javascript/entry',
-        //   activeBaseRegex: '/docs/programming-language/javascript/entry',
-        // },
-        // {
-        //   label: 'HTML5',
-        //   to: '/docs/programming-language/html5/entry',
-        //   activeBaseRegex: 'html5/*',
-        // },
-        // {
-        //   label: 'Python3',
-        //   to: '/docs/langs/python/concept',
-        //   activeBaseRegex: '/docs/langs/python',
-        // },
+      ],
+    },
+    {
+      label: '编程语言',
+      position: 'left',
+      items: [
+        {
+          label: 'Golang',
+          to: '/docs/programming-language/golang/entry',
+          activeBaseRegex: '/docs/programming-language',
+        },
+        {
+          label: 'HTML5',
+          to: '/docs/programming-language/html5/entry',
+          activeBaseRegex: '/docs/programming-language',
+        },
+        {
+          label: 'JavaScript',
+          to: '/docs/programming-language/javascript/entry',
+          activeBaseRegex: '/docs/programming-language',
+        },
       ],
     },
     // {

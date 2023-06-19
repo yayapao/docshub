@@ -472,6 +472,9 @@ kafka-topics --zookeeper sentry_zookeeper:2181 --list
 # 查看 topic 详细信息
 kafka-topics --zookeeper sentry_zookeeper:2181 --describe --topic ingest-events
 
+# 查看 kafka topic 的堆积情况。-time -1 表示最新的时间，--offset 1 表示最新的 offset, awk 用于计算总和
+kafka-run-class kafka.tools.GetOffsetShell --broker-list sentry_kafka:9092 --topic ingest-events --time -1 --offsets 1 | awk -F ":" '{sum += $3} END {print sum}'
+
 # 查看 topic 内容
 kafka-console-consumer --bootstrap-server sentry_kafka:9092 --topic ingest-events --from-beginning
 

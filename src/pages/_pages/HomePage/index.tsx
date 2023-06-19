@@ -9,7 +9,7 @@ const HomePage: React.FC = () => {
       <HeaderView />
       <footer className={styles.Footer}>
         <a href="https://beian.miit.gov.cn/" target="_blank">
-          Copyright © 2022 粤ICP备20070108号
+          粤ICP备20070108号-2
         </a>
       </footer>
     </main>

@@ -8,9 +8,9 @@ const HomePage: React.FC = () => {
     <main className={styles.Container}>
       <HeaderView />
       <footer className={styles.Footer}>
-        {/* <a href="https://beian.miit.gov.cn/" target="_blank">
-          Copyright © 2022 粤ICP备20070108号
-        </a> */}
+        <a href="https://beian.miit.gov.cn/" target="_blank">
+          粤ICP备20070108号-3
+        </a>
       </footer>
     </main>
   )

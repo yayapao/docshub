@@ -1,26 +1,39 @@
 ---
 id: cloudServer
-title: Cloud Server
+title: ''
 sidebar_label: Cloud Server
 ---
 
-import { HighlightWithText } from '../../src/components/Highlights'
+import { HighlightWithText } from '/src/components/Highlights'
+import { DocsHeader } from '/src/components/Layout/DocsHeader'
 
-## 初始化云服务的基础设施
+<DocsHeader
+  title="Cloud Server SRE"
+  description="记录云服务相关经验"
+  github=""
+  tags={['SRE']}
+  links={[
+    {
+      label: '使用远程登录软件登录 Linux 实例',
+      link: 'https://cloud.tencent.com/document/product/1207/44578',
+    },
+    {
+      label: 'Ubuntu 系统如何使用 root 用户登录实例？',
+      link: 'https://cloud.tencent.com/document/product/1207/44569#ubuntu-.E7.B3.BB.E7.BB.9F.E5.A6.82.E4.BD.95.E4.BD.BF.E7.94.A8-root-.E7.94.A8.E6.88.B7.E7.99.BB.E5.BD.95.E5.AE.9E.E4.BE.8B.EF.BC.9F',
+    },
+  ]}
+/>
 
-环境
-- 腾讯云 ubuntu 20.04 TLS
-- MacOS
+这里我们以腾讯云上的服务为基础进行记录，本地客户端使用 MacOS。
+
+## 搭建基础环境
 
 ### 设置 SSH 远程登录
 
-参考:
-
-- [使用远程登录软件登录 Linux 实例](https://cloud.tencent.com/document/product/1207/44578)
-- [Ubuntu 系统如何使用 root 用户登录实例？](https://cloud.tencent.com/document/product/1207/44569#ubuntu-.E7.B3.BB.E7.BB.9F.E5.A6.82.E4.BD.95.E4.BD.BF.E7.94.A8-root-.E7.94.A8.E6.88.B7.E7.99.BB.E5.BD.95.E5.AE.9E.E4.BE.8B.EF.BC.9F)
-- [设置 ssh 连接 timeout](https://www.tecmint.com/increase-ssh-connection-timeout/)
-
 核心步骤如下:
+
+- 在 `~/.ssh/` 内配置 ssh pub key
+- 在 `/etc/ssh/` 内配置 ssh 系统配置
 
 ```bash
 # 登录服务器,创建 root 账户,设置密码,修改相关配置
@@ -30,10 +43,19 @@ $ sudo passwd root
 # 修改 ssh 服务端配置
 # - 将 PermitRootLogin、PasswordAuthentication 置为 yes,之后进行保存
 #
-# 修改 ssh timeout 时间, 
+# 修改 ssh timeout 时间
 # - 设置 ClientAliveInterval(单位秒) 和 ClientAliveCountMax
 # - timeout = ClientAliveInterval * ClientAliveCountMax
-$ sudo vi /etc/ssh/sshd_config 
+#
+# 重要：如果需要设置从客户端免登录，需要：
+# 1. 开放服务器的 TCP：22 端口；
+# 2. 修改如下配置：
+# PasswordAuthentication yes 表示允许密码登录
+# KbdInteractiveAuthentication no 表示不需要键盘交互式认证
+# PubkeyAcceptedKeytypes=+ssh-rsa 表示允许使用 ssh-rsa 类型的公钥登录
+# 注释掉 AddressFamily inet
+#
+$ sudo vi /etc/ssh/sshd_config
 
 # 重启 ssh
 $ sudo service ssh restart
@@ -46,8 +68,8 @@ $ sudo service ssh restart
 具体操作如下：
 
 ```bash
-# 客户端生成密钥
-# 指定文件生成路径，通常位于 ～/.ssh/ 目录下
+# 客户端生成密钥，一般一个服务器对应一份 id_rsa 和 id_rsa.pub
+# 指定文件生成路径，通常位于 ～/.ssh/ 目录下，也可以自己指定**文件路径**
 ssh-keygen -t rsa
 
 # 建立服务器和客户端的信任关系
@@ -74,12 +96,219 @@ scp [file path] root@host:[server dir path]
 sshpass -p [password] scp [file path] root@host:[server dir path]
 ```
 
+## 升级 Ubuntu 系统
+
+有时候我们购买的服务器只能选择 Ubuntu 18 系统，这与轻量服务器或者使用习惯不符合，因此在开始之前可以选择升级 Ubuntu 系统。
+
+核心步骤如下：
+
+```bash
+# 更新 apt 源
+$ sudo apt update
+
+# 更新 apt 依赖包
+$ sudo apt full-upgrade
+
+# 升级系统，从 18 升级到 22，需要先升级到 20
+$ sudo do-release-upgrade
+
+# 查看版本信息，或者 `cat /etc/os-release`
+$ lsb_release -a
+```
+
+在升级过程中，可能会遇到如下问题：
+
+1. `cant upgrade, because reboot-required` 即使执行 `reboot` 仍然发生？
+
+   - 可以通过 `sudo rm /var/run/reboot-required` 来解决
+
+2. 系统无法升级，因为 `cloud-init` 没有升级到最新？
+
+   - 执行 `apt-mark unhold cloud-init` 取消对 cloud-init 的锁定
+   - 执行 `apt update` 来升级 cloud-init
+
+3. 没找到新版本，无法升级？
+
+   - 通常是由于没有正确设置 `/etc/update-manager/release-upgrades` 的 Prompt 属性。
+   - 如果设置为 LTS 则只会升级到长期支持版本，Never 表示不会升级，Normal 表示可以升级最新版本
+
+## coscli
+
+[coscli](https://cloud.tencent.com/document/product/436/63143) 是腾讯云对象存储的客户端命令行工具。基于此，我们可以方便地在本地对对象存储进行操作，通常我们可以利用其发起应用的发布流程。
+
+:::info
+注意在 macos 内，将可执行脚本直接放到 `/usr/local/bin` 目录下(Linux 在 `/usr/bin` 目录下)，就能够直接全局调用
+:::
+
+下面对其常用操作进行记录，方便随时查阅
+
+```bash
+# 将本地图片上传到 cos 指定 bucket 内，调换顺序则可以直接从 cos 上下载文件到本地
+coscli cp ./xxx.png cos://xxx-1300606192/showcase/xxx.png
+
+# 注意需要为 bucket name 加上 cos:// 前缀来查看具体内容
+coscli ls
+coscli cos://xxx-1300606192
+```
+
+在使用 coscli 时，需要注意：
+
+- 在上传或者拉取桶内的文件时，需要先执行 `coscli config show` 来查看当前桶是否已经写入本地配置，如果没有，则执行 `coscli config add -b [bucket name] -r [region]` 进行添加
+
+## 通用技能
+
+### 启停服务
+
+- `service --status-all` 查看所有服务
+- `service [server-name] stop` 停止服务
+- `service [server-name] start` 启动服务
+- `service [server-name] restart` 重启服务
+- `service [server-name] status` 查看服务状态
+
+### 解决端口占用
+
+查看端口占用情况
+
+`ps` 查看系统内进程，可以看到 pid 信息
+
+- `ps -e` 展示所有进程
+- `ps -aux` 显示所有包含其他使用者的进程
+
+`lsof` （list open files）列出当前系统打开文件的工具
+
+- `lsof -i:3000` 查看 3000 端口占用情况
+
+`netstat -tunlp` 用于显示 tcp，udp 的端口和进程等相关情况
+
+- `t(tcp)` 展示 TCP 相关的选项
+- `u(udp)` 展示 UDP 相关的选项
+- `n` 拒绝显示别名，能显示数字则展示数字
+- `l` 列出在 Listen 的服务状态
+- `p` 显示相关链接的程序名
+
+上述命令结合 `grep` 来查找指定信息，之后执行 `kill -9 [pid]` 来关闭指定 pid 的进程
+
+### 文件操作
+
+1. `pwd` 打印当前文件路径
+2. `find -name [name]` 全局搜索
+3. `whereis [filename]` 查看路径
+4. `mkdir [filename]` 在当前目录下创建一个文件夹
+5. `rm -rf [filepath]` 删除指定目录下的文件夹及其目录下的所有文件
+6. `rm -f [file]` 删除文件
+7. `cp [filename] [path]` 复制指定文件到指定目录
+8. `mv filename newfilename` 重命名文件或者文件目录
+
+<HighlightWithText>通过 zip 解/压文件</HighlightWithText>
+
+- `zip -r xxx.zip xxx` 压缩指定文件夹为 .zip 文件
+- `unzip xxx.zip` 直接解压指定文件，输出到当前目录
+- `zip xxx.zip 1.txt 2.txt` 将 1.txt 和 2.txt 压缩为 xxx.zip
+- `unzip xxx.zip -d /home` 将 xxx.zip 解压到 `/home` 目录下
+
+<HighlightWithText>通过 tar 解/压文件</HighlightWithText>
+
+- `tar -zcvf target.tar.gz [package files]` 进行压缩
+- `tar -zxvf target.tar.gz` 解压文件
+
+#### 可执行权限
+
+系统内，读、写和可执行权限对应的数字如下所示：
+
+- `r(read)` = 4
+- `w(write)` = 2
+- `x(execute)` = 1
+- no permissions = 0
+
+权限的设置实际上就是上面的数字求和，比如：
+
+- 7(4 + 2 + 1) 读、写、可执行
+
+为文件设置最高权限，在文件的上级目录内执行 `sudo chmod -R 777 [targetFileName]`， `-R` 表示递归（recursive），即所有子文件同步设置权限
+
+## 常用工具
+
+### bash 的 url 工具 -- curl
+
+执行 `curl https://www.xxx.com` 就可以发出一个 GET 请求，服务器返回值会在命令行内输出
+
+- `-A` 表示请求头内 `user-agent`
+- `-H` 表示请求头
+- `-b` 用来像服务器发送 cookie，比如 `curl -b 'key=value' https://www.xxx.com`
+- `-d` 用来表示 post 请求的 body 内容
+- `-G` 用来指定 GET 方法，比如 `curl -G -d 'key1=v1' -d 'k2=v2' https://www.xxx.com`，表示发送一个 GET 请求，`https://www.xxx.com?key1=v1&key2=v2`，如果不指定 -G，则会发送一个 POST 请求
+
+### VIM
+
+命令模式:
+
+删除
+
+- `dd` 快速删除当前行
+- `ndd` 比如 `3dd` 开始删除当前三行内容
+
+复制
+
+- `yy` 快速复制当前行
+- `nyy` 快速复制当前 n 行内容
+- `p` 粘贴内容
+- `ggdG` 删除所有内容，`gg` 光标置于首行，`d` 删除，`G` 光标置于文件末尾行
+
+回退
+
+- `u` 回退内容
+
+搜索
+
+- 通过 `/` 进入搜索模式，通过 `n/N` 来跳转到下一个/上一个
+
+### 软硬链接
+
+在上文中，我们通过软链接来做了一个指向绝对路径的“快捷方式”，这里我们简单区分一下软/硬链接的概念：
+
+- 硬链接：其 `inode`(可以理解为指针) 都指向同一个文件在内存中的区块，这意味着改变链接文件，另一个文件也会同步改变，`ln file hard`
+- 软链接：保存了其代表文件的绝对路径，在内存上有自己独立的区块，访问时会替换自身路径
+
+### 格式化时间
+
+`time=$(date "+%Y%m%d-%H%M%S")` 格式化当前时间，注意 `date` 后面加空格
+
+## Troubleshooting
+
+<HighlightWithText text="Q: 在服务器上拉取 github 的代码特别慢？" />
+{''}
+
+```
+通过配置 hosts 来指定 ip，减少 CDN 寻址时间
+
+通过 https://fastly.net.ipaddress.com/ 来查看指定域名的 IP 地址：
+1. github.com
+2. github.global.ssl.fastly.net
+
+之后将其添加到 hosts 文件内，最后执行 `sudo /etc/init.d/network restart` 刷新设置
+```
+
+<HighlightWithText text="Q: 磁盘被打满的排障思路？" />
+{''}
+
+通过 `du` 找到占用量大的文件，进行分析
+
+1. 通过监控查看磁盘周期内的磁盘使用情况，检查是否存在用量陡增，观察时间点是否存在发布事件
+2. 在指定服务器上查看磁盘占用情况，重点观察日志文件的磁盘占用
+3. 找到相应文件，执行不同处理
+
 ### 搭建 FTP 服务
+
+:::caution
+
+使用 SSH 传输文件是最安全的方式，但是在某些情况下，我们需要使用 FTP 服务来进行文件传输，比如在使用 Cyberduck 时，我们需要使用 FTP 服务来进行文件传输。
+
+:::
 
 参考:
 
 - [Linux 云服务器搭建 FTP 服务](https://cloud.tencent.com/document/product/213/10912)
-- [Cyberduck FTP客户端工具](https://cyberduck.io/)
+- [Cyberduck FTP 客户端工具](https://cyberduck.io/)
 
 核心步骤:
 
@@ -116,174 +345,3 @@ $ chmod -R 777 /home/xxx
 write_enable=YES
 anon_mkdir_write_enable=YES
 ```
-
-### coscli
-
-[coscli](https://cloud.tencent.com/document/product/436/63143) 是腾讯云对象存储的客户端命令行工具。基于此，我们可以方便地在本地对对象存储进行操作，通常我们可以利用其发起应用的发布流程。
-
-:::info
-注意在 macos 内，将可执行脚本直接放到 `/usr/local/bin` 目录下(Linux 在 `/usr/bin` 目录下)，就能够直接全局调用
-:::
-
-下面对其常用操作进行记录，方便随时查阅
-
-```bash
-# 将本地图片上传到 cos 指定 bucket 内，调换顺序则可以直接从 cos 上下载文件到本地
-coscli cp ./xxx.png cos://xxx-1300606192/showcase/xxx.png
-
-# 注意需要为 bucket name 加上 cos:// 前缀来查看具体内容
-coscli ls
-coscli cos://xxx-1300606192
-```
-
-在使用 coscli 时，需要注意：
-
-- 在上传或者拉取桶内的文件时，需要先执行 `coscli config show` 来查看当前桶是否已经写入本地配置，如果没有，则执行 `coscli config add -b [bucket name] -r [region]` 进行添加  
-
-
-## 通用技能
-
-### 启停服务
-
-- `service --status-all` 查看所有服务
-- `service [server-name] stop` 停止服务
-- `service [server-name] start` 启动服务
-- `service [server-name] restart` 重启服务
-- `service [server-name] status` 查看服务状态
-
-### 解决端口占用
-
-查看端口占用情况
-
-`ps` 查看系统内进程，可以看到 pid 信息
-
-- `ps -e` 展示所有进程
-- `ps -aux` 显示所有包含其他使用者的进程
-
-`lsof` （list open files）列出当前系统打开文件的工具
-
-- `lsof -i:3000` 查看 3000 端口占用情况
-
-`netstat -tunlp` 用于显示 tcp，udp 的端口和进程等相关情况
-
-- `t(tcp)` 展示 TCP 相关的选项
-- `u(udp)` 展示 UDP 相关的选项
-- `n` 拒绝显示别名，能显示数字则展示数字
-- `l` 列出在 Listen 的服务状态
-- `p` 显示相关链接的程序名
-
-上述命令结合 `grep` 来查找指定信息，之后执行 `kill -9 [pid]` 来关闭指定 pid 的进程
-
-
-### 文件操作
-
-1. `pwd` 打印当前文件路径
-2. `find -name [name]` 全局搜索
-3. `whereis [filename]` 查看路径
-4. `mkdir [filename]` 在当前目录下创建一个文件夹
-5. `rm -rf [filepath]` 删除指定目录下的文件夹及其目录下的所有文件
-6. `rm -f [file]` 删除文件
-7. `cp [filename] [path]` 复制指定文件到指定目录
-8. `mv filename newfilename` 重命名文件或者文件目录
-
-
-<HighlightWithText>通过 zip 解/压文件</HighlightWithText>
-
-- `zip -r xxx.zip xxx` 压缩指定文件夹为 .zip 文件
-- `unzip xxx.zip` 直接解压指定文件，输出到当前目录
-- `zip xxx.zip 1.txt 2.txt` 将 1.txt 和 2.txt 压缩为 xxx.zip
-- `unzip xxx.zip -d /home` 将 xxx.zip 解压到 `/home` 目录下
-
-<HighlightWithText>通过 tar 解/压文件</HighlightWithText>
-
-- `tar -zcvf target.tar.gz [package files]` 进行压缩
-- `tar -zxvf target.tar.gz` 解压文件
-
-<!-- fix Highlights -->
-
-#### 可执行权限
-
-系统内，读、写和可执行权限对应的数字如下所示：
-
-- `r(read)` = 4
-- `w(write)` = 2
-- `x(execute)` = 1
-- no permissions = 0
-
-权限的设置实际上就是上面的数字求和，比如：
-
-- 7(4 + 2 + 1) 读、写、可执行
-
-为文件设置最高权限，在文件的上级目录内执行 `sudo chmod -R 777 [targetFileName]`， `-R` 表示递归（recursive），即所有子文件同步设置权限
-
-
-## 常用工具
-
-### bash 的 url 工具 -- curl
-
-执行 `curl https://www.xxx.com` 就可以发出一个 GET 请求，服务器返回值会在命令行内输出
-
-- `-A` 表示请求头内 `user-agent`
-- `-H` 表示请求头
-- `-b` 用来像服务器发送 cookie，比如 `curl -b 'key=value' https://www.xxx.com`
-- `-d` 用来表示 post 请求的 body 内容
-- `-G` 用来指定 GET 方法，比如 `curl -G -d 'key1=v1' -d 'k2=v2' https://www.xxx.com`，表示发送一个 GET 请求，`https://www.xxx.com?key1=v1&key2=v2`，如果不指定 -G，则会发送一个 POST 请求
-
-
-### VIM
-
-命令模式:
-
-删除
-- `dd` 快速删除当前行
-- `ndd` 比如 `3dd` 开始删除当前三行内容
-
-复制
-- `yy` 快速复制当前行
-- `nyy` 快速复制当前 n 行内容
-- `p` 粘贴内容
-- `ggdG` 删除所有内容，`gg` 光标置于首行，`d` 删除，`G` 光标置于文件末尾行
-
-回退
-- `u` 回退内容
-
-搜索
-- 通过 `/` 进入搜索模式，通过 `n/N` 来跳转到下一个/上一个
-
-
-
-### 软硬链接
-
-在上文中，我们通过软链接来做了一个指向绝对路径的“快捷方式”，这里我们简单区分一下软/硬链接的概念：
-
-- 硬链接：其 `inode`(可以理解为指针) 都指向同一个文件在内存中的区块，这意味着改变链接文件，另一个文件也会同步改变，`ln file hard`
-- 软链接：保存了其代表文件的绝对路径，在内存上有自己独立的区块，访问时会替换自身路径
-
-### 格式化时间
-
-`time=$(date "+%Y%m%d-%H%M%S")` 格式化当前时间，注意 `date` 后面加空格
-
-
-## Troubleshooting
-
-<HighlightWithText text='Q: 在服务器上拉取 github 的代码特别慢？' />{''}
-
-```
-通过配置 hosts 来指定 ip，减少 CDN 寻址时间
-
-通过 https://fastly.net.ipaddress.com/ 来查看指定域名的 IP 地址：
-1. github.com
-2. github.global.ssl.fastly.net
-
-之后将其添加到 hosts 文件内，最后执行 `sudo /etc/init.d/network restart` 刷新设置
-```
-
-<HighlightWithText text='Q: 磁盘被打满的排障思路？' />{''}
-
-通过 `du` 找到占用量大的文件，进行分析
-
-1. 通过监控查看磁盘周期内的磁盘使用情况，检查是否存在用量陡增，观察时间点是否存在发布事件
-2. 在指定服务器上查看磁盘占用情况，重点观察日志文件的磁盘占用
-3. 找到相应文件，执行不同处理
-
-

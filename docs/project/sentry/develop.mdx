@@ -71,6 +71,14 @@ const ProjectDetails = withApi(ProjectDetailsInner)
 
 在 Sentry 内，集成了 StoryBook 来开发、预览和发布组件库，[Getting Started - Page ⋅ Storybook](https://storybook.sentry.dev/?path=/story/getting-started--page)，除此之外，我们还可以在本地通过 `yarn storybook` 来开发 stories。
 
+除此之外，可以在在命令行启动参数内添加 `--pretty --styleguide` 来启动 storybook 服务。(在后端开发时，不建议使用，在 v24 版本后移除了 storybook 目录)
+
+```bash
+
+devserver --workers --pretty --styleguide --debug-server
+
+```
+
 ### Frontend Development Server
 
 在本地可以通过 webpack proxy 技术，调用线上的所有接口，从而降低本地开发的资源消耗，同时能够使用线上的数据进行验证。
@@ -91,12 +99,33 @@ const ProjectDetails = withApi(ProjectDetailsInner)
 
 ## 插件开发
 
-Sentry 内置插件系统，可以通过插件来拓展 Sentry 的功能，比如自动 TAG、Webhooks 等。这里以 [sentry/src/sentry/plugins/sentry_webhooks at master · getsentry/sentry · GitHub](https://github.com/getsentry/sentry/tree/master/src/sentry/plugins/sentry_webhooks) 来学习 Sentry 的插件系统设计。
+Sentry 内置插件系统，可以通过插件来拓展 Sentry 的功能，比如自动 TAG、Webhooks 等。这里以 [sentry/src/sentry/plugins/sentry_webhooks at master · getsentry/sentry · GitHub](https://github.com/getsentry/sentry/tree/master/src/sentry/plugins/sentry_webhooks) 为例学习 Sentry 的插件系统设计。
 
 学习目的在于：
 
 1. 了解 Sentry 插件系统的设计思路
 2. 实现一个插件，来拓展 Sentry 的功能
+
+### Sentry 内添加自建插件
+
+在 Sentry 内，基于 Django 的 [ajango.apps](https://docs.djangoproject.com/zh-hans/4.2/ref/applications/#module-django.apps) 和 [django forms](https://docs.djangoproject.com/zh-hans/4.2/ref/forms/fields/) 来分别**注册应用程序**和**设计表单样式**。
+
+1. 在 `path/to/sentry/src/sentry/plugins/` 内创建插件目录，比如 `my_plugin`，并创建如下文件（其他文件按需创建）：
+
+- `my_plugin/__init__.py`
+- `my_plugin/apps.py` 用于向 django 注册应用程序，需要在 `class Config(AppConfig)` 内定义 `name` 和 `reday()` 方法
+- `my_plugin/plugin.py` 用户编写应用程序实现代码
+
+2. 插件编写完毕之后，还需要完成初始化的步骤：
+
+- 在 `path/to/sentry/src/sentry/conf/server.py` 文件内向 `INSTALLED_APPS` 字段添加 app 名称，比如 `sentry.plugins.my_plugin.apps.MyPluginConfig`
+- **在 `path/to/sentry/src/sentry.egg-info/SOURCES.txt` 文件内添加插件目录，比如 `sentry/plugins/my_plugin/`，这个文件用来打包 Sentry 的 egg 包，如果不添加，会导致插件无法正常加载**
+
+完成后，可以启动 Sentry 服务，在 `settings/Integrations` 内可以看到插件已经注册成功。
+
+### Plugin 配置存储流程
+
+用户在插件集成页面点击 `Save Changes` 之后，将向 `ProjectPluginDetailsEndpoint` 发起 post 请求，最终会在 `ProjectPluginDetailsEndpoint` 内调用 `self.plugin.set_option` 方法，将配置信息存储到表 sentry_projectoptions 内。
 
 ## 基于 API 进行二次开发
 

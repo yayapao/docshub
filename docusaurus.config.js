@@ -36,6 +36,11 @@ const themeConfig = {
     theme: lightCodeTheme,
     darkTheme: darkCodeTheme,
   },
+  docs: {
+    sidebar: {
+      hideable: true,
+    },
+  },
 }
 
 /** @type {import('@docusaurus/types').Config} */

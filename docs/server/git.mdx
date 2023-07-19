@@ -74,6 +74,12 @@ git shortlog -sn
 
 ### tag
 
+:::caution
+
+在创建 tag/branch 时，要避免使用 `~ ^ : , ? [ * \r \n .. @{` 等特殊字符，否则可能会导致 git 无法识别，直接抛出异常。
+
+:::
+
 [git-tags](https://git-scm.com/book/en/v2/Git-Basics-Tagging) 常用命令，主要用于记录里程碑事件，可以看成是一次特殊的 commit
 
 ```shell

@@ -30,6 +30,11 @@ import { DocsHeader } from '/src/components/Layout/DocsHeader'
 
 StoryBook 是一个用于前端构建 UI 组件的工作空间，它适用于任意流行前端框架，这里我们基于 React 进行介绍。
 
+在 StoryBook 内，将文档分为 stories 和 docs 两大类：
+
+- 前者是描述组件的基本单元，后者可以用于描述组件、或者组件应用文档等
+- 写法上存在差别，stories 主要是编写 Meta 和 StoryObj 配置，docs 则更多是开发 React 页面
+
 ### 使用 pnpm + vite
 
 :::caution CORE
@@ -64,7 +69,13 @@ $ npx storybook@latest init -f
 
 **注意安装执行顺序，初始化完毕之后，查看 package.json.scripts 启动脚本**
 
-## 编写一个 story
+### 打包构建
+
+1. 修改打包地址
+
+   storybook 默认执行 `build` 方法后会将产物输出到 `storybook-static`，如需指定输出地址，可以修改构建脚本 `storybook build -o ./dist`
+
+### 编写一个 story
 
 这里我们基于 React + TypeScript 项目展开，在开始前你需要准备好一个 React 组件。
 
@@ -111,14 +122,14 @@ export const Primary: StoryObj<typeof Button> = {
 }
 ```
 
-##### decorators
+#### decorators
 
 `decorators` 用于设置 story 的装饰器，比如组件容器（全局）样式、全局状态等，是一个数组，可以设置多个装饰器
 
 - 对于框架内置的 Provider （比如 MUI 的 ThemeProvider） 可以在 `.storybook/.preview.js` 内设置 decorators
 - 可以在 decorators 内执行 side effect，比如加载数据等，而不用在 args 内进行设置
 
-##### play function
+#### play function
 
 `play` 可以定义组件渲染完成之后，执行的代码块，通常设置在 named export story，可以设置组件的交互行为或者测试场景。在 `play` 方法内，需要用 storybook 内提供的一套方法来获取、操作、交互页面元素。
 

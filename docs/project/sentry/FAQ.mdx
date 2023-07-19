@@ -32,6 +32,37 @@ import { DocsHeader } from '/src/components/Layout/DocsHeader'
   ]}
 />
 
+## Event has no stacktrace details
+
+在 Sentry 实际使用过程发现，页面上存在一些错误没有 stacktrace 展示，进而观察到上报实体内没有 stacktrace 数据。这里针对 Browser JavaScript SDK 先说结论： **ErrorStack 与编程语言强相关，在 Browser JavaScript 内 Error.prototype.stack 属性不是标准属性，因此不是所有浏览器都支持，同时浏览器安全特性、错误发生位置以及错位类型也会直接影响 stacktrace 数据的生成。**
+
+我们对该现象进行更加深入的研究（**注意这里不考虑 SDK 用户自定义集成的影响**），发现该现象的原因有以下几点：
+
+1. 浏览器不支持，stacktrace 数据来源于 window.onerror 事件全局捕获，从 [Error.prototype.stack - JavaScript | MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/stack) 内进行提取，但是 stack 本身不是标准属性，即使大部分现代浏览器都支持，但仍然存在不支持的情况；
+
+![browser-errorstack.png](https://img.joyjoy.cc/html5/browser-errorstack.png)
+
+2. 浏览器的安全特性，出于安全考虑，浏览器会阻止跨域请求 stacktrace 数据，因此当页面内存在跨域请求时，浏览器会阻止 stacktrace 数据的上报；
+
+![sentry-cross-orgin-stacktrace.png](https://img.joyjoy.cc/project/sentry-cross-orgin-stacktrace.png)
+
+3. 错误发生在不包含任何函数脚本的地方，比如 `<script>console.log(1)</script>`，此时浏览器不会生成 stacktrace 数据；
+
+:::info Other Reasons
+
+This could also occur if the stack trace was somehow manipulated or removed, perhaps due to privacy reasons, data normalization, or if the error has occurred in a part of the script that doesn't contain any functions.
+
+:::
+
+4. 在 Sentry 内，如果不是以下类型的错误，不会生成 stacktrace 数据：
+
+- an instance of DOMError
+- an instance of DOMException
+- an instance of Event
+- an instance of Error
+- a valid ErrorEvent (one with an error property)
+- a plain Object
+
 ## 信息被 `[Filtered]` 占位
 
 **Q:** 在查看错误字段时，发现信息被 `[Filtered]` 占位，并展示 `Replaced because PII rule "@xxxxxx:filter"`

@@ -113,7 +113,7 @@ Turborepo 会根据框架自动处理环境变量，但是我们仍然能够通�
 
 ## 设置语法规范
 
-根据不同 Lint 工具的扩展方式，我们可以进行相应设计。将各个工具的配置作为 internal package 进行导出，由其他项目进行引用。
+根据不同 Lint 工具的扩展方式，我们可以进行相应设计。将各个工具的配置作为 internal package 进行导出，在其他项目内进行引用即可。
 
 ### tsconfig
 
@@ -144,6 +144,27 @@ The eslint-config- prefix can be omitted from the configuration name. For exampl
 
 prettier 用来规范代码风格，和 tsconfig 类似，我们直接将文件导出，在项目内通过 `require([path])` 进行导入
 
+## Build the output
+
+### 根据开发内容选择打包方式
+
+1. **发布一个 React UI Library**
+
+   在踩坑 vite, rollup 等打包工具后，我发现当开发 React 组件时，我们并不需要经历寻找依赖、tree shake、打包、压缩等过程，我们仅需要将组建发布到 npm 上，当用户引用就像在本地引用一样。
+
+   为了更验证这个观点，我查看了 [material-ui](https://github.com/mui/material-ui.git) 和 [ant-design](https://github.com/ant-design/ant-design) 的产物，发现它们仅完成了编辑工作，并没有说将组件打包成一个文件。这点符合开发直觉，还有一个点在于，如果你基于 React（或者其他组件库）进行开发，通常我们在项目内会安装对应的依赖，这些依赖会被打包到最终产物内，因此我们不需要再次打包。
+
+   因此，在发布 React UI Library 时，我们仅需要将 ts 文件编译成 js 文件即可。
+
+   - 可以使用 [tsup](https://tsup.egoist.dev/) 作为编译工具，执行 `tsup`
+   - 或者使用原生工具 `tsc --project tsconfig.json`
+
+   :::caution
+
+   使用 `.tsx` 来引入/导出组件，避免出现错误 [javascript - Uncaught Error: Invariant Violation: Element type is invalid: expected a string (for built-in components) or a class/function but got: object - Stack Overflow](https://stackoverflow.com/questions/34130539/uncaught-error-invariant-violation-element-type-is-invalid-expected-a-string)
+
+   :::
+
 ## FAQ
 
 ### Can't find module 'next/babel'
@@ -157,19 +178,3 @@ prettier 用来规范代码风格，和 tsconfig 类似，我们直接将文件�
 [1:1 error Definition for rule '@typescript-eslint/no-unused-vars' was not found @typescript-eslint/no-unused-vars · Issue #379 · typescript-eslint/typescript-eslint](https://github.com/typescript-eslint/typescript-eslint/issues/379)
 
 在引入自定义的 eslint package 后，发现 IDE 报上述错误，通过设置 `plugins: ["@typescript-eslint"]` 解决
-
-### 根据开发内容选择打包方式
-
-1. **发布一个 React UI Library**
-
-   在踩坑 vite, rollup 等打包工具后，我发现当开发 React 组件时，我们并不需要经历寻找依赖、tree shake、打包、压缩等过程，我们仅需要将组建发布到 npm 上，当用户引用就像在本地引用一样。
-
-   为了更验证这个观点，我查看了 [material-ui](https://github.com/mui/material-ui.git) 和 [ant-design](https://github.com/ant-design/ant-design) 的产物，发现它们仅完成了编辑工作，并没有说将组件打包成一个文件。这点符合开发直觉，还有一个点在于，如果你基于 React（或者其他组件库）进行开发，通常我们在项目内会安装对应的依赖，这些依赖会被打包到最终产物内，因此我们不需要再次打包。
-
-   因此，在发布 React UI Library 时，我们只用 `tsc --project tsconfig.json` 将 ts 文件编译成 js 文件即可。
-
-   :::caution
-
-   使用 `.tsx` 来引入/导出组件，避免出现错误 [javascript - Uncaught Error: Invariant Violation: Element type is invalid: expected a string (for built-in components) or a class/function but got: object - Stack Overflow](https://stackoverflow.com/questions/34130539/uncaught-error-invariant-violation-element-type-is-invalid-expected-a-string)
-
-   :::

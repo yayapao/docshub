@@ -121,11 +121,20 @@ Sentry 内置插件系统，可以通过插件来拓展 Sentry 的功能，比�
 - 在 `path/to/sentry/src/sentry/conf/server.py` 文件内向 `INSTALLED_APPS` 字段添加 app 名称，比如 `sentry.plugins.my_plugin.apps.MyPluginConfig`
 - **在 `path/to/sentry/src/sentry.egg-info/SOURCES.txt` 文件内添加插件目录，比如 `sentry/plugins/my_plugin/`，这个文件用来打包 Sentry 的 egg 包，如果不添加，会导致插件无法正常加载**
 
-完成后，可以启动 Sentry 服务，在 `settings/Integrations` 内可以看到插件已经注册成功。
+完成后，可以启动 Sentry 服务，在 `[project]/settings/Integrations` 内可以看到插件已经注册成功。
 
 ### Plugin 配置存储流程
 
 用户在插件集成页面点击 `Save Changes` 之后，将向 `ProjectPluginDetailsEndpoint` 发起 post 请求，最终会在 `ProjectPluginDetailsEndpoint` 内调用 `self.plugin.set_option` 方法，将配置信息存储到表 sentry_projectoptions 内。
+
+### 部署插件
+
+当本地一个插件开发完成之后，走正常的打包流程，会将插件打包到 egg 包内，这个 egg 包会被 Sentry 服务加载，从而实现插件的部署。
+
+**如果我们是拆分 Sentry 服务进行独立部署的话，需要更新以下服务：**
+
+- web 对应 `run web` 命令
+- celery.default 对应 `run worker -Q 16 default` 命令
 
 ## 基于 API 进行二次开发
 

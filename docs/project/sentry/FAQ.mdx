@@ -63,6 +63,53 @@ This could also occur if the stack trace was somehow manipulated or removed, per
 - a valid ErrorEvent (one with an error property)
 - a plain Object
 
+## `allowUrls` not working
+
+在 Sentry 实际使用过程中，发现 `allowUrls` 配置并没有生效，导致 Sentry 无法正确的过滤掉指定的错误信息。这里的疑惑点在于，**Sentry 内通过 allowUrls 和 stacktrace 的 url 进行匹配，如果错误没有 stacktrace 信息，应该默认过滤？**
+
+实际上，在 Sentry 内对于没有 stacktrace 的错误，或者在解析 frames 时发生错误的时候，都会上报。这也是导致 allowUrls 失效的直接原因，参考下面源码：
+
+```js
+// 判断是否需要丢弃该错误，如果命中 allowUrls 则丢弃
+private _shouldDropEvent(event: Event, options: Partial<InboundFiltersOptions>): boolean {
+  if (!this._isAllowedUrl(event, options)) {
+    return true;
+  }
+  return false;
+}
+
+// 这里读取 options.allowUrls，并从 event 内获取 url 进行匹配
+// 注意：这里的 url 是从 stacktrace 内获取的，如果没有 stacktrace 则为 null，此时，结果为 true
+private _isAllowedUrl(event: Event, options: Partial<InboundFiltersOptions>): boolean {
+  // TODO: Use Glob instead?
+  if (!options.allowUrls || !options.allowUrls.length) {
+    return true;
+  }
+  const url = this._getEventFilterUrl(event);
+  return !url ? true : options.allowUrls.some(pattern => isMatchingPattern(url, pattern));
+}
+
+
+// 从 stacktrace 内获取 url，如果没有 stacktrace 则返回 null
+private _getEventFilterUrl(event: Event): string | null {
+  try {
+    if (event.stacktrace) {
+      const frames = event.stacktrace.frames;
+      return this._getLastValidUrl(frames);
+    }
+    if (event.exception) {
+      const frames =
+        event.exception.values && event.exception.values[0].stacktrace && event.exception.values[0].stacktrace.frames;
+      return this._getLastValidUrl(frames);
+    }
+    return null;
+  } catch (oO) {
+    logger.error(`Cannot extract url for event ${getEventDescription(event)}`);
+    return null;
+  }
+}
+```
+
 ## 信息被 `[Filtered]` 占位
 
 **Q:** 在查看错误字段时，发现信息被 `[Filtered]` 占位，并展示 `Replaced because PII rule "@xxxxxx:filter"`

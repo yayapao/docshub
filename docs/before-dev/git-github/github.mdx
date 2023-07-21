@@ -78,6 +78,10 @@ jobs:
           target: ${{ vars.STORY_TARGET_PATH }}
 ```
 
+当推送 tags 后，github action 会自动触发，执行脚本
+
+![github-action-result.png](https://img.joyjoy.cc/project/github-action-result.png)
+
 ### secrets & vars & env
 
 在配置文件内，我们分别通过 `secrets` 和 `vars` 来访问预设的环境变量，它们需要在代码仓库内进行设置，如下图：
@@ -110,7 +114,7 @@ Webhooks allow you to build or set up integrations
 
 ![webhooks-xmind.png](https://img.joyjoy.cc/project/webhooks-xmind.png)
 
-## Config webhooks
+### Config webhooks
 
 首先，我们需要在 Github 上进行设置：服务器地址，参数类型，secret，触发事件以及是否激活
 
@@ -121,7 +125,7 @@ Webhooks allow you to build or set up integrations
 
 **注意：webhooks Payload URL 暂不支持域名转发，可以通过 host:port 来代替**
 
-### Secret
+#### Secret
 
 类似 `token`, 用来告诉服务器当前请求来自于 Github
 
@@ -129,7 +133,7 @@ Webhooks allow you to build or set up integrations
 
 推荐使用 `X-Hub-Signature-256` 以提高安全性
 
-## Run a server
+### Run a server
 
 在服务器上，需要暴露给 GitHub 一个 POST 接口，它主要干三件事：
 
@@ -179,7 +183,7 @@ export class HooksController {
 }
 ```
 
-## Test webhooks
+### Test webhooks
 
 一切准备就绪之后，我们还需要验证自己搭建的流程是否可行，可以直接在 Github 上进行查看，我们可以查看 Github 发起请求的具体信息（Headers 和 body）以及服务器返回结果
 

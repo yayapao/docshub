@@ -13,8 +13,8 @@ const beforeDevelopmentSidebar = {
       label: 'Git & GitHub',
       collapsed: true,
       items: [
-        `${frontendPrefix}/git-github/git`,
-        `${frontendPrefix}/git-github/github`,
+        `${frontendPrefix}git-github/git`,
+        `${frontendPrefix}git-github/github`,
       ],
     },
     {

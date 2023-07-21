@@ -10,6 +10,15 @@ const beforeDevelopmentSidebar = {
     },
     {
       type: 'category',
+      label: 'Git & GitHub',
+      collapsed: true,
+      items: [
+        `${frontendPrefix}/git-github/git`,
+        `${frontendPrefix}/git-github/github`,
+      ],
+    },
+    {
+      type: 'category',
       label: 'Cloud Infrastructure',
       collapsed: true,
       items: [`${cloudPrefix}/vercel/entry`],

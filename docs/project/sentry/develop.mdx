@@ -93,6 +93,15 @@ devserver --workers --pretty --styleguide --debug-server
 
 同时，如果遇到 **"Your connection is not private"** 的问题，这是由于本地开发证书不被浏览器信任，可以通过 `brew install mkcert` 和 `yarn mkcert-install` 来安装本地开发信任证书解决。
 
+:::caution
+
+安装之后，可能其他服务会出现问题：localhost 自动由 http 转换成 https，导致其他服务无法正常访问。
+
+- 访问 `chrome://net-internals/#hsts` 在 `Delete domain security policies` 内删除 localhost 的安全策略
+- 或者将 `mkcert` 生成的证书删除，然后重启浏览器即可
+
+:::
+
 最后，执行 `yarn dev-ui` 启动本地开发服务，访问 `[org].dev.getsentry.net:7999` 即可
 
 **我们这里以 organization Name 的方式进行登录，来建立与 Sentry.io 的联系**

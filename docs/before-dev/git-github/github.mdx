@@ -1,0 +1,186 @@
+---
+id: github
+title: ''
+sidebar_label: Github
+---
+
+import { DocsHeader } from '/src/components/Layout/DocsHeader'
+
+<DocsHeader
+  title="Github"
+  description="GitHub是一个在线软件源代码托管服务平台，使用Git作为版本控制软件"
+  tags={['codebase', 'git', 'github']}
+  links={[]}
+/>{' '}
+
+## Github Actions
+
+Github Actions 是 Github 提供的一套 CI/CD 解决方案。
+
+**本质上，就是我们通过事件来触发预设脚本，使其能够在 Github 的虚拟机上执行一些自动化的操作。配置文件以 `.yml` 的形式放在 .github 文件夹下，配置文件的编写与 dockerfile 类似。**基于此，Github Actions 提出了一些概念：
+
+- workflow: 工作流，一系列任务的集合
+- job: 任务，工作流中的一个步骤，默认是**并行执行**
+- step: 步骤，任务中的一个执行单元
+- action: 动作，步骤中的一个执行命令，可以在理解成函数，在 [GitHub Actions](https://github.com/actions) 可以找到很多现成的 action
+- event: 事件，触发工作流的事件，可以是手动执行或者通过定时器执行
+
+我们通过一个综合示例进行理解：
+
+```yml
+# workflow name
+name: deploy-srotybook
+
+# on-event 设置触发事件，当 push tags 且，tag 以 storybook- 开头时触发
+on:
+  push:
+    tags:
+      - 'storybook-*'
+
+# env 设置环境变量，这里设置是全局通用
+env:
+  TARGET_FILENAME: ''
+
+# jobs 设置任务
+jobs:
+  # job 名称
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # This action checks-out your repository under $GITHUB_WORKSPACE, so your workflow can access it.
+      # 切换到当前仓库根目录
+      - uses: actions/checkout@v3
+      # setup nodejs version
+      - name: setup-nodejs-version
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16.16.0
+      # 设置全局变量
+      - name: setting variables
+        run: |
+          dt=$(date +'%Y%m%d') 
+          echo "TARGET_FILENAME=dist-ga-$dt.tar.gz" >> "$GITHUB_ENV"
+      - name: install dependencies
+        run: npm i -g pnpm && pnpm install
+      - name: build the storybook
+        run: pnpm run build --filter story
+      - name: package the results
+        if: ${{ env.TARGET_FILENAME != '' }}
+        run: tar -cvf ${{ env.TARGET_FILENAME }} /home/runner/work/joy-ui/joy-ui/apps/story/dist/*
+      # 通过 scp 将文件产物发送到服务器上，这里 secrets/vars 是在仓库设置中配置的
+      - name: send result to remote
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.REMOTE_HOST }}
+          username: ${{ secrets.REMOTE_USER }}
+          key: ${{ secrets.SSH_SECRET_KEY }}
+          source: ${{ env.TARGET_FILENAME }}
+          target: ${{ vars.STORY_TARGET_PATH }}
+```
+
+### secrets & vars & env
+
+在配置文件内，我们分别通过 `secrets` 和 `vars` 来访问预设的环境变量，它们需要在代码仓库内进行设置，如下图：
+
+![github-action-setting.png](https://img.joyjoy.cc/project/github-action-setting.png)
+
+[Variables - GitHub Docs](https://docs.github.com/en/actions/learn-github-actions/variables) 环境变量设置和访问可以在脚本内进行，其同名变量的访问优先级遵循就近原则，即 `action > steps > jobs > env`。同时我们可以在脚本动态更改环境变量，如上面的 `setting variables` 步骤，通过 `echo "TARGET_FILENAME=value" >> "$GITHUB_ENV"` 来覆盖。
+
+### FAQ
+
+#### ssh: handshake failed: ssh: unable to authenticate, attempted methods [none publickey], no supported methods remain
+
+在通过 scp-action 上传文件时报错，通常是由于 ssh key 配置不当导致，可以参考 [scp setting ssh key](https://github.com/appleboy/ssh-action#setting-up-a-ssh-key) 来进行配置，需要注意：**推荐在本地生产 pub 和 private key，之后将 private 放到 Github Action Setting 内，将 pub 内容写到服务器 authorized_keys，⚠️ 不要直接在服务器上生成 ssh key**
+
+## webhooks
+
+:::note what's webhooks?
+Webhooks allow you to build or set up integrations
+:::
+
+在日常开发过程中，你一定会有这样的困扰：有一些流程化的工作，甚至是一些很小的改动，都会经历：开发 - 测试 - 提交 - 打包 - 上传 - 编译 - 发布等过程，频繁的重复，大大地降低了我们开发的乐趣！
+
+为此，Git 通过提供 webhooks 来使我们具备可集成的能力。通俗来说，就是 Github 针对你的一系列活动，提供了一些“钩子”，
+当你进行某项活动时（比如：新建一个 tag），Github 会主动向你的服务器发送一个请求，通知你指定事件正在被触发，通过对请求进行捕获和分析，你可以通过脚本等方式在服务器上执行后续步骤。
+
+**关键点：**
+
+- 配置 `web hooks.Payload URL` 时，注意 Github 目前不支持转发服务(Redirect)，如果你在服务器通过 nginx 配置了转发，且配置 Payload URL 为转发域名，则 Github 会返回 **502**，解决方案：暴露 `host:port/path`
+- 注意 Github 对 secret 的加密方式和对比验证
+
+![webhooks-xmind.png](https://img.joyjoy.cc/project/webhooks-xmind.png)
+
+## Config webhooks
+
+首先，我们需要在 Github 上进行设置：服务器地址，参数类型，secret，触发事件以及是否激活
+
+![webhooks_setting.png](https://img.joyjoy.cc/project/webhooks_setting.png)
+
+1. 设置 Git 需要监听哪些事件来触发 webhooks
+2. 在服务器内添加路由，用来接受和处理 webhooks 负载（请求）
+
+**注意：webhooks Payload URL 暂不支持域名转发，可以通过 host:port 来代替**
+
+### Secret
+
+类似 `token`, 用来告诉服务器当前请求来自于 Github
+
+当设置 `secret` 之后，POST 请求会带上 `X-Hub-Signature` 和 `X-Hub-Signature-256` 的请求头
+
+推荐使用 `X-Hub-Signature-256` 以提高安全性
+
+## Run a server
+
+在服务器上，需要暴露给 GitHub 一个 POST 接口，它主要干三件事：
+
+1. 接受 Github 的请求，获取请求数据
+2. 验证 secret 和仓库信息
+3. 执行脚本
+
+> Talk is cheap, show me the code!
+
+```typescript
+// 关键代码
+// common.ts, see https://docs.github.com/cn/developers/webhooks-and-events/securing-your-webhooks for details
+export function verifyToken(
+  bodyString: string,
+  secret: string,
+  signature: string
+) {
+  // 编码 secret
+  const verifyToken = HmacSHA256(bodyString, secret).toString()
+  return signature === `sha256=${verifyToken}`
+}
+
+// hooks.control.ts
+@Controller('/hooks')
+export class HooksController {
+  constructor(private hooksService: HooksService) {}
+  @Post()
+  async reciveHooks(@Body() data: any, @Headers() h: any) {
+    const signature = h['x-hub-signature-256'] || h['X-Hub-Signature-256']
+    // 验证通过
+    if (verifyToken(JSON.stringify(data), hooksSecret, signature)) {
+      const { repository } = data
+      // 如果是指定仓库则执行响应的打包命令
+      if (repository && repository.name === 'cms-apis') {
+        try {
+          // 执行后续步骤
+          this.hooksService.build('release')
+          return this.hooksService.successed()
+        } catch (error) {
+          Logger.error(error)
+          return this.hooksService.failed()
+        }
+      }
+    }
+    return this.hooksService.failed('Verify Failed!')
+  }
+}
+```
+
+## Test webhooks
+
+一切准备就绪之后，我们还需要验证自己搭建的流程是否可行，可以直接在 Github 上进行查看，我们可以查看 Github 发起请求的具体信息（Headers 和 body）以及服务器返回结果
+
+![webhooks_test.png](https://img.joyjoy.cc/project/webhooks_test.png)

@@ -91,7 +91,9 @@ devserver --workers --pretty --styleguide --debug-server
 
 在开始之前，先要安装 [Get Cookie Sync for Chrome](https://chrome.google.com/webstore/detail/sentry-cookie-sync/ojbolbbmkndcafmblpelfdhkggpmdhnm?hl=en&authuser=0) 用来共享 Sentry 和本地开发环境 Cookie。
 
-同时，如果遇到 **"Your connection is not private"** 的问题，这是由于本地开发证书不被浏览器信任，可以通过 `brew install mkcert` 和 `yarn mkcert-install` 来安装本地开发信任证书解决。
+同时，如果遇到 **"Your connection is not private"** 的问题，这是由于本地开发证书不被浏览器信任，可以通过 `brew install mkcert`，并在项目根目录下执行 `yarn mkcert-install` 来安装本地开发信任证书解决。证书会被安装在 `config/localhost.pem` 和 `config/localhost-key.pem`。
+
+**注意，需要根据开发访问的网站来修改 package.json 内证书的授权地址！**
 
 :::caution
 

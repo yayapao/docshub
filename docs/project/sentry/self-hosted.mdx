@@ -327,3 +327,10 @@ errors_local
 
 transactions_local
 ```
+
+## 注意事项
+
+1. 更新 sentry web 服务后（导致 podIp 发生变化），需要在 relay 内重新配置 upstream，否则会出现无法上报的情况；
+2. memcached 服务需要挂载到域名下，因此更新分组后需要重新配置 memcached 域名的后端容器；
+3. 开发 sentry plugins 后需要更新 web 和 worker-default 分组，分别对应 `sentry run web` 和 `sentry run worker default` 启动命令；
+4. Sentry 服务都要挂在同一个分布式文件地址，否则会出现 SourceMaps 文件上传失败的情况；

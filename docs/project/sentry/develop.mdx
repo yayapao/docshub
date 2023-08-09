@@ -127,7 +127,7 @@ Sentry 内置插件系统，可以通过插件来拓展 Sentry 的功能，比�
 
 ### Sentry 内添加自建插件
 
-在 Sentry 内，基于 Django 的 [ajango.apps](https://docs.djangoproject.com/zh-hans/4.2/ref/applications/#module-django.apps) 和 [django forms](https://docs.djangoproject.com/zh-hans/4.2/ref/forms/fields/) 来分别**注册应用程序**和**设计表单样式**。
+在 Sentry 内，基于 Django 的 [django.apps](https://docs.djangoproject.com/zh-hans/4.2/ref/applications/#module-django.apps) 和 [django forms](https://docs.djangoproject.com/zh-hans/4.2/ref/forms/fields/) 来分别**注册应用程序**和**设计表单样式**。
 
 1. 在 `path/to/sentry/src/sentry/plugins/` 内创建插件目录，比如 `my_plugin`，并创建如下文件（其他文件按需创建）：
 
@@ -154,6 +154,16 @@ Sentry 内置插件系统，可以通过插件来拓展 Sentry 的功能，比�
 
 - web 对应 `run web` 命令
 - celery.default 对应 `run worker -Q 16 default` 命令
+
+### 回调数据格式
+
+在 Sentry 内，能够配置多种告警规则来触发回调动作，比如：新创建一个错误、错误在 1 分钟内达到 N 次等，不同的规则下，回调数据也会存在差异。还在 Sentry 在内部尽量抹平这种差异，尽可能提供统一的回调数据格式。
+
+最基础的是指定 Event 时间触发，比如新发生一个 Event。通常它会返回：`project_id`，`project_name`，`triggering_rules`，`url` 以及**具体的 event 信息**。
+
+而对于触发 N 次的类型，Sentry 会将最后一次导致规则触发的 event 返回，这样在数据格式上与 Event 触发类型保持一致。但是它会返回更多的 TAGs 和上下文信息，开发者可以按需自取。
+
+具体示例参考 [Notification Integration Data](https://github.com/YaYaPao/docscripts/blob/main/sentry/data/webhook_data.md)
 
 ## 基于 API 进行二次开发
 

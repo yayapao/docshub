@@ -240,6 +240,24 @@ group by date_trunc('month', date_joined)
 order by date_trunc('month', date_joined)
 ```
 
+### FAQ
+
+#### duplicate key value violates unique constraint "xxx"
+
+在使用 `INSERT INTO` 语句时，如果出现 `duplicate key value violates unique constraint "xxx"` 错误，一种情况是手动对该表进行插入，导致 PG 内部维护的 OID 认为数据已经存在。
+
+查看表结构发现，其 ID 字段默认值为 `nextval('xxx_id_seq'::regclass)`，表示递增序列并返回新值。如果手动插入数据，会导致序列值不一致，从而出现上述错误。
+
+:::caution
+
+这里的手动插入，特指 `INSERT INTO table_name (xxx) VALUES (xxx)` 这种直接修改字段的方式
+
+:::
+
+解决方案：
+
+- 通过 `select setval('xxx_id_seq', 1000, true);` 将序列值重置为 1000（拿最新的值即可，这里 1000 为示例）
+
 ## Redis
 
 :::info

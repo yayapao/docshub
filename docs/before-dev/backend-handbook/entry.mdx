@@ -1,0 +1,34 @@
+---
+id: entry
+title: ''
+sidebar_label: Backend
+---
+
+import { DocsHeader } from '/src/components/Layout/DocsHeader'
+
+<DocsHeader
+  title="Backend Handbook"
+  description="This guide covers how we write basic backend code."
+  tags={['frontend']}
+  links={[]}
+/>{' '}
+
+:::info what's source?
+
+后端开发最佳实践和平时的工程经验。
+
+:::
+
+## 配置
+
+1. 项目配置文件统一放在 `config` 目录下，根据不同环境来进行区分，比如 `test.[env | yaml | js]`, `development.[env | yaml | js]` 等，**生产环境的配置应该放在服务器/配置中心，不要放在本地**；
+2. 设置/读取 config 应该从业务逻辑中抽离，封窗成 package/module，这样可以方便在不同的项目中复用；
+
+## 服务
+
+### 消费者服务
+
+1. 消费者服务应该是无状态的，不应该在服务端存储任何数据，所有的数据都应该存储在消息队列中；
+2. 消费者服务应该是幂等的，即使同一条消息被消费多次，也不会产生任何副作用；
+3. 消费者服务应该是可重试的，如果消费失败，应该可以重试，直到消费成功为止；
+4. 消费者应该添加速率控制和批处理，以提交消费效率，其控制参数应当放在配置文件内，参考 [docscripts/application/consumer/consumer.ts at main · YaYaPao/docscripts](https://github.com/YaYaPao/docscripts/blob/main/application/consumer/consumer.ts)

@@ -23,6 +23,11 @@ import { DocsHeader } from '/src/components/Layout/DocsHeader'
   ]}
 />{' '}
 
+React 无疑是 JavaScript 生态中浓墨重彩的一笔，它的出现，彻底改变了前端开发的方式，它的思想，影响了整个前端生态。那么，我希望通过更加深入阅读 React 源码，来探索 React 的秘密，从而更加深入地理解 React 的思想。
+
+1. React 解决了什么问题？
+2. React 做好了哪些工作，使它得以如此流行？
+
 ## React 解决的问题
 
 在最开始，React 官方是这样描述 React 的：
@@ -70,7 +75,7 @@ _进程&线程_
 
 关于以上知识，我们拓展一下，比如现在你有一个 API 服务跑在 80 端口上，实际上计算机就启动了一个进程，这个进程就是你的 API 服务，而这个进程中，可能有多个线程，比如你的 API 服务中有一个线程负责处理请求，一个线程负责写日志，一个线程负责读取数据库，这些线程都是在一个进程中，它们共享进程的资源，比如内存，文件句柄等。
 
--协程-
+_协程_
 
 思考下 NodeJS 生态和 Go 生态，不难发现“天然”基于协程设计的 Goroutine，没有令人烦恼的 promise/async/await 这些异步方法的编写，同时也不会出现回调地狱，这就是协程的魅力。同时，协程更加轻量，非抢占式，不需要上下文切换（我理解是当程序执行时，线程切换时不需要切换上下文指针，因为协程本身能够保留上一次的调用状态），不需要内核介入，所以它的性能更高。
 
@@ -91,3 +96,32 @@ _进程&线程_
 **已知 JavaScript 是单线程的，为什么还说 React Fiber？两种说法不是矛盾的吗？**
 
 在 React 中，Fiber 是一种将可中断的任务切片处理的一种方式，这种方式可以被认为是一种协程，但是它并不是 JavaScript 中的协程，因为 JavaScript 是单线程的，它只是利用了浏览器的空闲时间来执行任务，这样就可以将一个大的任务拆分成很多小的任务，每次执行一个小任务，然后将控制权交还给浏览器，这样就可以实现**增量渲染**，从而提升用户体验。
+
+### 核心工作原理-双缓存
+
+:::caution 双缓存
+
+在内存中构建，并完成替换的技术叫做双缓存
+
+:::
+
+想想如何没有双缓存会发生什么？用户产生交互后，浏览器先将新页面挂载，然后通过计算得出差异，再将差异更新到页面上，假设这个过程需要过量计算，或者在这个过程中用户产生了新的交互，那么就会出现明显的页面卡顿/闪烁的现象。
+
+**而采用双缓存技术，我们可以将计算和渲染分离，在内容中构建出新的页面，之后直接替换旧的页面，这样就可以避免页面卡顿/闪烁的现象。**
+
+![double-buffer.png](https://img.joyjoy.cc/react/double-buffer.png)
+
+在 React 中，双缓存意味着最多需要维持两套 Fiber 树。一套是当前屏幕上显示内容的 Fiber 树，称为 current Fiber 树，另一套是准备渲染的 Fiber 树，称为 workInProgress Fiber 树。树与树之间，通过 `alternate` 属性进行连接。
+
+React 应用的根节点为 **fiberRoot**，其 current 指针指向的树，就是 current Fiber Tree。一个 React 项目只有一个 fiberRoot。与之需要辨明得是 - **rootFiber**。通过调用 `ReactDOM.render` 方法创建的节点是 rootFiber，一个 React 项目内可以同时存在多个 rootFiber。
+
+1. fiberRoot 通过改变 current 指针，能够将 current Fiber Tree 和 workInProgress Fiber Tree 进行切换，从而实现双缓存。这个过程发生在 `commit` 阶段；
+2. workInProgress Fiber Tree 通过 `alternate` 属性，能够与 current Fiber Tree 进行连接。这个过程发生在 `render` 阶段；
+
+## 本地调试
+
+参考 [How to Contribute – React](https://legacy.reactjs.org/docs/how-to-contribute.html)，我们可以通过以下步骤进行本地调试：
+
+1. `git clone git@github.com:facebook/react.git` 到本地；
+2. 进入本地仓库后，执行 `yarn install` 安装依赖；
+3.

@@ -124,4 +124,48 @@ React 应用的根节点为 **fiberRoot**，其 current 指针指向的树，就
 
 1. `git clone git@github.com:facebook/react.git` 到本地；
 2. 进入本地仓库后，执行 `yarn install` 安装依赖；
-3.
+3. 执行 `yarn build react/index,react/jsx,react-dom/index,scheduler --type=NODE` 编译原文件；
+4. 进入 `react, react-dom, scheduler` 对应目录，执行 `yarn link`
+5. 进入项目内，执行 `yarn link react react-dom scheduler`，这样就可以将本地的 react, react-dom, scheduler 与项目内的 react, react-dom, scheduler 进行关联，从而实现本地调试；
+
+```bash
+# 注意，现在产物位于 build/oss-stable 目录下，与官网有一定差异，其他产物同理
+cd build/oss-stable/scheduler
+yarn link
+
+# link 成功后，会打印如下信息：
+# yarn link v1.13.0
+# success Registered "scheduler".
+# info You can now run `yarn link "scheduler"` in the projects where you want to use this package and it will be used instead.
+
+```
+
+### 准备 JDK 环境
+
+在执行 build 过程中，需要依赖 java runtime，因此需要确保 JDK 已安装，并且版本满足要求。这里我记录如何解决 MacOS 下，JDK 版本不匹配的问题。
+
+在 build 过程中，发现 JDK Runtime 版本不满足要求，通过 `java -version` 查看，发现版本过低导致，因此需要升级 JDK 版本。
+
+```bash
+brew info openjdk
+
+brew install openjdk
+
+# 下载完成之后，进入 /Library/Java/JavaVirtualMachines 查看当前版本文件，之后将最新下载的版本通过软链接的方式进行替换
+# 在此之前可以考虑删除 /Library/Java/JavaVirtualMachines 目录下的其他旧版本文件
+sudo ln -sfn /usr/local/opt/openjdk@20/libexec/openjdk.jdk /Library/Java/JavaVirtualMachines/openjdk.jdk
+
+# 之后进入 /Library/Java/JavaVirtualMachines/openjdk.jdk/Contents/Home 查看版本，发现版本已经更新
+# 编辑 ~/.bash_profile 文件
+touch .bash_profile
+open -e .bash_profile
+
+# 在文件中添加如下内容
+JAVA_HOME="/Library/Java/JavaVirtualMachines/openjdk.jdk/Contents/Home"
+export JAVA_HOME
+CLASS_PATH="$JAVA_HOME/lib"
+PATH=".$PATH:$JAVA_HOME/bin"
+
+# 刷新 .bash_profile 文件，即可完成替换
+source .bash_profile
+```

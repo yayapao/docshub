@@ -140,6 +140,12 @@ Sentry 内置插件系统，可以通过插件来拓展 Sentry 的功能，比�
 - 在 `path/to/sentry/src/sentry/conf/server.py` 文件内向 `INSTALLED_APPS` 字段添加 app 名称，比如 `sentry.plugins.my_plugin.apps.MyPluginConfig`
 - **在 `path/to/sentry/src/sentry.egg-info/SOURCES.txt` 文件内添加插件目录，比如 `sentry/plugins/my_plugin/`，这个文件用来打包 Sentry 的 egg 包，如果不添加，会导致插件无法正常加载**
 
+3. 配置插件展示 icon：
+
+- 向 logos 目录添加 svg 图片，比如 `src/sentry/static/sentry/images/logos/[PLUGIN_CONFIG_KEY].svg`
+- 在 `static/app/plugins/components/pluginIcon.tsx` 文件内引入图片，并配置`ICON_PATHS`
+- 修改 `path/to/sentry/src/sentry.egg-info/SOURCES.txt`，保证打包内容包含该图片
+
 完成后，可以启动 Sentry 服务，在 `[project]/settings/Integrations` 内可以看到插件已经注册成功。
 
 ### Plugin 配置存储流程
@@ -158,6 +164,12 @@ Sentry 内置插件系统，可以通过插件来拓展 Sentry 的功能，比�
 ### 回调数据格式
 
 在 Sentry 内，能够配置多种告警规则来触发回调动作，比如：新创建一个错误、错误在 1 分钟内达到 N 次等，不同的规则下，回调数据也会存在差异。还在 Sentry 在内部尽量抹平这种差异，尽可能提供统一的回调数据格式。
+
+:::caution
+
+数据回调的具体字段，在不同的版本会有所差异
+
+:::
 
 最基础的是指定 Event 时间触发，比如新发生一个 Event。通常它会返回：`project_id`，`project_name`，`triggering_rules`，`url` 以及**具体的 event 信息**。
 

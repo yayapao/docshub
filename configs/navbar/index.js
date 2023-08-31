@@ -72,6 +72,12 @@ const navbarConfig = {
       'aria-label': 'showcase',
     },
     {
+      className: 'header-storybook-link',
+      position: 'right',
+      'aria-label': 'storybook',
+      href: 'https://doc.joyjoy.cc/story',
+    },
+    {
       href: 'https://github.com/YaYaPao',
       className: 'header-github-link',
       position: 'right',

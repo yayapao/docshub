@@ -34,6 +34,16 @@ const navbarConfig = {
           activeBaseRegex: '/docs/before-dev',
         },
         {
+          label: 'JavaScript',
+          to: '/docs/programming-language/javascript/entry',
+          activeBaseRegex: '/docs/programming-language/javascript/entry',
+        },
+        {
+          label: 'React',
+          to: '/docs/programming-language/react/entry',
+          activeBaseRegex: '/docs/programming-language/react/entry',
+        },
+        {
           label: 'Node.js',
           to: '/docs/programming-language/nodejs/entry',
           activeBaseRegex: '/docs/programming-language/nodejs',
@@ -42,11 +52,6 @@ const navbarConfig = {
           label: 'Golang',
           to: '/docs/programming-language/golang/entry',
           activeBaseRegex: '/docs/programming-language/golang',
-        },
-        {
-          label: 'JavaScript',
-          to: '/docs/programming-language/javascript/entry',
-          activeBaseRegex: '/docs/programming-language/javascript/entry',
         },
         {
           label: 'HTML5',

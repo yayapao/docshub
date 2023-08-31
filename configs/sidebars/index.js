@@ -15,6 +15,7 @@ const projectSiderbarsConfig = require('./projects')
 const nodejsProgrammingSidebarConfig = require('./programming-nodejs')
 const goProgrammingSidebarConfig = require('./programming-go')
 const javascriptProgrammingSidebarConfig = require('./programming-javascript')
+const reactProgrammingSidebarConfig = require('./programming-react')
 const htmlProgrammingSiderbarConfig = require('./programming-html5')
 const beforeDevelopmentSidebarConfig = require('./before-development')
 
@@ -118,6 +119,7 @@ const sidebars = {
   ...nodejsProgrammingSidebarConfig,
   ...goProgrammingSidebarConfig,
   ...javascriptProgrammingSidebarConfig,
+  ...reactProgrammingSidebarConfig,
   ...htmlProgrammingSiderbarConfig,
   ...repoSiderbarsConfig,
   ...projectSiderbarsConfig,

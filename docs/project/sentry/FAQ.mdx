@@ -470,6 +470,87 @@ impl SecurityReportType {
 
 Sentry 会直接将数据插入 PG，如果 PG 产生如上回应，则表示当前数据已经存在，从而避免了在插入前先查询当前 Event 是否存在，进而决定下一步操作。对于 Sentry 这种数据使用场景来说，这种插入策略无疑更加高效。
 
+## Snuba-CK 数据全写入系统盘
+
+按照 self_hosted 的默认配置，在服务运行一段时间后，发现系统盘容量不足，但是其他盘内没有数据写入。
+
+![sentry-ck-disk-usage.png](https://img.joyjoy.cc/project/sentry-ck-disk-usage.png)
+
+通过对系统内各个表容量进行统计后发现，主要是 **sessions_raw_local** 和 **outcomes_raw_local** 两张表占用大部分存储空间。
+
+![sentry-session-usage.png](https://img.joyjoy.cc/project/sentry-session-usage.png)
+
+**经分析，该场景实际上存在两个问题：**
+
+1. 为什么会将数据写入系统盘？
+2. 为什么 sessions 和 outcomes 数据没有自动清理？
+
+实际上，两者都是由于在创建表是，没有正确使用创建语句来指定设置造成，那么，解决方案就是通过 `ALTER` 更改表的设置，使其按照正确方式进行。
+
+:::caution
+
+注意，仅仅使用 `ALTER` 语句不需要重启 CK 服务，但是修改 CK 配置则需要重启服务。重启服务会造成：
+
+- 查询服务不可用
+- Kafka 堆积
+
+:::
+
+### 为什么会将数据写入系统盘？
+
+实际上，根据 self_hosted 默认的建表语句，没有指定其存储策略，使用默认 `Default`。而为了让数据均匀分布在各个磁盘上，需要使用 `ALTER TABLE your_table_name MODIFY SETTINGS storage_policy = 'hdd_in_order';` 将其修改成 hdd_in_order 策略。
+
+注意，这个过程需要先修改 CK 配置，**新策略应当包含所有具有相同名称的旧磁盘和卷。** 参考 [clickhouse - Trying to Create a new Policy for Multi Disk Operations - Stack Overflow](https://stackoverflow.com/questions/70863152/trying-to-create-a-new-policy-for-multi-disk-operations)
+
+### 为什么 sessions 和 outcomes 数据没有自动清理？
+
+我们在启动服务时，通过设置 `SENTRY_EVENT_RETENTION_DAYS=7` 来仅存储 7 天的数据，可以观察到 transactions_local、errors_local 以及 sentry_local 均按照策略进行了清理。
+
+例子参考，在 2020-09-05 查询：
+
+```sql
+SELECT
+    event_id,
+    timestamp
+FROM transactions_local
+ORDER BY timestamp ASC
+LIMIT 1
+
+
+┌─────────────────────────────event_id─┬───────────timestamp─┐
+│ 241894bf-270d-416c-9c51-0ef8b357608b │ 2023-08-29 00:00:08 │
+└──────────────────────────────────────┴─────────────────────┘
+```
+
+另外，Snuba 还提供 `cleanup` 的命令入口来主动删除 CK 表的陈旧分区，它会执行如下命令，并打印执行结果 `Dropped n partitions on [clickhouse_host]:[clickhouse_port]`。
+
+```sql
+SELECT DISTINCT partition
+FROM system.parts
+WHERE database = 'database_name'
+AND table = 'sentry_local'
+AND active = 1
+```
+
+:::caution
+
+实际上，日志显示线上服务一直是 Dropped 0 partitions，还不知道这是否属于正常情况。参考 [Snuba cleanup transactions dropped 0 partitions · Issue #1172 · getsentry/self-hosted](https://github.com/getsentry/self-hosted/issues/1172)
+
+:::
+
+**至此，可以明确 Snuba 的 retention 配置并没有对 sessions 和 outcomes 数据产生影响。**通过手动设置 CK 表的 TTL 来解决该问题。参考 [fix(sessions): Limit data retention on sessions table by nikhars · Pull Request #3223 · getsentry/snuba](https://github.com/getsentry/snuba/pull/3223)
+
+```sql
+-- sessions_raw_local
+ALTER TABLE sessions_raw_local on cluster logs MODIFY TTL started + toIntervalDay(30);
+ALTER TABLE sessions_hourly_local on cluster logs  MODIFY TTL started + toIntervalDay(90);
+
+
+-- outcomes_raw_local
+ALTER TABLE outcomes_raw_local MODIFY TTL timestamp + toIntervalDay(30);
+ALTER TABLE outcomes_hourly_local MODIFY TTL timestamp + toIntervalDay(90);
+```
+
 ## [DEV]找不到 `performance` 入口
 
 在本地部署 Sentry 后，发现找不到 performance 模块的入口

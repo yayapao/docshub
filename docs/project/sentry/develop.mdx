@@ -14,6 +14,21 @@ import { HighlightWithText } from '../../../src/components/Highlights'
 
 我们希望基于源码对服务进行拓展和优化，将按照 **运行时环境 + 源码 + 配置 + 执行脚本** 的思路进行。
 
+## 快速排障
+
+下面记录在 Sentry 运维过程中，常用的文件、命令及其作用，帮助快速解决问题。
+
+**http 配置**
+
+Sentry 使用 uWSGI 作为内置的请求代理，用于控制 web 端的资源请求。通常可以修改 `sentry/services/http.py` 内的配置来调整 uWSGI 的配置。比如我们可以设置请求最大连接数来避免 Sentry 服务被过多的请求拖垮。
+
+```python file=sentry/services/http.py
+
+# fix for uWSGI listen queue of socket full
+options.setdefault("listen", 1024)
+
+```
+
 ## Sentry-cli 使用
 
 :::info Settings

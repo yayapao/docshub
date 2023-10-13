@@ -165,3 +165,198 @@ Sentry 内的 `post-process-forwarder` 同步消费 `events` 和 `snuba-commit-l
 `snuba-subscriptions-consumer` 同步消费 `events` 和 `snuba-commit-log` topic，并且从 CK 内读取原数据进行处理，将处理结果写入 `subscriptions-results` topic 内，由 Sentry 内消费者进行订阅，并处理数据。
 
 `replacements-topic` 主要针对 reprocessing/merge/unmerge 的事件（**即一部分非常规处理事件**），由 `replacements-consumer` 对其进行消费处理后写入 redis，并被 `snuba-subscriptions-consumer` 统一处理。
+
+### Sentry 架构内 Snuba 数据链路
+
+CK 数据表相关源码查看 [snuba/datasets](https://github.com/getsentry/snuba/tree/21.9.0/snuba/datasets)，包括数据表定义、物化视图定义、索引定义，以及数据处理逻辑。
+
+#### Errors & Transactions
+
+![sentry_snuba_errors_transactions](https://getsentry.github.io/snuba/_images/errors_transactions_deployment.png)
+
+#### sessions
+
+![sentry_snuba_sessions](https://getsentry.github.io/snuba/_images/sessions_deployment.png)
+
+:::caution
+
+**Sessions 数据主要服务于 Release Health**
+
+:::
+
+**sessions 数据从 relay 服务写入 ingest-sessions 队列后，由 snuba-sessions-consumer 消费，写入 CK 内**
+
+- 涉及 CK 表为 `sessions_raw_local` 和 `sessions_raw_dist`，以及物化视图 `sessions_hourly_local` 和 `sessions_hourly_mv_local`
+- `session-subscriptions-consumer` **同步消费** `ingest-sessions` 和 `sessions-commit-log` topic，根据项目订阅数据，将处理结果写入 `session-subscription-results` 队列中
+
+**sessions 数据格式以及实例**
+
+```JSON
+{
+	"meta":
+	[
+		{
+			"name": "session_id",
+			"type": "UUID"
+		},
+		{
+			"name": "distinct_id",
+			"type": "UUID"
+		},
+		{
+			"name": "quantity",
+			"type": "UInt32"
+		},
+		{
+			"name": "seq",
+			"type": "UInt64"
+		},
+		{
+			"name": "org_id",
+			"type": "UInt64"
+		},
+		{
+			"name": "project_id",
+			"type": "UInt64"
+		},
+		{
+			"name": "retention_days",
+			"type": "UInt16"
+		},
+		{
+			"name": "duration",
+			"type": "UInt32"
+		},
+		{
+			"name": "status",
+			"type": "UInt8"
+		},
+		{
+			"name": "errors",
+			"type": "UInt16"
+		},
+		{
+			"name": "received",
+			"type": "DateTime"
+		},
+		{
+			"name": "started",
+			"type": "DateTime"
+		},
+		{
+			"name": "release",
+			"type": "LowCardinality(String)"
+		},
+		{
+			"name": "environment",
+			"type": "LowCardinality(String)"
+		},
+		{
+			"name": "user_agent",
+			"type": "LowCardinality(String)"
+		},
+		{
+			"name": "os",
+			"type": "LowCardinality(String)"
+		}
+	],
+
+	"data":
+	[
+		{
+			"session_id": "2351161b-ebfc-4b7a-b7ba-8c59cd8188fb",
+			"distinct_id": "00000000-0000-0000-0000-000000000000",
+			"quantity": 1,
+			"seq": "0",
+			"org_id": "1",
+			"project_id": "325",
+			"retention_days": 7,
+			"duration": 4294967295,
+			"status": 0,
+			"errors": 0,
+			"received": "2023-10-13 09:39:17",
+			"started": "2023-10-13 09:39:17",
+			"release": "1.4.2",
+			"environment": "",
+			"user_agent": "",
+			"os": ""
+		}
+	],
+}
+
+```
+
+#### outcomes
+
+![sentry_snuba_outcomes](https://getsentry.github.io/snuba/_images/outcomes_deployment.png)
+
+:::caution
+
+**Outcomes 数据主要服务于 Sentry 平台上的数据统计页面**
+
+:::
+
+与 sessions 数据链路流转类似，outcomes 数据也是从 relay 直接怼到 snuba
+
+- 涉及 CK 表为 `outcomes_raw_local` 和 `outcomes_raw_dist`，以及物化视图 `outcomes_hourly_local`
+
+**outcomes 数据、实例展示**
+
+```json
+{
+  "meta": [
+    {
+      "name": "org_id",
+      "type": "UInt64"
+    },
+    {
+      "name": "project_id",
+      "type": "UInt64"
+    },
+    {
+      "name": "key_id",
+      "type": "Nullable(UInt64)"
+    },
+    {
+      "name": "timestamp",
+      "type": "DateTime"
+    },
+    {
+      "name": "category",
+      "type": "UInt8"
+    },
+    {
+      "name": "outcome",
+      "type": "UInt8"
+    },
+    {
+      "name": "reason",
+      "type": "LowCardinality(Nullable(String))"
+    },
+    {
+      "name": "quantity",
+      "type": "UInt32"
+    },
+    {
+      "name": "event_id",
+      "type": "Nullable(UUID)"
+    }
+  ],
+
+  "data": [
+    {
+      "org_id": "1",
+      "project_id": "159",
+      "key_id": "160",
+      "timestamp": "2023-10-13 09:54:27",
+      "category": 3,
+      "outcome": 1,
+      "reason": "discarded-hash",
+      "quantity": 1,
+      "event_id": "db6dbb52-db7f-40a0-ab18-d308f5f5d94e"
+    }
+  ]
+}
+```
+
+**这里 category 对应 relay 中对 event 的分类，outcome 对应 event 的处理结果，reason 对应 event 处理失败的原因。**

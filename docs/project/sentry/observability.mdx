@@ -1,0 +1,78 @@
+---
+id: observability
+title: ''
+sidebar_label: Observability
+---
+
+import { DocsHeader } from '/src/components/Layout/DocsHeader'
+
+<DocsHeader
+  title="Sentry Observability"
+  description="如何建设 Sentry 系统本身的可观测性"
+  tags={['features']}
+  links={[]}
+/>
+
+Sentry 本身是一个分布式系统，用来采集、分析日志，因此我们在考虑对 Sentry 系统本身的可观测性进行建设时，可以参考通用监控系统。这里我们主要针对 Sentry 平台的稳定性、性能、可用性等方面进行监控。
+
+## 监测指标
+
+**整体根据不同业务场景进行区分，比如 relay, sentry, sunba 等**
+
+- sinker 是一个术语，通常指数据同步或者传输的工具，用于将数据从一个系统传输到另一个系统，比如将数据从 Kafka 传输到 MySQL，或者从 Kafka 传输到 ClickHouse 等。
+
+### 系统稳定性（黄金指标）
+
+1. **TPS (Transactions Per Second)：每秒事务数**。即每秒钟系统处理的事务数，包括成功和失败的事务。其中**写入 TPS** 表达系统在处理写入请求的效率和性能。
+
+- 理论上，系统接收 TPS 和系统写入 TPS 两者的曲线应该是拟合的，如果出现较大偏差，则表示写入服务出现了阻塞
+
+2. **receiver 接收错误次数**。表达接收服务在处理请求时出现的错误次数，一般是没有数据的，通常发生在用户上报了错误数据、或者系统本身出现了错误。
+
+3. **sinker 写入失败错误次数**。表达数据存储过程中，发生失败的次数统计。正常情况下是没有数据的。
+
+4. **receiver 接收耗时小于 10ms 占比**。表达接收服务处理效率。
+
+5. **sinker 写入耗时占比**。表达数据写入服务的处理效率。
+
+### 消息接收分析
+
+1. **kafka 每秒输入数据量**。表达不同 topic 的概览。
+
+2. **receiver 消息接收 TPS**。
+
+3. **sinker 消息接收 TPS**。
+
+4. **receiver 消息接收总量**。
+
+5. **sinker 消息接收总量**。
+
+### sinker 消息写入分析
+
+1. **sinker 接收单条消息平均大小**。按照不同项目进行统计。
+
+2. **sinker 写入消息的大小**。
+
+3. **sinker 写入消息的数量**。
+
+### 客户端指标上报
+
+1. **客户端指标上报次数 QPS**。
+
+2. **上报通道 TPS**。表达不同上报通道的处理效率，包括 events/transaction。
+
+3. **上报量分布**。不同通道在一定时间范围内的上报量分布占比。
+
+### receiver 部署实例资源分析
+
+1. **receiver CPU 使用率**。按照不同实例分布。
+
+2. **receiver 内存使用率**。按照不同实例分布。
+
+### sinker 部署实例资源分析
+
+1. **sinker CPU 使用率**。按照不同实例分布。
+
+2. **sinker 内存使用率**。按照不同实例分布。
+
+3. **sinker 写入 TPS**。按照不同实例分布。

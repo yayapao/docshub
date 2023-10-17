@@ -130,49 +130,50 @@ class Outcome(IntEnum):
 
 ## Snuba
 
-在 Sentry 架构中，snuba 扮演 Clickhouse 代理服务的角色（**或者说它是一个基于 Clickhouse 的时序数据库**），它能够向 Clickhouse tables 或者物化视图内插入数据，同时提供查询服务。
+:::info
 
-Clickhouse tables 如下：
+**Search the seas for your lost treasure.**
 
-```
+:::
 
-sessions_raw_local
+正如 snuba github 简介上描述的一样，**Snuba 是一个在 clickhouse 基础上提供丰富数据模型的服务，同时它还具备高效的数据摄取和查询优化能力。**
 
-errors_raw_local
+CK 表结构如下图，与 Snuba 服务相关联的主要有 **errors、transactions、outcomes、sessions**
 
-transactions_raw_local
+![snuba-tables.png](https://img.joyjoy.cc/project/snuba-tables.png)
 
-outcomes_raw_local
-
-```
-
-snuba 整体架构如图：
+### 整体架构
 
 ![structure-overview](https://getsentry.github.io/snuba/_images/overview.png)
 
-consumer 消费回 `events` topic 的数据，并将其插入到 Clickhouse 内。客户端可以主动发起查询请求，snuba 的查询引擎对其进行解析后生成 SnQL，向 Clickhouse 拉取数据。
+**一句话表达：从 kafka 消费回来的数据会全部写入 CK 表和物化视图内，数据支持时间点查询和流式查询（订阅）。**
 
-这里值得注意的是，snuba 建立了 stream 监听的机制，用来向 client 主动推数据（**主要是告警数据**）。它将 `event` topic 数据消费回来，通过一定的处理后写入到 `errors-subscriptions-consumer` 等队列，由 Sentry 服务对其进行消费。
+Snuba 利用 CK 支持多种数据引擎的特性，通过选择合适的引擎，可以从底层数据上处理重复数据、保持数据一致性。
 
-这里我们对 errors 和 transactions 的数据链路进行解读，其他包括 sessions 和 outcomes 的数据可以在官网上进行理解。
-
-![errors-deployment](https://getsentry.github.io/snuba/_images/errors_transactions_deployment.png)
-
-snuba-consumer 消费由 Sentry 的 `save-task` 写入 `events` topic 的数据，将其按照不同数据类型写入 CK，同时将事件写入 `snuba-commit-log` topic。
-
-Sentry 内的 `post-process-forwarder` 同步消费 `events` 和 `snuba-commit-log` topic，生成任务提交给 celery，执行生产逻辑，比如 webhooks 发送等。
-
-`snuba-subscriptions-consumer` 同步消费 `events` 和 `snuba-commit-log` topic，并且从 CK 内读取原数据进行处理，将处理结果写入 `subscriptions-results` topic 内，由 Sentry 内消费者进行订阅，并处理数据。
-
-`replacements-topic` 主要针对 reprocessing/merge/unmerge 的事件（**即一部分非常规处理事件**），由 `replacements-consumer` 对其进行消费处理后写入 redis，并被 `snuba-subscriptions-consumer` 统一处理。
-
-### Sentry 架构内 Snuba 数据链路
+### Snuba 数据链路（Sentry 架构内）
 
 CK 数据表相关源码查看 [snuba/datasets](https://github.com/getsentry/snuba/tree/21.9.0/snuba/datasets)，包括数据表定义、物化视图定义、索引定义，以及数据处理逻辑。
 
 #### Errors & Transactions
 
 ![sentry_snuba_errors_transactions](https://getsentry.github.io/snuba/_images/errors_transactions_deployment.png)
+
+:::caution
+
+errors 和 transaction 在 Snuba 服务内，处理流程相同，只是数据表不同
+
+:::
+
+其中 `events` topic 被多个 group 消费：
+
+    1. `snuba-consumer` 消费 `events` topic，将数据写入 **CK** 内
+    2. `snuba-subscriptions-consumer` 同步消费 `events` topic 和 `snuba-commit-log` topic（由 snuba-consumer 生产），将数据写入 `subscriptions-results` topic 内
+    3. `replacements` topic 基于 `events` topic 产生，由 `replacements-consumer` 消费，主要针对非常规处理事件，比如 reprocessing/merge/unmerge 的事件，消费后将结果写入 **redis**，由 `snuba-subscriptions-consumer` 统一处理
+    4. Sentry 内服务 `post-process-forwarder` 也会同步消费 `events` topic 和 `snuba-commit-log` topic，之后执行生产逻辑，比如 webhooks 发送等
+
+[**errors 数据、实例展示**](https://github.com/YaYaPao/docscripts/blob/main/sentry/data/ck.md#errors)
+
+[**transactions 数据、实例展示**](https://github.com/YaYaPao/docscripts/blob/main/sentry/data/ck.md#transactions)
 
 #### sessions
 
@@ -189,102 +190,7 @@ CK 数据表相关源码查看 [snuba/datasets](https://github.com/getsentry/snu
 - 涉及 CK 表为 `sessions_raw_local` 和 `sessions_raw_dist`，以及物化视图 `sessions_hourly_local` 和 `sessions_hourly_mv_local`
 - `session-subscriptions-consumer` **同步消费** `ingest-sessions` 和 `sessions-commit-log` topic，根据项目订阅数据，将处理结果写入 `session-subscription-results` 队列中
 
-**sessions 数据格式以及实例**
-
-```JSON
-{
-	"meta":
-	[
-		{
-			"name": "session_id",
-			"type": "UUID"
-		},
-		{
-			"name": "distinct_id",
-			"type": "UUID"
-		},
-		{
-			"name": "quantity",
-			"type": "UInt32"
-		},
-		{
-			"name": "seq",
-			"type": "UInt64"
-		},
-		{
-			"name": "org_id",
-			"type": "UInt64"
-		},
-		{
-			"name": "project_id",
-			"type": "UInt64"
-		},
-		{
-			"name": "retention_days",
-			"type": "UInt16"
-		},
-		{
-			"name": "duration",
-			"type": "UInt32"
-		},
-		{
-			"name": "status",
-			"type": "UInt8"
-		},
-		{
-			"name": "errors",
-			"type": "UInt16"
-		},
-		{
-			"name": "received",
-			"type": "DateTime"
-		},
-		{
-			"name": "started",
-			"type": "DateTime"
-		},
-		{
-			"name": "release",
-			"type": "LowCardinality(String)"
-		},
-		{
-			"name": "environment",
-			"type": "LowCardinality(String)"
-		},
-		{
-			"name": "user_agent",
-			"type": "LowCardinality(String)"
-		},
-		{
-			"name": "os",
-			"type": "LowCardinality(String)"
-		}
-	],
-
-	"data":
-	[
-		{
-			"session_id": "2351161b-ebfc-4b7a-b7ba-8c59cd8188fb",
-			"distinct_id": "00000000-0000-0000-0000-000000000000",
-			"quantity": 1,
-			"seq": "0",
-			"org_id": "1",
-			"project_id": "325",
-			"retention_days": 7,
-			"duration": 4294967295,
-			"status": 0,
-			"errors": 0,
-			"received": "2023-10-13 09:39:17",
-			"started": "2023-10-13 09:39:17",
-			"release": "1.4.2",
-			"environment": "",
-			"user_agent": "",
-			"os": ""
-		}
-	],
-}
-
-```
+[**sessions 数据、实例展示**](https://github.com/YaYaPao/docscripts/blob/main/sentry/data/ck.md#sessions)
 
 #### outcomes
 
@@ -300,63 +206,6 @@ CK 数据表相关源码查看 [snuba/datasets](https://github.com/getsentry/snu
 
 - 涉及 CK 表为 `outcomes_raw_local` 和 `outcomes_raw_dist`，以及物化视图 `outcomes_hourly_local`
 
-**outcomes 数据、实例展示**
-
-```json
-{
-  "meta": [
-    {
-      "name": "org_id",
-      "type": "UInt64"
-    },
-    {
-      "name": "project_id",
-      "type": "UInt64"
-    },
-    {
-      "name": "key_id",
-      "type": "Nullable(UInt64)"
-    },
-    {
-      "name": "timestamp",
-      "type": "DateTime"
-    },
-    {
-      "name": "category",
-      "type": "UInt8"
-    },
-    {
-      "name": "outcome",
-      "type": "UInt8"
-    },
-    {
-      "name": "reason",
-      "type": "LowCardinality(Nullable(String))"
-    },
-    {
-      "name": "quantity",
-      "type": "UInt32"
-    },
-    {
-      "name": "event_id",
-      "type": "Nullable(UUID)"
-    }
-  ],
-
-  "data": [
-    {
-      "org_id": "1",
-      "project_id": "159",
-      "key_id": "160",
-      "timestamp": "2023-10-13 09:54:27",
-      "category": 3,
-      "outcome": 1,
-      "reason": "discarded-hash",
-      "quantity": 1,
-      "event_id": "db6dbb52-db7f-40a0-ab18-d308f5f5d94e"
-    }
-  ]
-}
-```
+[**outcomes 数据、实例展示**](https://github.com/YaYaPao/docscripts/blob/main/sentry/data/ck.md#outcomes)
 
 **这里 category 对应 relay 中对 event 的分类，outcome 对应 event 的处理结果，reason 对应 event 处理失败的原因。**

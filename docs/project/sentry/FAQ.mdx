@@ -487,7 +487,7 @@ Sentry 会直接将数据插入 PG，如果 PG 产生如上回应，则表示当
 
 实际上，两者都是由于在创建表是，没有正确使用创建语句来指定设置造成，那么，解决方案就是通过 `ALTER` 更改表的设置，使其按照正确方式进行。
 
-:::caution
+:::warning
 
 注意，仅仅使用 `ALTER` 语句不需要重启 CK 服务，但是修改 CK 配置则需要重启服务。重启服务会造成：
 
@@ -532,7 +532,7 @@ AND table = 'sentry_local'
 AND active = 1
 ```
 
-:::caution
+:::warning
 
 实际上，日志显示线上服务一直是 Dropped 0 partitions，还不知道这是否属于正常情况。参考 [Snuba cleanup transactions dropped 0 partitions · Issue #1172 · getsentry/self-hosted](https://github.com/getsentry/self-hosted/issues/1172)
 

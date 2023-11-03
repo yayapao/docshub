@@ -1,0 +1,154 @@
+---
+id: entry
+title: ''
+sidebar_label: GuideBook
+---
+
+import { DocsHeader } from '/src/components/Layout/DocsHeader'
+import {
+  HighlightWithCode,
+  HighlightWithText,
+} from '/src/components/Highlights/TextContent'
+import { ResolvedTag } from '/src/components/Highlights/CustomizedTag'
+
+<DocsHeader
+  title="Snuba GuideBook"
+  description="Snuba is a service that provides a rich data model on top of Clickhouse together with a fast ingestion consumer and a query optimizer."
+  tags={['structure']}
+  links={[
+    {
+      label: `Snuba Structure`,
+      link: 'https://getsentry.github.io/snuba/architecture/overview.html',
+    },
+  ]}
+/>
+
+:::info
+
+**Search the seas for your lost treasure.**
+
+:::
+
+正如 snuba github 简介上描述的一样，**Snuba 是一个在 clickhouse 基础上提供丰富数据模型的服务，同时它还具备高效的数据摄取和查询优化能力。**
+
+CK 表结构如下图，与 Snuba 服务相关联的主要有 **errors、transactions、outcomes、sessions**
+
+![snuba-tables.png](https://img.joyjoy.cc/project/snuba-tables.png)
+
+## 整体架构
+
+![structure-overview](https://getsentry.github.io/snuba/_images/overview.png)
+
+**一句话表达：从 kafka 消费回来的数据会全部写入 CK 表和物化视图内，数据支持时间点查询和流式查询（订阅）。**
+
+Snuba 利用 CK 支持多种数据引擎的特性，通过选择合适的引擎，可以从底层数据上处理重复数据、保持数据一致性。
+
+## Snuba 数据链路（Sentry 架构内）
+
+CK 数据表相关源码查看 [snuba/datasets](https://github.com/getsentry/snuba/tree/21.9.0/snuba/datasets)，包括数据表定义、物化视图定义、索引定义，以及数据处理逻辑。
+
+### Errors & Transactions
+
+![sentry_snuba_errors_transactions](https://getsentry.github.io/snuba/_images/errors_transactions_deployment.png)
+
+:::warning
+
+errors 和 transaction 在 Snuba 服务内，处理流程相同，只是数据表不同
+
+:::
+
+其中 `events` topic 被多个 group 消费：
+
+    1. `snuba-consumer` 消费 `events` topic，将数据写入 **CK** 内
+    2. `snuba-subscriptions-consumer` 同步消费 `events` topic 和 `snuba-commit-log` topic（由 snuba-consumer 生产），将数据写入 `subscriptions-results` topic 内
+    3. `replacements` topic 基于 `events` topic 产生，由 `replacements-consumer` 消费，主要针对非常规处理事件，比如 reprocessing/merge/unmerge 的事件，消费后将结果写入 **redis**，由 `snuba-subscriptions-consumer` 统一处理
+    4. Sentry 内服务 `post-process-forwarder` 也会同步消费 `events` topic 和 `snuba-commit-log` topic，之后执行生产逻辑，比如 webhooks 发送等
+
+[**errors 数据、实例展示**](https://github.com/YaYaPao/docscripts/blob/main/sentry/data/ck.md#errors)
+
+[**transactions 数据、实例展示**](https://github.com/YaYaPao/docscripts/blob/main/sentry/data/ck.md#transactions)
+
+### sessions
+
+![sentry_snuba_sessions](https://getsentry.github.io/snuba/_images/sessions_deployment.png)
+
+:::warning
+
+**Sessions 数据主要服务于 Release Health**
+
+:::
+
+**sessions 数据从 relay 服务写入 ingest-sessions 队列后，由 snuba-sessions-consumer 消费，写入 CK 内**
+
+- 涉及 CK 表为 `sessions_raw_local` 和 `sessions_raw_dist`，以及物化视图 `sessions_hourly_local` 和 `sessions_hourly_mv_local`
+- `session-subscriptions-consumer` **同步消费** `ingest-sessions` 和 `sessions-commit-log` topic，根据项目订阅数据，将处理结果写入 `session-subscription-results` 队列中
+
+[**sessions 数据、实例展示**](https://github.com/YaYaPao/docscripts/blob/main/sentry/data/ck.md#sessions)
+
+### outcomes
+
+![sentry_snuba_outcomes](https://getsentry.github.io/snuba/_images/outcomes_deployment.png)
+
+:::warning
+
+**Outcomes 数据主要服务于 Sentry 平台上的数据统计页面**
+
+:::
+
+与 sessions 数据链路流转类似，outcomes 数据也是从 relay 直接怼到 snuba
+
+- 涉及 CK 表为 `outcomes_raw_local` 和 `outcomes_raw_dist`，以及物化视图 `outcomes_hourly_local`
+
+[**outcomes 数据、实例展示**](https://github.com/YaYaPao/docscripts/blob/main/sentry/data/ck.md#outcomes)
+
+**这里 category 对应 relay 中对 event 的分类，outcome 对应 event 的处理结果，reason 对应 event 处理失败的原因。**
+
+## Development
+
+这里我们介绍**如何在本地搭建 Snuba 的开发环境？**
+
+:::warning
+
+在开始开发 snuba 之前，请确保你已经安装了 sentry 本地所需环境。
+
+:::
+
+修改 `~/.sentry/sentry.conf.py`，添加如下配置，并关闭 docker sunba 容器服务：
+
+```
+############
+# Snuba    #
+############
+
+SENTRY_SEARCH = 'sentry.search.snuba.EventsDatasetSnubaSearchBackend'
+SENTRY_TSDB = 'sentry.tsdb.redissnuba.RedisSnubaTSDB'
+SENTRY_EVENTSTREAM = 'sentry.eventstream.snuba.SnubaEventStream'
+
+```
+
+### 准备 snuba 开发环境
+
+1. 拉取代码 `git@github.com:getsentry/snuba.git`；
+2. 设置 python 虚拟环境，利用 `pyenv`；
+   ```sh
+   # 在项目根目录下执行，可能需要切换不同的 TAG 分支 `git checkout -b t/21.9.0 21.9.0`
+   make pyenv-setup
+   source .venv/bin/activate
+   pip install --upgrade pip==22.2.2
+   make develop
+   ```
+
+### 执行启动命令
+
+```sh
+
+snuba --help # 查看启动命令
+
+# 启动全部服务，包括 api / consumer。建议配置 pycharm 方便 debug
+snuba devserver
+
+# 在 sentry 目录下，启动 sentry 服务，此时会读取 sentry.conf.py 配置，不启动本身的 snuba 服务
+sentry devservices up
+
+
+```

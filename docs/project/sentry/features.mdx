@@ -5,6 +5,10 @@ sidebar_label: Features
 ---
 
 import { DocsHeader } from '/src/components/Layout/DocsHeader'
+import {
+  HighlightWithBadge,
+  HighlightWithCode,
+} from '/src/components/Highlights'
 
 <DocsHeader
   title="Sentry Features"
@@ -63,7 +67,7 @@ beforeSend(event, hint) {
 
 最理想的情况是，我们希望将客户端上报的所有数据进行处理并存储，这将为我们在数据分析时提升准确率。
 
-但是，当**海量数据（enormous volume of data）**由客户端进行上报后，服务器的计算成本和数据存储成本将是我们不得不考虑的问题。
+但是，当<strong>海量数据(enormous volume of data)</strong>由客户端进行上报后，服务器的计算成本和数据存储成本将是我们不得不考虑的问题。
 
 在 Sentry 中的具体表现是，性能数据是错误数据的千倍计，同时两者的 context size 几乎相同。
 
@@ -158,7 +162,7 @@ Sentry 内聚合逻辑的核心在于 <HighlightWithCode bgcolor="#ef613e">finge
 
 答案是：Sentry 内置的聚合算法**会根据错误的堆栈追踪信息来生产 fingerprint**。即错误事件的堆栈信息相同，则此类错误事件属于同一个 issue。
 
-:::caution
+:::warning
 
 - 所有的聚合策略，均遵循 `stack trace -> exception -> message` 的次序进行处理，一旦 group hash code 生成，不会继续执行剩下的逻辑
 - 仅有 `stack trace` 生成的 group hash code 是可靠的
@@ -242,7 +246,7 @@ merge issues 是 Sentry 提供最易操作的自定义聚合能力，它用来�
 
 `merge issues` 属于事后的人工干预，仅会影响已处理的错误事件以及将来上报的相同的错误事件。其操作方法很简单，在 issues 面板选择不同的 issue 进行合并即可，这里不再赘述。
 
-:::caution
+:::warning
 
 **Sentry 不会根据 merge issues 来推断新的聚合规则，仅当新的错误事件拥有和当前 merged issues 相同的 fingerprint 并生产同样的 group hash code 才会被自动聚合**
 
@@ -261,7 +265,7 @@ finterprint rules 遵循如下模式：
 matcher:glob -> fingerprint, values title=""
 ```
 
-比如，我们配置了一条规则 `error.type:ReferenceError -> Not-found-error, {{ transaction }}`，它表示匹配所有 type 为 ReferenceError 的错误事件，对其聚合并赋值 fingerprint 为 Not-found-error，同时，使用 {{ transaction }} 进行通配，达到按照不同 transaction 进行聚合的目的
+比如，我们配置了一条规则 `error.type:ReferenceError -> Not-found-error, {{transaction}}`，它表示匹配所有 type 为 ReferenceError 的错误事件，对其聚合并赋值 fingerprint 为 Not-found-error，同时，使用 `{{ transaction }}` 进行通配，达到按照不同 transaction 进行聚合的目的
 
 在了解基本规则之后，我们希望在对上文的例子进行拆分，即按照不同的 exception 值来对错误事件进行聚合，并在 issue 上自定义标题展示。
 
@@ -410,7 +414,7 @@ Source Maps 是构建时的产物，用来映射源文件，定位源码位置�
 
 ### Upload Source Maps
 
-:::caution Before Upload
+:::warning Before Upload
 
 1. 需要申请指定权限的 token
 2. 需要配置 SDK 和上传时 release 一致
@@ -614,7 +618,7 @@ sentry-cli releases finalize <release_name>
 
 除了将文件上传到 Sentry 平台外，我们还可以通过开启 `Allow JavaScript Source Fetching` 来让 Sentry 直接从线上去拉取文件。大家可以思考一下，**为什么 Sentry 不建议这么做？**
 
-:::caution Why not？
+:::warning Why not？
 
 1. 存在安全风险
 2. 阻塞 Sentry 处理进程

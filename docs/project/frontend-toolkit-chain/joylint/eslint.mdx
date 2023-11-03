@@ -6,12 +6,12 @@ sidebar_label: ESLint
 
 import { HighlightWithCode } from '/src/components/Highlights'
 
-:::caution
+:::warning
 **ESLint's default parser and core rules only support the latest final ECMAScript standard!**
 
 - 支持 JSX 语法并不等同于支持 React，React 内的语法，默认 ESLint 解释器不能生效；
 - 支持 ES6 语法并不意味着同时支持新的 ES6 全局变量或类型
-:::
+  :::
 
 ESLint 的默认解释器和核心规则仅支持最新稳定的 ECMAScript 标准（目前就是指 ES5，其 default 也是 ES3/5），你可以通过配置开启更高版本的 ES，**但是，并不包括其实验性的语法，即使已经被各浏览器厂商兼容！**。
 

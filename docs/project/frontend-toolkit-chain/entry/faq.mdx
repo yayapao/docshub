@@ -40,7 +40,7 @@ pnpm add [relative directory path]
 
 解决方案：通过 `@rollup/plugin-replace` 对 `string_decoder/` 路径进行替换，如下：
 
-:::caution prework
+:::warning prework
 
 在替换之前需要 `yarn add string_decoder` 添加依赖，它是发布在 npm 上，对于 Node.js string_decoder 模块的镜像
 

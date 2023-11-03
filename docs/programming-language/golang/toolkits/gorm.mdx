@@ -37,7 +37,7 @@ import { HighlightWithText } from '/src/components/Highlights'
 - many2many 更新数据
 - 更改值时，不会主动变更零值
 
-:::caution
+:::warning
 
 **我觉得根本原因在于 gorm 是基于 upsert 的模型实现的，以及 go 本身的默认值规则**
 

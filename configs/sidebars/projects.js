@@ -40,6 +40,12 @@ const fte = {
         'project/sentry/sourcecode',
       ],
     },
+    {
+      type: 'category',
+      label: 'Snuba',
+      collapsed: true,
+      items: ['project/sentry/snuba/entry'],
+    },
   ],
 }
 

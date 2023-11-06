@@ -7,7 +7,7 @@ const metaConfig: Config = {
   title: 'Docshub',
   // main page slogan
   tagline: 'Nice to doc, nice to code!',
-  organizationName: 'YaYaPao', // Usually your GitHub org/user name.
+  organizationName: 'yayapao', // Usually your GitHub org/user name.
   projectName: 'docshub', // Usually your repo name.
   url: 'https://doc.joyjoy.cc/',
   baseUrl: '/',

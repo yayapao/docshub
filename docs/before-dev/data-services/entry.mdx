@@ -248,7 +248,7 @@ order by date_trunc('month', date_joined)
 
 查看表结构发现，其 ID 字段默认值为 `nextval('xxx_id_seq'::regclass)`，表示递增序列并返回新值。如果手动插入数据，会导致序列值不一致，从而出现上述错误。
 
-:::caution
+:::warning
 
 这里的手动插入，特指 `INSERT INTO table_name (xxx) VALUES (xxx)` 这种直接修改字段的方式
 
@@ -530,7 +530,7 @@ kafka-consumer-groups --bootstrap-server sentry_kafka:9092 --describe --group in
 
 ![consumer-group](/img/database/consumer-group.png)
 
-:::caution
+:::warning
 
 - 一条消息只能被消费组内一个消费者实例消费
 - 一个 partition 只能被组内一个消费者实例负责(一对一)

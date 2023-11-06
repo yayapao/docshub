@@ -6,7 +6,7 @@ sidebar_label: Development
 
 import { HighlightWithText } from '../../../src/components/Highlights'
 
-:::caution 前置准备
+:::warning 前置准备
 
 具体环境配置、依赖安装和本地运行参考[self-hosted](./self_hosted#环境准备)
 
@@ -106,7 +106,7 @@ devserver --workers --pretty --styleguide --debug-server
 
 在本地可以通过 webpack proxy 技术，调用线上的所有接口，从而降低本地开发的资源消耗，同时能够使用线上的数据进行验证。
 
-:::caution
+:::warning
 
 使用该方式进行开发时，注意本地操作会影响到线上真实数据，需要保持谨慎！
 
@@ -118,7 +118,7 @@ devserver --workers --pretty --styleguide --debug-server
 
 **注意，需要根据开发访问的网站来修改 package.json 内证书的授权地址！**
 
-:::caution
+:::warning
 
 安装之后，可能其他服务会出现问题：localhost 自动由 http 转换成 https，导致其他服务无法正常访问。
 
@@ -180,7 +180,7 @@ Sentry 内置插件系统，可以通过插件来拓展 Sentry 的功能，比�
 
 在 Sentry 内，能够配置多种告警规则来触发回调动作，比如：新创建一个错误、错误在 1 分钟内达到 N 次等，不同的规则下，回调数据也会存在差异。还在 Sentry 在内部尽量抹平这种差异，尽可能提供统一的回调数据格式。
 
-:::caution
+:::warning
 
 数据回调的具体字段，在不同的版本会有所差异
 

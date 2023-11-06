@@ -63,7 +63,7 @@ import {
 - <VitalStandard label="FID" good="<100ms" improve="100~300ms" bad=">300ms" />
 - <VitalStandard label="CLS" good="<0.1" improve="0.1~0.25" bad=">0.25" />
 
-:::caution
+:::warning
 各个指标的衡量指标具有广泛的指导意义，但是对于特殊的应用其阈值可以动态调整
 :::
 
@@ -339,7 +339,7 @@ export const getTTFB = (onReport: ReportHandler) => {
 
 [FCP](https://web.dev/fcp/)（First Contentful Paint：首次内容绘制）是用来测量**加载效率**的辅助指标。
 
-:::caution
+:::warning
 
 我们注意到 google 开发者手册内已经找不到关于 FP 的描述
 

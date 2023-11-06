@@ -1,13 +1,17 @@
-# Docshub
+# Website
 
-## Local Development
+This website is built using [Docusaurus 2](https://docusaurus.io/), a modern static website generator.
 
-Learning [CLI](https://docusaurus.io/zh-CN/docs/cli) to aaccess more scripts!
-
-### develop in local
+### Installation
 
 ```
-$ yarn dev
+$ yarn
+```
+
+### Local Development
+
+```
+$ yarn start
 ```
 
 This command starts a local development server and opens up a browser window. Most changes are reflected live without having to restart the server.
@@ -18,24 +22,20 @@ This command starts a local development server and opens up a browser window. Mo
 $ yarn build
 ```
 
-This command generates static content into the `dist` directory and can be served using any static contents hosting service.
+This command generates static content into the `build` directory and can be served using any static contents hosting service.
 
-And you can run `$ yarn serve` to test static contents in local.
+### Deployment
 
-### release
+Using SSH:
 
 ```
-$ yarn rls
+$ USE_SSH=true yarn deploy
 ```
 
-This command will upload the packaged resource to cos and create a tag, then trigger the webhooks to release the static contents in server side.
+Not using SSH:
 
-## Docusaurus notes
+```
+$ GIT_USER=<Your GitHub username> yarn deploy
+```
 
--  By default, any Markdown or Javascript file starting with _ will be ignored, and no routes will be created for that file (see the exclude option).
-
-
-
-## Support
-
-This website is built using [Docusaurus](https://docusaurus.io/), a modern static website generator.
+If you are using GitHub pages for hosting, this command is a convenient way to build the website and push to the `gh-pages` branch.

@@ -152,3 +152,9 @@ sentry devservices up
 
 
 ```
+
+## FAQ
+
+### 1. 开发时 kafka 服务报错？
+
+通常是由 zk 和 kafka 信息不同步导致，比如 Snuba 服务已经关闭，但是 sentry 服务仍在运行，一段时间后，再次启动 Snuba 服务，此时 zk 信息已经过期，出现 kafka 服务报错。此时，需要手动清理卷/kafka 镜像，之后重新创建 topic 即可。

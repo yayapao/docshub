@@ -73,7 +73,7 @@ $`cd ${packagePath} && pnpm version [version]`
 
 ## 用 process.hrtime.bigint() 来计算高精度时间
 
-:::caution why not console.time
+:::warning why not console.time
 
 通过 `console.time(label) && console.timeEnd(label)` 启动计时器来跟踪某一操作的占用时长，**label 必须是唯一的且能够被转换为 String 类型**。在 Node.js 中，如果一个接口被多次调用，则会产生不必要的警告。
 

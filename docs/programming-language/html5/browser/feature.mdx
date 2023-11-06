@@ -169,7 +169,7 @@ window.addEventListener(
 3. 如果 HTTP response 内，Header 包含 `content-disposition` 字段，并且值为 `attachment`，则其拥有最高优先级；且无论文件类型如何，它都将被下载；
 4. 如果 `content-disposition` 被设置为 `inline`，不同浏览器会存在差异，FireFox 浏览器会以它优先，但是 Chrome 则会以 download 优先；
 
-:::caution Exceptions
+:::warning Exceptions
 
 上面讨论的是图片地址为 http 的形式，如果图片地址为 `blob` 或者 `base64` 的形式，则不存在跨域问题，可以直接下载。
 
@@ -196,7 +196,7 @@ window.addEventListener(
 
 CORS 是 W3C 标准，全称是 Cross-Origin Resource Sharing，即跨域资源共享。它允许浏览器向跨源服务器，发出 XMLHttpRequest 请求，从而克服了 AJAX 只能同源使用的限制。
 
-:::caution
+:::warning
 
 CORS 不等于跨域，它是为了解决跨域问题而提出的一种 HTTP-header 标准。
 

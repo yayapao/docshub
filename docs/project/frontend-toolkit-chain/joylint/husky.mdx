@@ -75,7 +75,7 @@ npx husky add .husky/commit-msg 'node scripts/verify_commit.mjs'
 
 我们在提交代码之前，进行 lint 检测和修正，能够阻止不规范的代码提交到仓库中，但是如果我们每次都对项目内所有文件进行 lint，整个流程会变得无比缓慢。而 lint-staged 通过对每次提交的增量文件进行扫描和修正，能够帮助我们解决上述问题。
 
-:::caution
+:::warning
 `lint-staged` 是本身不具备 format 的能力，你仍然需要安装 ESLint、Prettier 等代码格式化工具。
 :::
 

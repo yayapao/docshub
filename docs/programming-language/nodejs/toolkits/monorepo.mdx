@@ -41,7 +41,7 @@ Monorepo 则是为了解决上述问题而提出的一种管理模式。**Monore
 
 通过将多个项目代码存储在一个代码仓库中，我们可以解决上述问题，这就是 monorepo 的由来。**monorepo 能够提升代码复用、代码重构、依赖管理的效率，同时保证工程标准化**，但是随之而来的是项目复杂度和维护成本的增加，同时还有权限管理和学习成本等。
 
-:::caution
+:::warning
 
 monorepo 是一种代码管理概念，并不是一种技术（框架），它可以通过多种方式实现，为了解决某一类场景问题。开发者需要结合实际项目情况、团队规模、技术栈等因素来选择合适代码管理方案以及实现方式。
 
@@ -159,7 +159,7 @@ prettier 用来规范代码风格，和 tsconfig 类似，我们直接将文件�
    - 可以使用 [tsup](https://tsup.egoist.dev/) 作为编译工具，执行 `tsup`
    - 或者使用原生工具 `tsc --project tsconfig.json`
 
-   :::caution
+   :::warning
 
    使用 `.tsx` 来引入/导出组件，避免出现错误 [javascript - Uncaught Error: Invariant Violation: Element type is invalid: expected a string (for built-in components) or a class/function but got: object - Stack Overflow](https://stackoverflow.com/questions/34130539/uncaught-error-invariant-violation-element-type-is-invalid-expected-a-string)
 

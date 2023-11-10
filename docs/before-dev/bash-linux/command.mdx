@@ -1,0 +1,26 @@
+---
+id: command
+title: ''
+sidebar_label: Command
+---
+
+import { DocsHeader } from '/src/components/Layout/DocsHeader'
+
+<DocsHeader
+  title="Command"
+  description="Useful dev commands."
+  tags={['bash']}
+  links={[]}
+/>
+
+## 常用命令/脚本
+
+**1. 显示处于监听状态下打开的文件或者网络连接**
+
+```bash
+
+echo "COMMAND     PID  USER   FD   TYPE  DEVICE  SIZE/OFF  NODE  NAME"; lsof -nP -i4 | grep LISTEN
+
+```
+
+- `lsof -nP -i4` 用于显示所有打开的文件和网络连接的相关信息

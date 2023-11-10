@@ -5,6 +5,8 @@ sidebar_label: Observability
 ---
 
 import { DocsHeader } from '/src/components/Layout/DocsHeader'
+import { sentryTaskIngestProcessor } from './datasets/task.tsx'
+import { CommonTable } from '/src/docase/sentry'
 
 <DocsHeader
   title="Sentry Observability"
@@ -14,6 +16,22 @@ import { DocsHeader } from '/src/components/Layout/DocsHeader'
 />
 
 Sentry 本身是一个分布式系统，用来采集、分析日志，因此我们在考虑对 Sentry 系统本身的可观测性进行建设时，可以参考通用监控系统。这里我们主要针对 Sentry 平台的稳定性、性能、可用性等方面进行监控。
+
+## Sentry Task 指标拆解
+
+:::warning
+
+这里我们遵从 sentry 本身的指标定义，并在 `src/sentry/utils/metrics.py` 内统一打印。
+
+:::
+
+我们根据不同 runner 记录的指标进行拆解，并主动发起一次错误上报。
+
+### ingest
+
+ingest 服务记录日志如下，分别打印 `key, value, instance, current_tags, sample_rate`（**注意，这个过程中删除了一些与时间指标/流程无关的日志**）
+
+<CommonTable data={sentryTaskIngestProcessor} index={1} />
 
 ## 使用 prometheus 采集指标
 

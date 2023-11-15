@@ -61,6 +61,7 @@ export const CommonTable: React.FC<SentryIngestProcessorTableProps> = ({
 
 const StyledTableContainer = styled(TableContainer)<any>(() => {
   return {
+    marginBottom: '1rem',
     '& table': {
       marginBottom: 0,
     },

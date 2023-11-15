@@ -33,6 +33,16 @@ ingest 服务记录日志如下，分别打印 `key, value, instance, current_ta
 
 <CommonTable data={sentryTaskIngestProcessor} index={1} />
 
+在 Sentry 实现中，需要明白 ingest 是一个消费 kafka 数据的服务，它通过 consumer 和 worker 两种实现来分别消费数据、处理数据。在 consumer 服务内，主要对原始消息进行解析、过滤、调度，而 worker 将执行具体的处理。为此，我们阅读源码，理清指标之间的关联关系。
+
+**ingest 处理 message 到写入 kafka 流转过程如图：**
+
+<img src="/img/drawio/sentry-ingest-process.drawio.svg" width="100%" />
+
+- `process_event` 主要执行 `_load_event()`、`_store_event()` 以及 `dispatch_task()` 方法，会进行反序列化、前置过滤、写入缓存等操作
+
+
+
 ## 使用 prometheus 采集指标
 
 ### 指标类型

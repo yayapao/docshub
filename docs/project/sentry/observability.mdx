@@ -5,7 +5,7 @@ sidebar_label: Observability
 ---
 
 import { DocsHeader } from '/src/components/Layout/DocsHeader'
-import { sentryTaskIngestProcessor } from './datasets/task.tsx'
+import { sentryTaskIngestProcessor, sentryWorkerProcessor } from './datasets/task.tsx'
 import { CommonTable } from '/src/docase/sentry'
 
 <DocsHeader
@@ -41,7 +41,13 @@ ingest 服务记录日志如下，分别打印 `key, value, instance, current_ta
 
 - `process_event` 主要执行 `_load_event()`、`_store_event()` 以及 `dispatch_task()` 方法，会进行反序列化、前置过滤、写入缓存等操作
 
+### worker
 
+worker 服务主要是处理 event，将 event 写入到 postgres/tsdb 中，同时会将 event 的相关信息写入到 redis 中，以便后续查询。**不同的 worker 将执行不同的任务。**
+
+worker 相关的服务日志记录如下，这个过程中删除了一些无关紧要或者微粒度的日志。
+
+<CommonTable data={sentryWorkerProcessor} index={1} />
 
 ## 使用 prometheus 采集指标
 

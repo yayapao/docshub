@@ -92,3 +92,92 @@ export const sentryTaskIngestProcessor = {
     },
   ],
 }
+
+export const sentryWorkerProcessor = {
+  columns: [
+    {
+      name: 'metric',
+    },
+    {
+      name: 'description',
+    },
+    {
+      name: 'keyword',
+    },
+    {
+      name: 'logs',
+    },
+  ],
+  rows: [
+    {
+      metric: 'tasks.store.process_event.stacktraces',
+      description: '处理 event 内的 stacktrace 耗时',
+      keyword: 'store.py -> process_stacktraces(data) ',
+      logs: `tasks.store.process_event.stacktraces 0.004715446004411206 None {'from_symbolicate': True, 'result': 'success'}`,
+    },
+    {
+      metric: 'tasks.store.process_event.preprocessors',
+      description:
+        '各个 event 处理器处理耗时，比如 browsers，device 等内置处理器，主要用于提取 tags',
+      keyword: 'store.py -> processor(data)',
+      logs: `tasks.store.process_event.preprocessors 7.031019777059555e-06 None {'plugin': 'browsers', 'from_symbolicate': True, 'result': 'success'}`,
+    },
+    {
+      metric: 'sentry.tasks.store.save_event',
+      description: '从提交 save_event 任务到实际执行的延迟',
+      keyword: 'store.py -> celery.py -> class SentryTask',
+      logs: ` jobs.delay 0.008466314990073442 sentry.tasks.store.save_event {'result': 'success'}`,
+    },
+    {
+      metric: 'eventstore.create_event',
+      description:
+        '将event写入 postgres 的耗时并返回event实例耗时，通过 @metrics.wraps 上报',
+      keyword: 'event_manager.py -> _get_event_instance()',
+      logs: `eventstore 4.8995978431776166e-05 create_event {'event_type': 'default', 'backend': 'sentry.eventstore.snuba.SnubaEventStorage', 'result': 'success'}`,
+    },
+    {
+      metric: 'event_manager.load_grouping_config',
+      description: '拉取项目所有分组配置信息耗时',
+      keyword: 'event_manager.py -> get_grouping_config_dict_for_event_data',
+      logs: `event_manager.load_grouping_config 1.3292999938130379e-05 None {'event_type': 'default', 'result': 'success'}`,
+    },
+    {
+      metric: 'event_manager.filter_attachments_for_group',
+      description: '根据项目/组织配置，对事件的附件进行过滤，并记录 outcomes',
+      keyword: 'event_manager.py -> filter_attachments_for_group()',
+      logs: `event_manager.filter_attachments_for_group 4.99398447573185e-06 None {'event_type': 'default', 'result': 'success'}`,
+    },
+    {
+      metric: 'event_manager.save_attachments',
+      description: '将缓存事件附件写入文件系统的耗时',
+      keyword: 'event_manager.py -> save() -> save_attachments()',
+      logs: `event_manager.save_attachments 3.0170194804668427e-06 None {'event_type': 'default', 'result': 'success'}`,
+    },
+    {
+      metric: 'event_manager.save',
+      description:
+        '将信息（environment、release）写入 postgres、将事件写入 kafka（供 snuba消费） 的耗时，这个过程会有异步任务',
+      keyword: 'ingest_consumer.py -> save()',
+      logs: `event_manager.save 0.2249258590163663 None {'event_type': 'default', 'result': 'success'}`,
+    },
+    {
+      metric: 'tasks.store.do_save_event.event_manager.save',
+      description: '执行 save 任务并重新获取数据后，写入缓存耗时',
+      keyword: 'store.py ->  manager.save()',
+      logs: `tasks.store.do_save_event.event_manager.save 0.2285031029896345 None {'event_type': 'default', 'result': 'success'}`,
+    },
+    {
+      metric: 'events.time-to-process',
+      description: '从事件被 ingest 消费到处理完毕耗时',
+      keyword:
+        'start_time=float(message["start_time"]) -> _do_save_event() -> time() - start_time',
+      logs: `events.time-to-process 1.947455883026123 native None`,
+    },
+    {
+      metric: 'jobs.duration.sentry.tasks.store.save_event',
+      description: '保存事件任务执行耗时',
+      keyword: 'store.py -> save_event()',
+      logs: `jobs.duration 0.26822201898903586 sentry.tasks.store.save_event {'result': 'success'}`,
+    },
+  ],
+}

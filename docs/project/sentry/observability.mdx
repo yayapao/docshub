@@ -27,6 +27,12 @@ Sentry 本身是一个分布式系统，用来采集、分析日志，因此我�
 
 我们根据不同 runner 记录的指标进行拆解，并主动发起一次错误上报。
 
+**处理 message 到写入 snuba kafka topic 流转过程如图：**
+
+<img src="/img/drawio/sentry-ingest-process.drawio.svg" width="100%" />
+
+- `process_event` 主要执行 `_load_event()`、`_store_event()` 以及 `dispatch_task()` 方法，会进行反序列化、前置过滤、写入缓存等操作
+
 ### ingest
 
 ingest 服务记录日志如下，分别打印 `key, value, instance, current_tags, sample_rate`（**注意，这个过程中删除了一些与时间指标/流程无关的日志**）
@@ -34,12 +40,6 @@ ingest 服务记录日志如下，分别打印 `key, value, instance, current_ta
 <CommonTable data={sentryTaskIngestProcessor} index={1} />
 
 在 Sentry 实现中，需要明白 ingest 是一个消费 kafka 数据的服务，它通过 consumer 和 worker 两种实现来分别消费数据、处理数据。在 consumer 服务内，主要对原始消息进行解析、过滤、调度，而 worker 将执行具体的处理。为此，我们阅读源码，理清指标之间的关联关系。
-
-**ingest 处理 message 到写入 kafka 流转过程如图：**
-
-<img src="/img/drawio/sentry-ingest-process.drawio.svg" width="100%" />
-
-- `process_event` 主要执行 `_load_event()`、`_store_event()` 以及 `dispatch_task()` 方法，会进行反序列化、前置过滤、写入缓存等操作
 
 ### worker
 

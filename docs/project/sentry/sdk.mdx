@@ -1,0 +1,205 @@
+---
+id: sdk
+title: ''
+sidebar_label: SDK Development
+---
+
+import {
+  HighlightWithText,
+  HighlightWithCode,
+} from '/src/components/Highlights'
+
+import { DocsHeader } from '/src/components/Layout/DocsHeader'
+
+<DocsHeader
+  title="Sentry JavaScript SDK"
+  description="Development of Official Sentry SDKs for JavaScript."
+  github="https://github.com/getsentry/sentry-javascript"
+  tags={['Sentry']}
+  links={[{
+    label: 'Distributed Tracing',
+    link: 'https://docs.sentry.io/product/sentry-basics/tracing/distributed-tracing/'
+  }]}
+/>
+
+
+## Packages
+
+### @sentry/hub
+
+`@sentry/hub` 管理 SDK 全局作用域，Hub 可以看作将事件路由到 Sentry 的一个中继器，一个 hub 形式通常为 `{ version, stack: [{ client, scope }]}`，hub 内维护 `client` 和 `scope`
+
+- 当一个错误事件被捕获并发送到 Sentry 过程中，hub 向事件内注入 scopes，当调用 `Sentry.init()` 方法时，会创建一个 hub、client 以及一个空的 scope
+- scope 内会维护附加信息，用于随事件一起发送给 Sentry，我们可以通过 `configureScope`，`withScope` 来控制 scope 内容
+
+```json
+{
+    "_notifyingListeners": false,
+    "_scopeListeners": [],
+    "_eventProcessors": [],
+    "_breadcrumbs": [
+        {
+            "timestamp": 1635233786.593,
+            "category": "navigation",
+            "data": {
+                "from": "/",
+                "to": "/dashboard/d/15"
+            }
+        },
+    ],
+    "_user": {},
+    "_tags": {},
+    "_extra": {},
+    "_contexts": {},
+    "_session": {
+        "sid": "3aab0156d1f14201ac742678d521c37c",
+        "init": true,
+        "started": "2021-10-26T07:36:26.223Z",
+        "timestamp": "2021-10-26T07:36:26.223Z",
+        "status": "ok",
+        "errors": 0,
+        "attrs": {
+            "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.107 Safari/537.36"
+        }
+    }
+}
+```
+
+### @sentry/tracing
+
+通过 tracing, sentry 能够追踪页面性能、统计指标比如吞吐量和延迟、展示同一个错误在不同系统的影响
+
+trace 用来记录一套完成的操作流程，比如页面加载，支付流程，如果这套流程内包含不同的服务，则进阶成为分布式调用，相比于统计分析，trace 更像是一组有时间序列的日志
+
+trace 由多个树状结构数据的 transaction 组成，这些 transaction 共享同一个 trace_id，trace 更像是产品流程上的抽象；节点代表 span
+
+transaction 可以理解为一次服务调用，span 则表示在这次调用中，执行的最小单元，可能是一次函数调用或者请求其他服务
+
+举例说明，transaction 和 spans 在一次页面加载过程中：
+
+- pageload
+    - index.html 加载
+    - 异步加载 css, script, html 资源
+    - 渲染任务
+- each request
+- Database query
+
+除了初始 transaction 的初始 span 之外，其他的 transaction 和 span 都含有父亲节点
+
+span 和 transaction 的连接处正是服务的边界
+
+transaction 在 `tracing` 包内进行创建、更新和发送
+
+举例 transaction 类型：
+
+```ts
+export interface Transaction {
+  spanId: string;
+  traceId: string;
+  startTimestamp: number;
+  tags: { [key: string]: Primitive };
+  data: { [key: string]: any };
+  metadata: TransactionMetadata; // Metadata about the transaction
+  setName(name: string): void; // Set the name of the transaction
+  toContext(): TransactionContext;
+  updateWithContext(transactionContext: TransactionContext): this;
+  // inherit from TransactionContext
+  name: string; // 自定义用来标识事务
+  trimEnd?: boolean; // 消除 idle time 带来的误差
+  parentSampled?: boolean;
+  // also can inherit from Span
+}
+```
+
+举例 span 类型：
+
+```ts
+interface SpanContext {
+  description?: string;
+  op?: string; // Operation of the Span. 比如 pageload/navigator，可以在页面查询时辨认
+  status?: string; // short code indicating operation's status
+  parentSpanId?: string;
+  sampled?: boolean;
+  spanId?: string;
+  traceId?: string;
+  tags?: { [key: string]: Primitive };
+  data?: { [key: string]: any };
+  startTimestamp?: number;
+  endTimestamp?: number;
+}
+```
+#### transaction performance metrics?
+
+**navigator**
+
+- 'unloadEvent'
+- 'redirect'
+- 'domContentLoadedEvent'
+- 'loadEvent'
+- 'connect'
+- 'TLS/SSL'
+- 'cache'
+- 'domainLookup'
+- 'request'
+- 'response'
+
+
+**transaction operation**
+
+- browser
+- pageload
+- script
+- web.vitals
+
+
+#### 在 tracing 内 transaction 上报时机？
+
+```ts
+// 1. page tab 隐藏时
+global.document.addEventListener('visibilitychange', () => {
+    if (global.document.hidden && activeTransaction) {
+        activeTransaction.finish();
+    }
+}
+
+// 2. 路由发生变化时
+export function instrumentRoutingWithDefaults() {
+    if (startTransactionOnLocationChange) {
+        if (from !== to) {
+            activeTransaction.finish();
+        }
+    }
+}
+```
+
+
+
+## FAQ
+
+### how we calculate errored and crashed sessions?(#3224)
+
+参考 `hub.startSession`, `hub.captureSession`, `baseclient.captureSession`
+
+- 应用 active （页面加载）时，创建会话信息
+- 初始化时，会话配置为 `{ init: true, status: 'ok' }`，初始化后并发送 session 之后，配置更新为 `{ init: false }`
+  - 如果错误类型为 `handled error`，则 `error += 1`，执行更新
+  - 如果错误类型为 `unhandled error`，则 `error += 1` 并且设置 `status: 'crashed'`，执行更新
+- 监听到路由变化后，结束本次会话，并发送数据
+  - 如果会话信息为 `status: crashed`，则继续保持为 `status: crashed`
+  - 如果会话信息为 `status: ok`，则更新为 `status: exited`
+
+一个 sessions data 例子如下：
+
+```json
+{
+    "sid": "bdfddb407767477e9ab6abb8f6432a43",
+    "init": true,
+    "started": "2021-10-26T06:24:35.719Z",
+    "timestamp": "2021-10-26T06:24:35.720Z",
+    "status": "ok",
+    "errors": 0,
+    "attrs": {
+        "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.107 Safari/537.36"
+    }
+}
+```

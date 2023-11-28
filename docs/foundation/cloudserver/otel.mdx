@@ -1,0 +1,52 @@
+---
+id: otel
+title: ''
+sidebar_label: otel
+---
+
+import { DocsHeader } from '/src/components/Layout/DocsHeader'
+
+<DocsHeader
+  title="OpenTelemetry(OTel)"
+  description="OpenTelemetry is an Observability framework and toolkit designed to create and manage telemetry data such as traces, metrics, and logs."
+  github="https://github.com/golang/go"
+  tags={['Google']}
+  links={[
+    {
+      label: 'OpenTelemetry Official Documentation',
+      link: 'https://opentelemetry.io/docs/what-is-opentelemetry/',
+    },
+  ]}
+/>
+
+:::warning
+
+**OpenTelemetry 是一个开源的可观测框架和工具包，用于创建和管理遥测数据。它与 vendor 和工具无关，这意味着只要你使用 OTel，你可以在任何可观测平台上使用数据。**
+
+:::
+
+什么是**可观测性（observablity）** ？
+
+    通俗来说，可观测性是指用户在不了解系统内部执行机制的前提下，仍然能够通过系统的外部可视化，来定位问题和排障。
+
+什么是**遥测数据** ？
+
+    遥测数据是指跨越分布式系统的数据，包括*跟踪（traces）、指标（metrics）和日志（logs）*。遥测数据可以帮助你了解系统的行为和性能，以便更好地管理和调试系统。
+
+    traces 和 logs 的重要区别在于其是否需要与用户请求/事务绑定。trace 能够记录执行顺序和上下文。
+
+
+什么是**OTel Collector** ？
+
+    OTel Collector 一个独立于供应商的代理（即独立于后端系统），可*接收（receivers）、处理（processors）和导出（exporters）*遥测数据。它支持以多种格式接收遥测数据，以及在导出前对遥测数据进行处理和筛选。
+
+    ![otel collector](https://opentelemetry.io/docs/collector/img/otel-collector.svg)
+
+
+## 基本概念
+
+### span & traces
+
+span 代表单元操作/事务，用它来追踪具体的操作。它通常由名称、时间相关数据、结构化日志信息以及其他元信息组成。
+
+第一个 span 叫做 root span。trace 通常由一个或者多个 span 组成。

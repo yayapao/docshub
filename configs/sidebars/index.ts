@@ -1,91 +1,88 @@
-import type { SidebarsConfig } from "@docusaurus/plugin-content-docs";
-import programmingLanguageConfig from "./programming-language";
-import projectSiderbarsConfig from "./projects";
-import { genSiderItem } from "./utils";
+import type { SidebarsConfig } from '@docusaurus/plugin-content-docs'
+import programmingLanguageConfig from './programming-language'
+import foundationConfig from './foundation'
+import projectSiderbarsConfig from './projects'
+import { genSiderItem } from './utils'
 
 const sidebarConfig: SidebarsConfig = {
   serverSiderbar: [
     {
-      type: "category",
-      label: "Site Reliability",
+      type: 'category',
+      label: 'Site Reliability',
       collapsed: true,
-      items: genSiderItem("server", [
-        "cloudServer",
-        "linux",
-        "nginx",
-        "docker",
-      ]),
+      items: genSiderItem('server', ['cloudServer', 'linux', 'nginx']),
     },
   ],
   interviewSiderbar: [
     {
-      type: "category",
-      label: "Frontend",
+      type: 'category',
+      label: 'Frontend',
       collapsed: true,
-      items: ["interview/js", "interview/frames"],
+      items: ['interview/js', 'interview/frames'],
     },
   ],
   librarySiderbar: [
     {
-      type: "category",
-      label: "Library",
+      type: 'category',
+      label: 'Library',
       collapsed: true,
-      items: ["library/python"],
+      items: ['library/python'],
     },
     {
-      type: "category",
-      label: "Vue",
+      type: 'category',
+      label: 'Vue',
       collapsed: true,
-      items: ["library/vue/concept", "library/vue/libs"],
+      items: ['library/vue/concept', 'library/vue/libs'],
     },
     {
-      type: "category",
-      label: "NestJs",
+      type: 'category',
+      label: 'NestJs',
       collapsed: true,
-      items: ["library/nestjs/concept", "library/nestjs/qa"],
+      items: ['library/nestjs/concept', 'library/nestjs/qa'],
     },
     {
-      type: "category",
-      label: "Webpack",
+      type: 'category',
+      label: 'Webpack',
       collapsed: true,
       items: [
-        "library/webpack/concept",
-        "library/webpack/loader",
-        "library/webpack/plugin",
-        "library/webpack/optimization",
+        'library/webpack/concept',
+        'library/webpack/loader',
+        'library/webpack/plugin',
+        'library/webpack/optimization',
       ],
     },
   ],
   frontendHandbookSidebar: [
     {
-      type: "doc",
-      id: "before-dev/frontend-handbook/entry",
+      type: 'doc',
+      id: 'before-dev/frontend-handbook/entry',
     },
     {
-      type: "doc",
-      id: "before-dev/backend-handbook/entry",
+      type: 'doc',
+      id: 'before-dev/backend-handbook/entry',
     },
     {
-      type: "category",
-      label: "Git & GitHub",
+      type: 'category',
+      label: 'Git & GitHub',
       collapsed: true,
-      items: genSiderItem("before-dev/git-github", ["git", "github"]),
+      items: genSiderItem('before-dev/git-github', ['git', 'github']),
     },
     {
-      type: "category",
-      label: "Cloud Infrastructure",
+      type: 'category',
+      label: 'Cloud Infrastructure',
       collapsed: true,
-      items: genSiderItem("before-dev/cloud-infrastructure", ["vercel/entry"]),
+      items: genSiderItem('before-dev/cloud-infrastructure', ['vercel/entry']),
     },
     {
-      type: "category",
-      label: "Data Services",
+      type: 'category',
+      label: 'Data Services',
       collapsed: true,
-      items: genSiderItem("before-dev/data-services", ["entry"]),
+      items: genSiderItem('before-dev/data-services', ['entry']),
     },
   ],
   ...programmingLanguageConfig,
   ...projectSiderbarsConfig,
-};
+  ...foundationConfig,
+}
 
-export default sidebarConfig;
+export default sidebarConfig

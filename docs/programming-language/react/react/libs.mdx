@@ -5,11 +5,12 @@ sidebar_label: Libraries
 ---
 
 import { DocsHeader } from '/src/components/Layout/DocsHeader'
+import { CommonTable } from '/src/docase/sentry'
 
 <DocsHeader
-  title="Node.js Libraries"
-  description="Libraries based on Node.js eco."
-  tags={['Node.js']}
+  title="React Libraries"
+  description="Libraries based on React eco."
+  tags={['React', 'Libraries']}
   links={[
     {
       label: 'How to write stories',
@@ -26,100 +27,130 @@ import { DocsHeader } from '/src/components/Layout/DocsHeader'
   ]}
 />{' '}
 
+
+
 ## StoryBook
 
-StoryBook 是一个用于前端构建 UI 组件的工作空间，它适用于任意流行前端框架，这里我们基于 React 进行介绍。
+> Build UIs without the grunt work。
 
-在 StoryBook 内，将文档分为 stories 和 docs 两大类：
+StoryBook 是一个用于前端构建 UI 组件/页面的工作空间，能够帮助我们开发、测试、文档化开发内容，它适用于任意流行前端框架，这里我们基于 Storybook + React + pnpm(monorepo) + vite 进行介绍。
 
-- 前者是描述组件的基本单元，后者可以用于描述组件、或者组件应用文档等
-- 写法上存在差别，stories 主要是编写 Meta 和 StoryObj 配置，docs 则更多是开发 React 页面
+在 StoryBook 内，将产物分为 stories 和 docs 两大类：
 
-### 使用 pnpm + vite
+<CommonTable data={{
+  columns: [{ name: 'name'}, { name: 'description'}, { name: 'exports'}],
+  rows: [{
+    name: 'stories',
+    description: '描述组件的基本单元，用于展示组件的各种状态，stories 主要是编写 Meta 和 StoryObj 配置',
+    exports: 'meta, named export'
+  },{
+    name: 'docs',
+    description: '用于描述组件、组件应用文档、页面等，更多用来开发 React 页面',
+    exports: '-' 
+  }]
+}} />
+
+
+### 初始化项目
 
 :::warning CORE
 
-核心在于使 `npx storybook@latest init -f` 执行成功
+我们使用 pnpm + vite 的组合，关键在于使 `npx storybook@latest init -f` 执行成功
 
 :::
 
-1. 在目录下创建基于 vite 的 React + TS 项目
+创建 vite 项目
 
 ```bash
-
+# 创建一个 vite 项目，使用 react ts 模板
 $ pnpm create vite story --template react-ts
 
-```
-
-2. 进入 story 目录，配置 storybook
-
-```bash
-
+# 进入 story 目录，配置 storybook
 $ cd story && mkdir .storybook && touch .storybook/main.ts
 
-```
-
-3. 初始化 storybook 安装程序，会自动修改启动脚本、导入 example 组件、引入 storybook 相关依赖
-
-```bash
-
+# 初始化 storybook 安装程序，会自动修改启动脚本、导入 example 组件、引入 storybook 相关依赖
 $ npx storybook@latest init -f
 
 ```
 
 **注意安装执行顺序，初始化完毕之后，查看 package.json.scripts 启动脚本**
 
-### 打包构建
+- 修改打包地址，storybook 默认执行 `build` 方法后会将产物输出到 `storybook-static`，如需指定输出地址，可以修改构建脚本 `storybook build -o ./dist`
 
-1. 修改打包地址
+```json title="package.json"
+"scripts": {
+  "dev": "storybook dev -p 6060",
+  "build": "storybook build -o ./dist",
+  "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
+}
+```
 
-   storybook 默认执行 `build` 方法后会将产物输出到 `storybook-static`，如需指定输出地址，可以修改构建脚本 `storybook build -o ./dist`
+### 编写 story
 
-### 编写一个 story
+通常一个组件会有多个 story，比如 Button 组件，可以有 `Primary`、`Secondary`、`Large` 等多个 story，每个 story 代表一种状态。组件状态通过 props 进行控制。
 
-这里我们基于 React + TypeScript 项目展开，在开始前你需要准备好一个 React 组件。
+story 编写规范：
 
-story 以 `[component name].stories.[js | ts | tsx | jsx | mdx]` 的形式进行命名， stories 基于 `Component Story Format(CSF)` 的标准进行编写，**即 export default meta 用于描述组件，named export 用于描述 story。**
+1. stories 以 `[component name].stories.[js|jsx|mjs|ts|tsx]` 的形式进行命名，且基于 `Component Story Format(CSF)` 的标准进行编写
+2. stories 通常包含两个部分，`Meta` 和 `StoryObj`，其中 `Meta` 用于描述组件，`StoryObj` 用于描述组件的状态
+3. stories 使用 UpperCamelCase 命名
+4. 通常 story properties 可以定义在全局、组件或者 stories，其优先级为：named export > default export > global defination。全局 story properties 定义在 `.storybook/.preview.js` 内，其他定义在 `stories` 内
+5. 在 monorepo 内，从源路径 `src/` 而不是产物路径 `build/` 引入组件
 
-- stories 使用 UpperCamelCase 命名
-- **通常 story properties 可以定义在全局、组件或者 stories**， 其优先级为：named export > default export > global defination
-- ⚠️，全局 story properties 定义在 `.storybook/.preview.js` 内，其他定义在 `stories` 内
-
-举例说明（TS + React 项目）：
+举例说明：
 
 ```tsx
-import { Button } from 'Where/Component/Is/Defined'
-import type { Meta, StoryObj } from '@storybook/react'
+import { CopyWrapper } from "@nofun/ui/src/Button/CopyWrapper";
+import { ButtonLinear } from "@nofun/ui/src/Button/ButtonLinear";
+import { Meta, StoryObj } from "@storybook/react";
 
-const meta = {
-  title: 'ui/Button', // storybook 中展示的标题，通过 / 进行分组，代表 [组件库]/[组件]
-  component: Button,
-  tags: ['autodocs'], // 用于描述/搜索 story
-  // argTypes 设置组件 props 的类型、默认值以及交互控制
-  argTypes: {
-    backgroundColor: { control: 'color' },
-    size: {
-      control: { type: 'select', options: ['small', 'medium', 'large'] },
+const meta: Meta<typeof CopyWrapper> = {
+  title: "Component/Button/CopyWrapper", // 对应平台的层级目录
+  component: CopyWrapper,
+  tags: ["autodocs"], // 用户告诉 Autodocs 插件，该组件需要生成文档，相关配置查看 `.storybook/main.ts`
+};
+
+// 描述组件
+export default meta;
+
+type Story = StoryObj<typeof CopyWrapper>;
+
+// 组件的默认状态
+export const Default: Story = {
+  args: {
+    value: `copy something`,
+    label: <ButtonLinear>copy to clipboard</ButtonLinear>,
+    onError: () => console.error("copy failed"),
+    onSuccess: () => alert("copy success"),
+  },
+  // 这里可以自定义组件渲染，args 为组件的 props
+  render: (args) => <CopyWrapper {...args} />,
+};
+
+// argTypes 用来描述不同 props 的类型、作用以及其默认值
+meta.argTypes = {
+  value: {
+    description: "The text to be copied, support multiple lines",
+  },
+  label: {
+    description: "The element to be clicked",
+    table: {
+      defaultValue: {
+        summary: "<button>copy to clipboard</button>",
+      },
+      type: {
+        summary: "React.ReactNode | string | undefined",
+      },
     },
   },
-  decorators: [
-    (Story) => (
-      <div style={{ margin: '3em' }}>
-        <Story />
-      </div>
-    ),
-  ],
-} satisfies Meta<typeof Button>
-// export default meta
-export default meta
-
-// named export
-export const Primary: StoryObj<typeof Button> = {
-  args: {
-    primary: true,
-    size: 'small',
+  onSuccess: {
+    description: "Callback when copy success",
   },
-}
+  onError: {
+    description: "Callback when copy failed",
+  },
+};
+
 ```
 
 #### decorators
@@ -134,6 +165,12 @@ export const Primary: StoryObj<typeof Button> = {
 `play` 可以定义组件渲染完成之后，执行的代码块，通常设置在 named export story，可以设置组件的交互行为或者测试场景。在 `play` 方法内，需要用 storybook 内提供的一套方法来获取、操作、交互页面元素。
 
 - 定义的操作流程可以在 `Interactions` 内检查
+
+### FAQ
+
+1. 升级 storybook 到 v7.6.7 之后，出现 `Internal server error: Argument must be Identifier, Literal, QualifiedTypeIdentifier or TSQualifiedName. Received 'TemplateLiteral'` 问题
+
+参考 [The auto-generated documentation is not showing up in a monorepo setup](https://storybook.js.org/docs/writing-docs/autodocs#the-auto-generated-documentation-is-not-showing-up-in-a-monorepo-setup)，由于我们使用了 monorepo 的方式，因此在引入自定义组件库的时候，需要使用 `src/` 而不是 `dist/build/` 路径来导入组件。
 
 ## Redux
 

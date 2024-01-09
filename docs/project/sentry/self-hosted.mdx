@@ -4,7 +4,6 @@ title: ''
 sidebar_label: Self Hosted
 ---
 
-import { HighlightWithText } from '/src/components/Highlights'
 import { DocsHeader } from '/src/components/Layout/DocsHeader'
 
 <DocsHeader
@@ -324,14 +323,14 @@ Snuba 是 CK 的代理服务，用户查询和写入数据。
 
 ### ClickHouse
 
-参考[运维脚本](https://doc.joyjoy.cc/docs/database/clickhouse)
+参考[ck运维脚本](https://doc.joyjoy.cc/docs/before-dev/data-services/entry#%E5%B8%B8%E7%94%A8%E8%BF%90%E7%BB%B4%E8%84%9A%E6%9C%AC)
 
 在 ClickHouse 内，Sentry 会创建如下表，由 Snuba 服务对其进行代理，负责插入和代理查询数据：
 
 ```
 sessions_raw_local
 
-outcomes_raw_local
+outcomes_raw_local // 时序数据库
 
 errors_local
 

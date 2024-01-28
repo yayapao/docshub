@@ -16,23 +16,59 @@ import { HighlightWithText } from '/src/components/Highlights'
 
 :::info
 
-React Native 可以看成是 React 在 ios/android 运行环境的实现
+React Native 可以看成是 React 在 ios/android 运行环境的实现，它提供编译器将 jsx 语法转换成 ios/android 原生组件，同时提供了一套原生组件的封装。
 
 :::
 
 众所周知，React 通过建立内存 DOM，即虚拟数来进行 Diff 比较、计算后，调用浏览器 API 进行重新渲染。那么只要我们能够掌握不同运行时或者执行环境下的底层渲染接口，这一套逻辑仍然行之有效。
 
-React Native 正是利用桥接和虚拟 DOM 来在手机端内进行，**它与 React 的区别？**
+React Native 正是利用 Bridge 和 Virtual DOM 来在手机端内进行。
 
-- 元素标签
+**RN 与 React 的区别？**
+
+- 元素标签，实际上在于浏览器和手机端的渲染方式不同，其支持原生组件不同，从而导致了标签的差异
 - 生命周期
 
 **React Native 相比 webview 的优势？**
 
-- webview 存在安全问题
-- webview 存在性能问题
-- webview 存在样式和交互问题
-- webview 维护成本更高
+就凭 RN 编译的内容，能够直接使用原生组件渲染，就已经吊打 webview 了。webview 相当于在原生应用内嵌入一个 V8 引擎，然后在这个引擎内运行一个网页，天然存在安全、性能、样式交互问题。
+
+## 环境准备
+
+查看 [Setting up the development environment · React Native](https://reactnative.dev/docs/environment-setup) 这里介绍通过 React-Native-CLI 进行安装，需要：
+- Node.js > 18，通过 volta 解决
+- watchman，`brew install watchman`
+- Xcode > 12.5，通过 App Store 安装
+- CocoaPods，管理 ios 依赖
+- Metro，React Native 的打包工具
+
+准备完毕之后，执行 `npx react-native@latest init AwesomeProject` 创建项目，**注意项目名称**，初始化完毕之后，按照提示继续执行：
+
+```bash
+# 仅针对 ios 
+Run instructions for iOS:
+  • cd "/Users/yango/github/apps/joyappRn/ios"
+
+  • Install Cocoapods
+    • bundle install # you need to run this only once in your project.
+    • bundle exec pod install # 如果遇到问题，尝试执行 pod repo update 更新本地仓库
+    • cd ..
+
+  • npx react-native run-ios
+  - or -
+  • Open joyappRn/ios/joyappRn.xcodeproj in Xcode or run "xed -b ios"
+  • Hit the Run button
+
+```
+
+### 在真机上运行
+
+查看 [Running On Device · React Native](https://reactnative.dev/docs/running-on-device)，这里浓缩步骤：
+- 通过 Xcode 打开 **ios/xxx.xcworkspace**，分别确认项目名称、签名、bundle id 等信息
+- 之后在导航栏选择设备，点击运行即可，这个过程中可能会遇到一些问题，**尝试重启 Xcode、电脑、手机**
+
+注意让电脑信任手机设备，让手机设备信任开发者证书。
+
 
 ## Q&A
 

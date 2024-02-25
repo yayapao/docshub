@@ -9,10 +9,16 @@ import { HighlightWithText } from '/src/components/Highlights'
 
 <DocsHeader
   title="React Native Application"
-  description="基于 React Native 从 0 到 1 创建一个 ios 应用"
-  tags={['React Native']}
-  links={[]}
-/>{' '}
+  description = "基于 React Native 从 0 到 1 创建一个 ios 应用"
+  tags = { ['React Native']}
+  links = {
+    [
+      {
+        link: 'https://medium.com/@vimniky/how-to-use-vector-icons-in-your-react-native-project-8212ac6a8f06',
+        label: 'How to use vector icons in your react-native project',
+      },
+  ]}
+    />{ ' '}
 
 :::info
 
@@ -67,7 +73,46 @@ Run instructions for iOS:
 - 通过 Xcode 打开 **ios/xxx.xcworkspace**，分别确认项目名称、签名、bundle id 等信息
 - 之后在导航栏选择设备，点击运行即可，这个过程中可能会遇到一些问题，**尝试重启 Xcode、电脑、手机**
 
-注意让电脑信任手机设备，让手机设备信任开发者证书。
+**注意让电脑信任手机设备，让手机设备信任开发者证书。**
+
+遇到代码更新后，无法在真机上运行的问题，可以尝试：
+- 清除缓存，`npx react-native start --reset-cache`
+- 重新编译，`npx react-native run-ios`
+
+
+## 选择UI库
+
+我们选择 [react-native-paper](https://callstack.github.io/react-native-paper/docs/guides/getting-started) 作为 UI 库，它提供了一套 Material Design 风格的组件，同时提供了一些常用的功能组件。
+
+直接安装即可，这里特别说明引入 Icon 的方式：在 react-native-paper 内很多组件都需要使用 [oblador/react-native-vector-icons: Customizable Icons for React Native with support for image source and full styling.](https://github.com/oblador/react-native-vector-icons) 这个库，所以我们需要安装这个库，并将其资源拷贝到 ios 项目内，并编辑 `Info.plist` 文件。
+
+:::warning
+
+添加 icon 文件之后，需要重新编译
+
+:::
+
+完成之后，通过 `import Icon from 'react-native-vector-icons/FontAwesome'` 即可使用
+
+```tsx
+import Icon from 'react-native-vector-icons/FontAwesome';
+const myButton = (
+  <Icon.Button
+    name="facebook"
+    backgroundColor="#3b5998"
+    onPress={this.loginWithFacebook}
+  >
+    Login with Facebook
+  </Icon.Button>
+);
+```
+
+## 封装请求方法
+
+
+
+
+
 
 
 ## Q&A

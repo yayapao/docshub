@@ -9,10 +9,11 @@ import { HighlightWithText } from '/src/components/Highlights'
 
 <DocsHeader
   title="React Handbook"
-  description="基于 React 官方文档进行解读和深入研究。"
-  github="https://reactjs.org/docs/getting-started.html"
-  tags={['React', 'Document']}
-  links={[
+  description = "基于 React 官方文档进行解读和深入研究。"
+  github = "https://reactjs.org/docs/getting-started.html"
+  tags = { ['React', 'Document']}
+  links = {
+    [
     {
       label: 'useEffect vs useLayoutEffect',
       link: 'https://kentcdodds.com/blog/useeffect-vs-uselayouteffect',
@@ -26,7 +27,7 @@ import { HighlightWithText } from '/src/components/Highlights'
       link: 'https://overreacted.io/before-you-memo/',
     },
   ]}
-/>{' '}
+    />{ ' '}
 
 ## 关于 re-render
 
@@ -207,7 +208,7 @@ export default function TodoList({ todos, tab, theme }) {
 
 ## useEffect vs useLayoutEffet
 
-<HighlightWithText text="One Word" />{' '}
+< HighlightWithText text = "One Word" />{ ' '}
 
 `useEffect` 与 `useLayoutEffect` 的区别在于执行时机，99% 的场景都是使用 `useEffect`，因为其被设计有更好的执行性能。
 

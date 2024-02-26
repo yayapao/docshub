@@ -21,8 +21,15 @@ const navbarConfig: Config['themeConfig'] = {
           // 设置高亮
           activeBaseRegex: '/docs/foundation',
         },
+        {
+          label: 'Applied Practice',
+          to: '/docs/applied-practice/android/handbook',
+          // 设置高亮
+          activeBaseRegex: '/docs/applied-practice',
+        },
       ],
     },
+
     {
       label: 'Progarmming Language',
       position: 'left',

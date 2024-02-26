@@ -3,6 +3,7 @@ import programmingLanguageConfig from './programming-language'
 import foundationConfig from './foundation'
 import projectSiderbarsConfig from './projects'
 import { genSiderItem } from './utils'
+import appliedPracticeConfig from './applied-practice'
 
 const sidebarConfig: SidebarsConfig = {
   serverSiderbar: [
@@ -83,6 +84,7 @@ const sidebarConfig: SidebarsConfig = {
   ...programmingLanguageConfig,
   ...projectSiderbarsConfig,
   ...foundationConfig,
+  ...appliedPracticeConfig,
 }
 
 export default sidebarConfig

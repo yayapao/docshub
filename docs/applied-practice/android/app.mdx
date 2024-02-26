@@ -1,10 +1,20 @@
 ---
-id: app
-title: 'App'
-sidebar_label: app
+id: handbook
+title: ''
+sidebar_label: Handbook
 ---
 
-### 创建一个 App 页面
+import { DocsHeader } from '/src/components/Layout/DocsHeader'
+import { HighlightWithText } from '/src/components/Highlights'
+
+<DocsHeader
+  title="Android handbook"
+  description=""
+  tags={['Android']}
+  links={[]}
+/>
+
+## 创建一个 App 页面
 
 创建一个 App 页面需要具备以下内容：
 
@@ -12,7 +22,7 @@ sidebar_label: app
 - 在对应模块内创建 java 脚本
 - 在 AndroidManifest 内注册页面
 
-#### 创建布局文件
+### 创建布局文件
 
 这里我们使用 `LinearLayout` 实现了一个页面布局，在内有一个 id 为 'title' 的 TextView 元素。
 
@@ -28,6 +38,7 @@ LinearLayout 可以类比 flex，以线性的方式排列子视图，可以指�
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:gravity="center"
+    android:layout_gravity="center"
     android:orientation="vertical">
 
     <TextView
@@ -40,13 +51,14 @@ LinearLayout 可以类比 flex，以线性的方式排列子视图，可以指�
 ```
 
 - `android:layout_width="match_parent"`：设置布局的宽度为与父容器相同
-- `android:gravity="center"`：设置元素内部对齐方式
+- `android:gravity="center"`：设置元素内部对齐方式，参数为 left, right, top, bottom, center, center_vertical, center_horizontal 等，也可以组合使用，比如 left|bottom 就代表左下角对齐
+- `android:layout_gravity="center"`：设置当前元素在父容器内的对齐方式
 - `android:orientation="vertical"`：设置子视图的排列方式
 - `android:id="@+id/title"`：元素的唯一标识，在代码内引用
 - `android:layout_width="wrap_content"`：设置 TextView 宽度根据内容自适应
 - `android:text="@string/title"`：引用在 values/strings.xml 内定义的变量
 
-#### 创建脚本
+### 创建脚本
 
 在 java/[package] 内创建一个 java Activity class，下面展示的必须包含的代码，为页面选择布局并初始化；
 
@@ -60,7 +72,7 @@ public class ListActivity extends AppCompatActivity {
 }
 ```
 
-#### 在 AndroidManifest.xml 内注册
+### 在 AndroidManifest.xml 内注册
 
 在 AndroidManifest.xml 内注册指定的 Activity。**如果是主页面（即进入 app 后展示的页面），则需要添加 android.intent.action.MAIN 的 activity 为入口文件。**
 
@@ -84,7 +96,7 @@ public class ListActivity extends AppCompatActivity {
 <activity android:name=".ListActivity"></activity>
 ```
 
-#### 视图跳转
+### 视图跳转
 
 在 android 内通过 `intent` 来实现视图跳转（类比 `window.open()`）,下面展示核心代码：
 
@@ -98,4 +110,34 @@ button.setOnClickListener(new View.OnClickListener() {
         startActivity(intent);
     }
 });
+```
+
+## 布局
+
+在 android 内有四种常用布局方式：LinearLayout, RelativeLayout, GridLayout, ScrollLayout。
+
+### LinearLayout
+
+LinearLayout 可以类比 flex，以线性的方式排列子视图，可以指定方向、对齐方式、子视图的占比等。默认按水平方向，从左到右排列。
+
+设置子视图权重，可以通过 `android:layout_width="0dp"` 和 `android:layout_weight` 可以使子视图按照比例分配宽度（高度则设置 layout_width），类比 flex 属性 `flex-grow`。
+
+```xml
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal">
+
+    <TextView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="horizontal1"
+        android:layout_weight="1"/>
+
+    <TextView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="horizontal2"
+        android:layout_weight="1"/>
+</LinearLayout>
 ```

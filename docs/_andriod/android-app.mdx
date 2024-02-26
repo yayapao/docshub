@@ -1,0 +1,95 @@
+### 创建一个 App 页面
+
+创建一个 App 页面需要具备以下内容：
+
+- 在 res/layout 目录下创建布局文件，文件格式为 xml
+- 在对应模块内创建 java 脚本
+- 在 AndroidManifest 内注册页面
+
+#### 创建布局文件
+
+这里我们使用 `LinearLayout` 实现了一个页面布局，在内有一个 id 为 'title' 的 TextView 元素。
+
+:::info
+
+LinearLayout 可以类比 flex，以线性的方式排列子视图，可以指定方向、对齐方式、子视图的占比等
+
+:::
+
+```xml
+<?xml version="1.0" encoding="utf-8" ?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/title" />
+
+</LinearLayout>
+```
+
+- `android:layout_width="match_parent"`：设置布局的宽度为与父容器相同
+- `android:gravity="center"`：设置元素内部对齐方式
+- `android:orientation="vertical"`：设置子视图的排列方式
+- `android:id="@+id/title"`：元素的唯一标识，在代码内引用
+- `android:layout_width="wrap_content"`：设置 TextView 宽度根据内容自适应
+- `android:text="@string/title"`：引用在 values/strings.xml 内定义的变量
+
+#### 创建脚本
+
+在 java/[package] 内创建一个 java Activity class，下面展示的必须包含的代码，为页面选择布局并初始化；
+
+```java
+public class ListActivity extends AppCompatActivity {
+    @Override
+    protected void onCreate(Bundle saveInstanceState) {
+        super.onCreate(saveInstanceState);
+        setContentView(R.layout.activity_linear);
+    }
+}
+```
+
+#### 在 AndroidManifest.xml 内注册
+
+在 AndroidManifest.xml 内注册指定的 Activity。**如果是主页面（即进入 app 后展示的页面），则需要添加 android.intent.action.MAIN 的 activity 为入口文件。**
+
+注册一个主视图：
+
+```xml
+<activity
+    android:name=".MainActivity"
+    android:exported="true">
+    <intent-filter>
+        <action android:name="android.intent.action.MAIN" />
+
+        <category android:name="android.intent.category.LAUNCHER" />
+    </intent-filter>
+</activity>
+```
+
+注册一个非主视图：
+
+```xml
+<activity android:name=".ListActivity"></activity>
+```
+
+#### 视图跳转
+
+在 android 内通过 `intent` 来实现视图跳转（类比 `window.open()`）,下面展示核心代码：
+
+```java
+button.setOnClickListener(new View.OnClickListener() {
+    @Override
+    public void onClick(View v) {
+        // 创建意图对象，实现跳转
+        Intent intent = new Intent();
+        intent.setClass(MainActivity.this, ListActivity.class);
+        startActivity(intent);
+    }
+});
+```

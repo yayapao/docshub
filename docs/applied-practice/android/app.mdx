@@ -141,3 +141,32 @@ LinearLayout 可以类比 flex，以线性的方式排列子视图，可以指�
         android:layout_weight="1"/>
 </LinearLayout>
 ```
+
+### RelativeLayout
+
+RelativeLayout 可以类比 grid，可以通过设置子视图的相对位置来排列子视图。可以通过两种方式来设置子视图的相对位置：
+
+- 设置相对同级元素，比如 `android:layout_below="@id/title"` 可以使当前视图在 title 视图下方
+- 设置相对父级元素，比如 `android:layout_centerInParent="true"` 可以使当前视图在父级视图内居中
+
+```xml
+<RelativeLayout
+    android:layout_width="match_parent"
+    android:layout_height="100dp"
+    android:background="@color/orange"
+    android:layout_weight="1">
+    <TextView
+        android:id="@+id/relative1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:text="relative1" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:layout_toLeftOf="@id/relative1"
+        android:layout_alignTop="@id/relative1"
+        android:text="leftOf1" />
+</RelativeLayout>
+```

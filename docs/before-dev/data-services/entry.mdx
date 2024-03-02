@@ -439,58 +439,59 @@ from
 **查看表内字段，注意不能直接使用 \***
 
 ```sql
-SELECT project_id, timestamp, event_id, platform, environment, http_method, http_referer, tags.key, tags.value, _tags_hash_map, contexts.key, contexts.value, transaction_name, transaction_hash, span_id, trace_id, partition, offset, message_timestamp, retention_days, deleted, group_id, primary_hash, hierarchical_hashes, received, message, title, culprit, level, location, version, type, modules.name, modules.version 
-FROM errors_local 
-WHERE timestamp >= now() - 3600 
-ORDER BY timestamp DESC 
+SELECT project_id, timestamp, event_id, platform, environment, http_method, http_referer, tags.key, tags.value, _tags_hash_map, contexts.key, contexts.value, transaction_name, transaction_hash, span_id, trace_id, partition, offset, message_timestamp, retention_days, deleted, group_id, primary_hash, hierarchical_hashes, received, message, title, culprit, level, location, version, type, modules.name, modules.version
+FROM errors_local
+WHERE timestamp >= now() - 3600
+ORDER BY timestamp DESC
 LIMIT 1 FROMAT JSON;
 ```
 
 **创建物化视图**，我们需要在每个节点创建本地表、物化视图（实际上也是个表）、以及分布式表。下面举例说明：
 
-1. 创建本地表 `errors_analysis_local`，使用 `ReplicatedReplacingMergeTree` 引擎，将数据写入到 `shard3` 的 `hdd_in_order` 策略（即按序存放到硬盘）
+1. **创建本地表** `errors_analysis_local`，使用 `ReplicatedReplacingMergeTree` 引擎，将数据写入到 `shard3` 的 `hdd_in_order` 策略（即按序存放到硬盘）
 
-注意，副本需要与集群对应，即 `replica[index]` 需要与当前集群 shard num 对应。
+:::warning
+
+- 副本需要与集群对应，即 `replica[index]` 需要与当前集群 shard num 对应
+- 使用 Nullable 来确保能够处理 null 数据
+
+:::
 
 ```sql
 CREATE TABLE sentry.errors_analysis_local
 (
     `project_id` UInt64,
     `timestamp` DateTime,
-    `event_id` UUID,
-    `url` String
-) ENGINE = ReplicatedReplacingMergeTree('/clickhouse/tables/errors/shard3/sentry/errors_analysis_local', 'replica3') 
-PARTITION BY toMonday(timestamp) 
-PRIMARY KEY (project_id, timestamp) 
-ORDER BY (project_id, timestamp) 
+    `url` Nullable(String)
+) ENGINE = ReplicatedReplacingMergeTree('/clickhouse/tables/errors/shard3/sentry/errors_analysis_local', 'replica3')
+PARTITION BY toMonday(timestamp)
+PRIMARY KEY (project_id, timestamp)
+ORDER BY (project_id, timestamp)
 SETTINGS index_granularity = 256, storage_policy = 'hdd_in_order';
 ```
 
 查看当前集群信息 `SELECT * FROM system.clusters;`
 
-
-2. 创建分布式表，注意字段要一致，引擎为 `Distributed`，将数据分发到 `errors_analysis_local` 表内
+2. **创建分布式表，注意字段要一致**，引擎为 `Distributed`，将数据分发到 `errors_analysis_local` 表内
 
 ```sql
 CREATE TABLE sentry.errors_analysis_dist
 (
     `project_id` UInt64,
     `timestamp` DateTime,
-    `event_id` UUID,
-    `url` String
+    `url` Nullable(String)
 )
 ENGINE = Distributed('logs', 'sentry', 'errors_analysis_local');
 ```
 
-3. 创建物化视图，注意设置源 table 和目标 table。`arrayElement(tags.value, indexOf(tags.key, 'url'))` 用来从  `tags.key` 数组内找到 `url` 对应的值
+3. **创建物化视图**，注意设置源 table 和目标 table。`arrayElement(tags.value, indexOf(tags.key, 'url'))` 用来从 `tags.key` 数组内找到 `url` 对应的值
 
 ```sql
-CREATE MATERIALIZED VIEW sentry.mv_errors_analysis_local TO entry.errors_analysis_local
+CREATE MATERIALIZED VIEW sentry.mv_errors_analysis_local TO sentry.errors_analysis_local
 (
     `project_id` UInt64,
     `timestamp` DateTime,
-    `event_id` UUID,
-    `url` String
+    `url` Nullable(String)
 ) AS
 SELECT
     project_id,
@@ -501,7 +502,6 @@ FROM sentry.errors_local;
 ```
 
 如果在操作过程中发现错误，可以执行 `DROP TABLE IF EXISTS sentry.mv_errors_analysis_local;` 删除物化视图，不然可能影响到数据写入。
-
 
 ## Kafka
 

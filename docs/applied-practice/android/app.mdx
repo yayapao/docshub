@@ -170,3 +170,52 @@ RelativeLayout 可以类比 grid，可以通过设置子视图的相对位置来
         android:text="leftOf1" />
 </RelativeLayout>
 ```
+
+### GridLayout
+
+GridLayout 可以类比 table，可以通过设置多行多列来排列子视图。可以通过 `android:layout_row` 和 `android:layout_column` 来设置子视图的位置。
+
+```xml
+<GridLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:columnCount="2"
+        android:rowCount="1">
+    <TextView
+        android:layout_width="0dp"
+        android:layout_height="30dp"
+        android:gravity="center"
+        android:layout_columnWeight="1"
+        android:background="#1890ff"
+        android:text="grid1" />
+    <TextView
+        android:layout_width="0dp"
+        android:layout_height="30dp"
+        android:gravity="center"
+        android:layout_columnWeight="1"
+        android:background="#00bf8a"
+        android:text="grid2" />
+</GridLayout>
+```
+
+- `android:columnCount` 和 `android:rowCount` 分别设置列数和行数
+- `android:layout_columnWeight` 和 `android:layout_rowWeight` 分别设置列宽和行高的权重
+
+## 列表
+
+对于 android 内列表，需要明确以下几个概念：
+
+- adapter：适配器，用于将数据和视图绑定，注意，这里的视图是指列表项/选择项的视图，通常命令为 `item_xxx.xml`
+
+## fragment
+
+:::warn
+
+**传统的 Activity 不能很好地适应大屏幕设备，因此需要 fragment 来划分区域展示内容，并且它具备自己的独立操作空间**
+
+:::
+
+[Fragment  |  Android 开发者  |  Android Developers](https://developer.android.com/guide/fragments?hl=zh-cn)
+
+fragment 可以在 xml 内静态注册，也可以在 java 内动态注册。**创建时必须指定 fragment 对应的 class。**

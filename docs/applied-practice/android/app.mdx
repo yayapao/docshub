@@ -204,9 +204,19 @@ GridLayout 可以类比 table，可以通过设置多行多列来排列子视图
 
 ## 列表
 
-对于 android 内列表，需要明确以下几个概念：
+对于 android 内列表，是指需要使用 adapter 提供数据，与 layout 结合的做法。通常包括：`ListView`, `GridView`, `Spinner`
 
 - adapter：适配器，用于将数据和视图绑定，注意，这里的视图是指列表项/选择项的视图，通常命令为 `item_xxx.xml`
+
+**ListView 和 GridView 的区别在于前者是垂直列表，后者是网格列表，即一列多行和多行多列。**
+
+如果我们在 adapter 内设置了点击事件，同时有需要对列表项目进行操作，则需要设置 `android:descendantFocusability="blocksDescendants"` 来阻止子视图的点击事件冒泡。
+
+```xml path="res/layout/item_list.xml"
+<LinearLayout android:descendantFocusability="blocksDescendants">
+
+</LinearLayout>
+```
 
 ## fragment
 
@@ -216,6 +226,6 @@ GridLayout 可以类比 table，可以通过设置多行多列来排列子视图
 
 :::
 
-[Fragment  |  Android 开发者  |  Android Developers](https://developer.android.com/guide/fragments?hl=zh-cn)
+[Fragment | Android 开发者 | Android Developers](https://developer.android.com/guide/fragments?hl=zh-cn)
 
 fragment 可以在 xml 内静态注册，也可以在 java 内动态注册。**创建时必须指定 fragment 对应的 class。**

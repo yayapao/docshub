@@ -124,6 +124,27 @@ git branch -r | grep 'key_word' | sed 's/origin\///'| xargs git push origin -d
 
 这种操作带来的风险点：如果另一个人在该分支上也提交了内容，那么会将他的提交内容也覆盖（清空）
 
+### submodule
+
+有种情况我们经常会遇到：某个工作中的项目需要包含并使用另一个项目。 也许是第三方库，或者你独立开发的，用于多个父项目的库。 现在问题来了：你想要把它们当做两个独立的项目，同时又想在一个项目中使用另一个项目。
+
+`git submodule` 就是为了帮助我们解决上述问题。
+
+**添加子模块到指定目录，之后进行提交**
+
+```bash
+
+git submodule add git@github.com:yayapao/xxxxxx.git ./submodules/xxxxxx
+
+```
+
+**删除已添加的子模块，需要删除 git 跟踪和目录**
+
+1. 删除 `.submodule` 文件内相关内容；
+2. 删除 `.git/config` 内相关内容；
+3. 删除 `.git/modules` 内相关内容；
+4. 执行 `git submodule deinit -f <子模块路径>` 删除子模块目录
+
 ## Github
 
 :::note what's Github?

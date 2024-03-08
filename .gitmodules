@@ -1,0 +1,6 @@
+[submodule "submodules/enjoy-android"]
+	path = submodules/enjoy-android
+	url = https://github.com/yayapao/enjoy-android.git
+[submodule "submodules/docsupport"]
+	path = submodules/docsupport
+	url = git@github.com:yayapao/docsupport.git

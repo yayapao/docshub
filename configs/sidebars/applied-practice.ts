@@ -9,7 +9,7 @@ const appliedPracticeConfig: SidebarsConfig = {
       type: 'category',
       label: 'Android',
       collapsed: true,
-      items: genSiderItem(`${prefix}/android`, ['handbook', 'app']),
+      items: genSiderItem(`${prefix}/android`, ['handbook']),
     },
   ],
 }

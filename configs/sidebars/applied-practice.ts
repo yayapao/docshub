@@ -17,6 +17,12 @@ const appliedPracticeConfig: SidebarsConfig = {
       collapsed: true,
       items: genSiderItem(`${prefix}/go`, ['webapp']),
     },
+    {
+      type: 'category',
+      label: 'React',
+      collapsed: true,
+      items: genSiderItem(`${prefix}/react`, ['iosapp']),
+    },
   ],
 }
 

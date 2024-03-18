@@ -1,24 +1,23 @@
 ---
-id: application
+id: iosapp
 title: ''
-sidebar_label: application
+sidebar_label: IOS App
 ---
 
 import { DocsHeader } from '/src/components/Layout/DocsHeader'
 import { HighlightWithText } from '/src/components/Highlights'
 
 <DocsHeader
-  title="React Native Application"
-  description = "基于 React Native 从 0 到 1 创建一个 ios 应用"
-  tags = { ['React Native']}
-  links = {
-    [
-      {
-        link: 'https://medium.com/@vimniky/how-to-use-vector-icons-in-your-react-native-project-8212ac6a8f06',
-        label: 'How to use vector icons in your react-native project',
-      },
+  title="React Native Application(ios)"
+  description="基于 React Native 从 0 到 1 创建一个 ios 应用"
+  tags={['React Native']}
+  links={[
+    {
+      link: 'https://medium.com/@vimniky/how-to-use-vector-icons-in-your-react-native-project-8212ac6a8f06',
+      label: 'How to use vector icons in your react-native project',
+    },
   ]}
-    />{ ' '}
+/>{' '}
 
 :::info
 
@@ -42,6 +41,7 @@ React Native 正是利用 Bridge 和 Virtual DOM 来在手机端内进行。
 ## 环境准备
 
 查看 [Setting up the development environment · React Native](https://reactnative.dev/docs/environment-setup) 这里介绍通过 React-Native-CLI 进行安装，需要：
+
 - Node.js > 18，通过 volta 解决
 - watchman，`brew install watchman`
 - Xcode > 12.5，通过 App Store 安装
@@ -51,7 +51,7 @@ React Native 正是利用 Bridge 和 Virtual DOM 来在手机端内进行。
 准备完毕之后，执行 `npx react-native@latest init AwesomeProject` 创建项目，**注意项目名称**，初始化完毕之后，按照提示继续执行：
 
 ```bash
-# 仅针对 ios 
+# 仅针对 ios
 Run instructions for iOS:
   • cd "/Users/yango/github/apps/joyappRn/ios"
 
@@ -70,17 +70,18 @@ Run instructions for iOS:
 ### 在真机上运行
 
 查看 [Running On Device · React Native](https://reactnative.dev/docs/running-on-device)，这里浓缩步骤：
+
 - 通过 Xcode 打开 **ios/xxx.xcworkspace**，分别确认项目名称、签名、bundle id 等信息
 - 之后在导航栏选择设备，点击运行即可，这个过程中可能会遇到一些问题，**尝试重启 Xcode、电脑、手机**
 
 **注意让电脑信任手机设备，让手机设备信任开发者证书。**
 
 遇到代码更新后，无法在真机上运行的问题，可以尝试：
+
 - 清除缓存，`npx react-native start --reset-cache`
 - 重新编译，`npx react-native run-ios`
 
-
-## 选择UI库
+## 选择 UI 库
 
 我们选择 [react-native-paper](https://callstack.github.io/react-native-paper/docs/guides/getting-started) 作为 UI 库，它提供了一套 Material Design 风格的组件，同时提供了一些常用的功能组件。
 
@@ -95,7 +96,7 @@ Run instructions for iOS:
 完成之后，通过 `import Icon from 'react-native-vector-icons/FontAwesome'` 即可使用
 
 ```tsx
-import Icon from 'react-native-vector-icons/FontAwesome';
+import Icon from 'react-native-vector-icons/FontAwesome'
 const myButton = (
   <Icon.Button
     name="facebook"
@@ -104,16 +105,10 @@ const myButton = (
   >
     Login with Facebook
   </Icon.Button>
-);
+)
 ```
 
 ## 封装请求方法
-
-
-
-
-
-
 
 ## Q&A
 

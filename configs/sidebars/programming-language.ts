@@ -11,12 +11,10 @@ const goHandbookPrefix = 'programming-language/golang/handbook'
 const htmlHandbookPrefix = 'programming-language/html5/handbook'
 const htmlBrowserPrefix = 'programming-language/html5/browser'
 // js
-const jsToolkitPrefix = 'programming-language/javascript/toolkits'
 const jsHandbookPrefix = 'programming-language/javascript/handbook'
 const tsPrefix = 'programming-language/javascript/typescript'
 // react
 const reactPrefix = 'programming-language/react/react'
-const rnPrefix = 'programming-language/react/react-native'
 
 const programmingLanguageConfig: SidebarsConfig = {
   nodejsProgrammingSidbar: [
@@ -113,12 +111,6 @@ const programmingLanguageConfig: SidebarsConfig = {
         'libs',
         'qa',
       ]),
-    },
-    {
-      type: 'category',
-      label: 'React Native',
-      collapsed: true,
-      items: genSiderItem(rnPrefix, ['application']),
     },
   ],
 }

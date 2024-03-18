@@ -1,126 +1,126 @@
-import type { SidebarsConfig } from "@docusaurus/plugin-content-docs";
-import { genSiderItem } from "./utils";
+import type { SidebarsConfig } from '@docusaurus/plugin-content-docs'
+import { genSiderItem } from './utils'
 
 // nodejs
-const nodejsToolkitPrefix = "programming-language/nodejs/toolkits";
-const nodejsHandbookPrefix = "programming-language/nodejs/handbook";
+const nodejsToolkitPrefix = 'programming-language/nodejs/toolkits'
+const nodejsHandbookPrefix = 'programming-language/nodejs/handbook'
 // go
-const goToolkitPrefix = "programming-language/golang/toolkits";
-const goHandbookPrefix = "programming-language/golang/handbook";
+const goToolkitPrefix = 'programming-language/golang/toolkits'
+const goHandbookPrefix = 'programming-language/golang/handbook'
 // html5
-const htmlHandbookPrefix = "programming-language/html5/handbook";
-const htmlBrowserPrefix = "programming-language/html5/browser";
+const htmlHandbookPrefix = 'programming-language/html5/handbook'
+const htmlBrowserPrefix = 'programming-language/html5/browser'
 // js
-const jsToolkitPrefix = "programming-language/javascript/toolkits";
-const jsHandbookPrefix = "programming-language/javascript/handbook";
-const tsPrefix = "programming-language/javascript/typescript";
+const jsToolkitPrefix = 'programming-language/javascript/toolkits'
+const jsHandbookPrefix = 'programming-language/javascript/handbook'
+const tsPrefix = 'programming-language/javascript/typescript'
 // react
-const reactPrefix = "programming-language/react/react";
-const rnPrefix = "programming-language/react/react-native";
+const reactPrefix = 'programming-language/react/react'
+const rnPrefix = 'programming-language/react/react-native'
 
 const programmingLanguageConfig: SidebarsConfig = {
   nodejsProgrammingSidbar: [
     {
-      type: "doc",
-      id: "programming-language/nodejs/entry",
+      type: 'doc',
+      id: 'programming-language/nodejs/entry',
     },
     {
-      type: "category",
-      label: "Node.js Handbook",
+      type: 'category',
+      label: 'Node.js Handbook',
       collapsed: true,
-      items: genSiderItem(nodejsHandbookPrefix, ["usage", "execution"]),
+      items: genSiderItem(nodejsHandbookPrefix, ['usage', 'execution']),
     },
     {
-      type: "category",
-      label: "Node.js Toolkits",
+      type: 'category',
+      label: 'Node.js Toolkits',
       collapsed: true,
-      items: genSiderItem(nodejsToolkitPrefix, ["monorepo", "common", "npm"]),
+      items: genSiderItem(nodejsToolkitPrefix, ['monorepo', 'common', 'npm']),
     },
   ],
   golangProgrammingSidbar: [
     {
-      type: "doc",
-      id: "programming-language/golang/entry",
+      type: 'doc',
+      id: 'programming-language/golang/entry',
     },
     {
-      type: "category",
-      label: "Go Handbook",
+      type: 'category',
+      label: 'Go Handbook',
       collapsed: true,
-      items: genSiderItem(goHandbookPrefix, ["grammar", "webapp"]),
+      items: genSiderItem(goHandbookPrefix, ['grammar']),
     },
     {
-      type: "category",
-      label: "Go Toolkits",
+      type: 'category',
+      label: 'Go Toolkits',
       collapsed: true,
-      items: genSiderItem(goToolkitPrefix, ["gorm"]),
+      items: genSiderItem(goToolkitPrefix, ['gorm']),
     },
   ],
   HTML5ProgrammingSidbar: [
     {
-      type: "doc",
-      id: "programming-language/html5/entry",
+      type: 'doc',
+      id: 'programming-language/html5/entry',
     },
     {
-      type: "category",
-      label: "Handbook",
+      type: 'category',
+      label: 'Handbook',
       collapsed: true,
       items: genSiderItem(htmlHandbookPrefix, [
-        "mechanism",
-        "element",
-        "css",
-        "faq",
+        'mechanism',
+        'element',
+        'css',
+        'faq',
       ]),
     },
     {
-      type: "category",
-      label: "Browser",
+      type: 'category',
+      label: 'Browser',
       collapsed: true,
-      items: genSiderItem(htmlBrowserPrefix, ["feature", "cache"]),
+      items: genSiderItem(htmlBrowserPrefix, ['feature', 'cache']),
     },
   ],
   javascriptProgrammingSidbar: [
     {
-      type: "doc",
-      id: "programming-language/javascript/entry",
+      type: 'doc',
+      id: 'programming-language/javascript/entry',
     },
     {
-      type: "category",
-      label: "JavaScript Handbook",
+      type: 'category',
+      label: 'JavaScript Handbook',
       collapsed: true,
-      items: genSiderItem(jsHandbookPrefix, ["grammar", "closure", "devskill"]),
+      items: genSiderItem(jsHandbookPrefix, ['grammar', 'closure', 'devskill']),
     },
     {
-      type: "category",
-      label: "TypeScript",
+      type: 'category',
+      label: 'TypeScript',
       collapsed: true,
-      items: genSiderItem(tsPrefix, ["handbook", "tsconfig"]),
+      items: genSiderItem(tsPrefix, ['handbook', 'tsconfig']),
     },
   ],
   reactProgrammingSidbar: [
     {
-      type: "doc",
-      id: "programming-language/react/entry",
+      type: 'doc',
+      id: 'programming-language/react/entry',
     },
     {
-      type: "category",
-      label: "React",
+      type: 'category',
+      label: 'React',
       collapsed: true,
       items: genSiderItem(reactPrefix, [
-        "secret",
-        "concept",
-        "handbook",
-        "solution",
-        "libs",
-        "qa",
+        'secret',
+        'concept',
+        'handbook',
+        'solution',
+        'libs',
+        'qa',
       ]),
     },
     {
-      type: "category",
-      label: "React Native",
+      type: 'category',
+      label: 'React Native',
       collapsed: true,
-      items: genSiderItem(rnPrefix, ["application"]),
+      items: genSiderItem(rnPrefix, ['application']),
     },
   ],
-};
+}
 
-export default programmingLanguageConfig;
+export default programmingLanguageConfig

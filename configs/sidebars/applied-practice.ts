@@ -11,6 +11,12 @@ const appliedPracticeConfig: SidebarsConfig = {
       collapsed: true,
       items: genSiderItem(`${prefix}/android`, ['handbook']),
     },
+    {
+      type: 'category',
+      label: 'Go',
+      collapsed: true,
+      items: genSiderItem(`${prefix}/go`, ['webapp']),
+    },
   ],
 }
 

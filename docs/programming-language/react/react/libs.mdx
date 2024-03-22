@@ -5,7 +5,7 @@ sidebar_label: Libraries
 ---
 
 import { DocsHeader } from '/src/components/Layout/DocsHeader'
-import { CommonTable } from '/src/docase/sentry'
+import { CommonTable } from '/src/components/material/Table'
 
 <DocsHeader
   title="React Libraries"
@@ -27,8 +27,6 @@ import { CommonTable } from '/src/docase/sentry'
   ]}
 />{' '}
 
-
-
 ## StoryBook
 
 > Build UIs without the grunt work。
@@ -37,19 +35,25 @@ StoryBook 是一个用于前端构建 UI 组件/页面的工作空间，能够�
 
 在 StoryBook 内，将产物分为 stories 和 docs 两大类：
 
-<CommonTable data={{
-  columns: [{ name: 'name'}, { name: 'description'}, { name: 'exports'}],
-  rows: [{
-    name: 'stories',
-    description: '描述组件的基本单元，用于展示组件的各种状态，stories 主要是编写 Meta 和 StoryObj 配置',
-    exports: 'meta, named export'
-  },{
-    name: 'docs',
-    description: '用于描述组件、组件应用文档、页面等，更多用来开发 React 页面',
-    exports: '-' 
-  }]
-}} />
-
+<CommonTable
+  data={{
+    columns: [{ name: 'name' }, { name: 'description' }, { name: 'exports' }],
+    rows: [
+      {
+        name: 'stories',
+        description:
+          '描述组件的基本单元，用于展示组件的各种状态，stories 主要是编写 Meta 和 StoryObj 配置',
+        exports: 'meta, named export',
+      },
+      {
+        name: 'docs',
+        description:
+          '用于描述组件、组件应用文档、页面等，更多用来开发 React 页面',
+        exports: '-',
+      },
+    ],
+  }}
+/>
 
 ### 初始化项目
 
@@ -100,57 +104,56 @@ story 编写规范：
 举例说明：
 
 ```tsx
-import { CopyWrapper } from "@nofun/ui/src/Button/CopyWrapper";
-import { ButtonLinear } from "@nofun/ui/src/Button/ButtonLinear";
-import { Meta, StoryObj } from "@storybook/react";
+import { CopyWrapper } from '@nofun/ui/src/Button/CopyWrapper'
+import { ButtonLinear } from '@nofun/ui/src/Button/ButtonLinear'
+import { Meta, StoryObj } from '@storybook/react'
 
 const meta: Meta<typeof CopyWrapper> = {
-  title: "Component/Button/CopyWrapper", // 对应平台的层级目录
+  title: 'Component/Button/CopyWrapper', // 对应平台的层级目录
   component: CopyWrapper,
-  tags: ["autodocs"], // 用户告诉 Autodocs 插件，该组件需要生成文档，相关配置查看 `.storybook/main.ts`
-};
+  tags: ['autodocs'], // 用户告诉 Autodocs 插件，该组件需要生成文档，相关配置查看 `.storybook/main.ts`
+}
 
 // 描述组件
-export default meta;
+export default meta
 
-type Story = StoryObj<typeof CopyWrapper>;
+type Story = StoryObj<typeof CopyWrapper>
 
 // 组件的默认状态
 export const Default: Story = {
   args: {
     value: `copy something`,
     label: <ButtonLinear>copy to clipboard</ButtonLinear>,
-    onError: () => console.error("copy failed"),
-    onSuccess: () => alert("copy success"),
+    onError: () => console.error('copy failed'),
+    onSuccess: () => alert('copy success'),
   },
   // 这里可以自定义组件渲染，args 为组件的 props
   render: (args) => <CopyWrapper {...args} />,
-};
+}
 
 // argTypes 用来描述不同 props 的类型、作用以及其默认值
 meta.argTypes = {
   value: {
-    description: "The text to be copied, support multiple lines",
+    description: 'The text to be copied, support multiple lines',
   },
   label: {
-    description: "The element to be clicked",
+    description: 'The element to be clicked',
     table: {
       defaultValue: {
-        summary: "<button>copy to clipboard</button>",
+        summary: '<button>copy to clipboard</button>',
       },
       type: {
-        summary: "React.ReactNode | string | undefined",
+        summary: 'React.ReactNode | string | undefined',
       },
     },
   },
   onSuccess: {
-    description: "Callback when copy success",
+    description: 'Callback when copy success',
   },
   onError: {
-    description: "Callback when copy failed",
+    description: 'Callback when copy failed',
   },
-};
-
+}
 ```
 
 #### decorators

@@ -1,11 +1,12 @@
 ---
-title:
+title: ''
 authors: y
-slug: software
+slug: topology
 tags: [software]
 ---
 
 import { DocsHeader } from '/src/components/Layout/DocsHeader'
+import { CommonTable } from '/src/components/material/Table'
 
 <DocsHeader
   title="Awesome Topology"
@@ -31,12 +32,59 @@ import { DocsHeader } from '/src/components/Layout/DocsHeader'
   ]}
 />
 
-{/* <!--truncate--> */}
+最近花费大量精力在拓扑图的开发实现上，主要是为了解决公司内部的一些问题，比如：网络拓扑图、业务拓扑图、系统拓扑图等。一个好用的拓扑图必须具备以下几个特点：
 
-最近花费大量精力在拓扑图的开发实现上，主要是为了解决公司内部的一些问题，比如：网络拓扑图、业务拓扑图、系统拓扑图等。在这个过程中，我总结实现一个好用的拓扑图必须具备以下几个特点：
+1. **节点/路径高度定制能力；**
+2. **布局能力，处理环问题；**
+3. **交互能力；**
 
-    1. 节点/路径高度定制能力；
-    2. 布局能力；
-    3. 交互能力；
+目前社区内的拓扑图工具并不多，并且各有优劣。
 
-社区内的拓扑图工具并不多，并且各有优劣。
+<CommonTable
+  data={{
+    columns: [
+      { name: 'name', label: '名称' },
+      { name: 'customized', label: '定制化' },
+      { name: 'layout', label: '布局' },
+      { name: 'interface', label: '交互' },
+    ],
+    rows: [
+      {
+        name: 'GoJS',
+        customized: '支持高度定制化',
+        layout: '低',
+        interface: '主流的交互都支持，并且可以定制高级交互',
+      },
+      {
+        name: 'Graphviz',
+        customized: '低',
+        layout: '高，但是没有浏览器环境的解决方案，需要在后端生成',
+        interface: '低',
+      },
+      {
+        name: 'vis-network',
+        customized: '中，各方面都比较平庸',
+        layout: '中',
+        interface: '中',
+      },
+      {
+        name: 'Microsoft Automatic Graph Layout',
+        customized: '中，定制化能力不足，社区活跃度低',
+        layout: '高，并且支持浏览器环境',
+        interface: '中',
+      },
+    ],
+  }}
+/>
+
+通过详细的调研，**最终我选择使用 GoJS + graphviz 来进行拓扑图开发，并且将 msagljs 作为布局的兜底策略。**具体的实现过程如下：
+
+1. 在后端使用 graphviz 生成拓扑图的布局信息，并带到节点信息中；
+2. 前端通过 GoJS 来渲染拓扑图，并且使用 node 内携带的布局信息进行定位；
+3. 验证布局信息是否完整，如果不完整则使用 msagljs 来进行布局。
+
+在实现过程中，需要注意：
+
+- graphviz 需要先生成 dot 文件，在通过 dot 文件生成 XML 文件，最后解析获取各个节点坐标；
+- msagljs 在打包时会有问题，因为它的依赖包没有处理，可能和项目打包配置不兼容，主要在旧项目 + webpack 内出现，此时可以考虑通过下载源码重新打包后再引入；
+- GoJS 的文档非常详细，需要耐心；

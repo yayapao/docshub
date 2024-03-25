@@ -14,6 +14,7 @@ const htmlBrowserPrefix = 'programming-language/html5/browser'
 const jsHandbookPrefix = 'programming-language/javascript/handbook'
 const tsPrefix = 'programming-language/javascript/typescript'
 // react
+const reactSourcePrefix = 'programming-language/react/source'
 const reactPrefix = 'programming-language/react/react'
 
 const programmingLanguageConfig: SidebarsConfig = {
@@ -103,8 +104,13 @@ const programmingLanguageConfig: SidebarsConfig = {
       type: 'category',
       label: 'React',
       collapsed: true,
+      items: genSiderItem(reactSourcePrefix, ['guide']),
+    },
+    {
+      type: 'category',
+      label: 'React',
+      collapsed: true,
       items: genSiderItem(reactPrefix, [
-        'secret',
         'concept',
         'handbook',
         'solution',

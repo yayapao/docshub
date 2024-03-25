@@ -4,11 +4,8 @@ title: 'JSX & createElement'
 sidebar_label: jsx
 ---
 
-import { DocsHeader } from '/src/components/Layout/DocsHeader'
 import Tabs from '@theme/Tabs'
 import TabItem from '@theme/TabItem'
-
-## JSX && createElement
 
 **为什么 React 使用 JSX 来组织代码，而不是传统的 CSS + HTML + JS?**
 
@@ -43,7 +40,10 @@ JSX 并不是一定只能转换成 **createElement** 方法，你可以修改 @b
   </TabItem>
 </Tabs>
 
-从源码 [React \* createElement 实现](https://github.com/facebook/react/blob/1fb18e22ae66fdb1dc127347e169e73948778e5a/packages/react/src/ReactElement.js#L348) 可以看出，**createElement 最终输出一个 ReactElement 对象，除了其他属性回传之外，会增加 `$$typeof: REACT_ELEMENT_TYPE` 来标记当前元素为 React 元素。**
+## createElement
+
+- 源码位置：[React - createElement ](https://github.com/facebook/react/blob/9e3b772b8cabbd8cadc7522ebe3dde3279e79d9e/packages/react/src/ReactElement.js#L362)
+  可以看出，**createElement 最终输出一个 ReactElement 对象，除了其他属性回传之外，会增加 `$$typeof: REACT_ELEMENT_TYPE` 来标记当前元素为 React 元素。**
 
 ```jsx title="/packages/react/src/ReactElement.js"
 export function createElement(type, config, children) {

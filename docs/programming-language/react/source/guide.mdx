@@ -1,7 +1,7 @@
 ---
 id: guide
 title: ''
-sidebar_label: React
+sidebar_label: guide
 ---
 
 import { DocsHeader } from '/src/components/Layout/DocsHeader'
@@ -9,7 +9,7 @@ import Tabs from '@theme/Tabs'
 import TabItem from '@theme/TabItem'
 
 <DocsHeader
-  title="React Secret"
+  title="Source code guide"
   description="从思想到框架，再到源码，抽丝剥茧了解 React 的秘密"
   github="https://github.com/facebook/react"
   tags={['React']}
@@ -25,6 +25,12 @@ import TabItem from '@theme/TabItem'
 
 1. React 解决了什么问题？
 2. React 做好了哪些工作，使它得以如此流行？
+
+:::warning
+
+本章节内容全部基于 `const ReactVersion = '18.3.0';` 版本。
+
+:::
 
 ## React 解决的问题
 
@@ -155,21 +161,19 @@ React 应用的根节点为 **fiberRoot**，其 current 指针指向的树，就
 参考 [How to Contribute – React](https://legacy.reactjs.org/docs/how-to-contribute.html)，我们可以通过以下步骤进行本地调试：
 
 1. `git clone git@github.com:facebook/react.git` 到本地；
-2. 进入本地仓库后，执行 `yarn install` 安装依赖；
-3. 执行 `yarn build react/index,react/jsx,react-dom/index,scheduler --type=NODE` 编译原文件；
-4. 进入 `react, react-dom, scheduler` 对应目录，执行 `yarn link`
-5. 进入项目内，执行 `yarn link react react-dom scheduler`，这样就可以将本地的 react, react-dom, scheduler 与项目内的 react, react-dom, scheduler 进行关联，从而实现本地调试；
+2. 进入本地仓库后，执行 `yarn install` 安装依赖，**注意 node 版本需要满足 `"^12.17.0 || 13.x || 14.x || 15.x || 16.x || 17.x"`;**
+3. 执行 `yarn build react/index,react/jsx,react-dom/index,scheduler --type=NODE` 编译原文件，构建产物位于 `/build/node_modules/` 目录下；
+4. 依次进入 `react`, `react-dom` 以及 `scheduler` 目录，执行 `yarn link` 操作；
 
 ```bash
 # 注意，现在产物位于 build/oss-stable 目录下，与官网有一定差异，其他产物同理
-cd build/oss-stable/scheduler
+cd build/node_modules/react
 yarn link
 
 # link 成功后，会打印如下信息：
-# yarn link v1.13.0
-# success Registered "scheduler".
-# info You can now run `yarn link "scheduler"` in the projects where you want to use this package and it will be used instead.
-
+# yarn link v1.22.22
+# success Registered "react".
+# info You can now run `yarn link "react"` in the projects where you want to use this package and it will be used instead.
 ```
 
 ### 准备 JDK 环境

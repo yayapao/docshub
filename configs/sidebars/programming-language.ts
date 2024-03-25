@@ -102,9 +102,9 @@ const programmingLanguageConfig: SidebarsConfig = {
     },
     {
       type: 'category',
-      label: 'React',
+      label: 'Source',
       collapsed: true,
-      items: genSiderItem(reactSourcePrefix, ['guide']),
+      items: genSiderItem(reactSourcePrefix, ['guide', 'jsx', 'fiber']),
     },
     {
       type: 'category',

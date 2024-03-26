@@ -42,25 +42,40 @@ JSX 并不是一定只能转换成 **createElement** 方法，你可以修改 @b
 
 ## createElement
 
-- 源码位置：[React - createElement ](https://github.com/facebook/react/blob/9e3b772b8cabbd8cadc7522ebe3dde3279e79d9e/packages/react/src/ReactElement.js#L362)
-  可以看出，**createElement 最终输出一个 ReactElement 对象，除了其他属性回传之外，会增加 `$$typeof: REACT_ELEMENT_TYPE` 来标记当前元素为 React 元素。**
+源码位置：[React - createElement ](https://github.com/facebook/react/blob/9e3b772b8cabbd8cadc7522ebe3dde3279e79d9e/packages/react/src/ReactElement.js#L362)
 
-```jsx title="/packages/react/src/ReactElement.js"
+有如下代码：
+
+```jsx
+import { createElement, useState } from 'react'
+
+function App() {
+  const title = createElement('h1', { className: 'title' }, 'Hello, world!')
+
+  return <div>{title}</div>
+}
+
+export default App
+```
+
+`createElement` 接受 `(type, config, children)` 作为参数，并从 config 内解析出 **key, ref, self, source, props**，最终作为参数传递并返回 `ReactElement(type, key, ref, self, source, ReactCurrentOwner.current, props)`
+
+- source 为注释对象（由转码器或其他设备添加），用于显示文件名、行号和/或其他信息
+- self 是一个辅助对象，用于在调用 React.createElement 时检测 this(self) 与 owner(ReactCurrentOwner.current) 不一致的地方，用来发出警告
+
+```jsx title="packages/react/src/ReactElement.js"
 export function createElement(type, config, children) {
   let propName
-
-  // Reserved names are extracted
   const props = {}
-
   let key = null
   let ref = null
   let self = null
   let source = null
 
-  // ...分别从 config 内提取 ref 和 key 并赋值给当前变量...
-  // ...遍历 config 将其key和value赋值给 props
-  // ...处理 children，如果传多个，则将其写入数组内，最终赋值给 props.children
-  // ...处理 defaultProps
+  // 分别从 config 内提取 ref 和 key 并赋值给当前变量
+  // 遍历 config 将其key和value赋值给 props
+  // 处理 children，如果传多个，则将其写入数组内，最终赋值给 props.children
+  // 处理 defaultProps，比如 props.className
 
   return ReactElement(
     type,
@@ -74,24 +89,43 @@ export function createElement(type, config, children) {
 }
 ```
 
-ReactElement 重点关注，返回值多了个 `$$typeof` 用来标记当前元素为 React 元素。
+其中，需要传递 `ReactCurrentOwner.current`，是一个 FiberNode 其内容如下：
+
+![ReactCurrentOwner.current.png](https://img.joyjoy.cc/react/ReactCurrentOwner.current.png)
+
+## ReactElement
+
+ReactElement 很重要的一点是将传入数据组装，并将其标记为 react 元素。
 
 ```js title="/packages/react/src/ReactElement.js"
 function ReactElement(type, key, ref, self, source, owner, props) {
   const element = {
-    // This tag allows us to uniquely identify this as a React Element
-    $$typeof: REACT_ELEMENT_TYPE,
+    $$typeof: REACT_ELEMENT_TYPE, // Symbol.for('react.element')
 
-    // Built-in properties that belong on the element
+    // 该元素自身属性
     type: type,
     key: key,
     ref: ref,
     props: props,
 
-    // Record the component responsible for creating this element.
+    // 记录当前元素的父节点
     _owner: owner,
   }
 
   return element
 }
 ```
+
+因此，当我们需要判断一个元素是否为 React 元素时，可以通过 `$$typeof` 验证：
+
+```jsx
+const titleIsElement = title.$$typeof === Symbol.for('react.element')
+
+console.log('title is an element?', titleIsElement)
+```
+
+:::info
+
+在 React 内，可以直接调用 `isValidElement(object)` 进行验证
+
+:::

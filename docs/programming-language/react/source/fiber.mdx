@@ -4,11 +4,62 @@ title: 'fiber'
 sidebar_label: fiber
 ---
 
-:::warning
+fiber 是 React v16 之后提出，用于取代虚拟 Dom 说法的一种架构设计。**目的是为了解决虚拟 DOM 在遍历更新时，如果树足够复杂，导致线程阻塞的问题，fiber 将递归的无法中断的更新策略替换为异步的可中断更新。**
 
-以下源码块，省略了 DEV 环境和 **lanes 优先级**处理的代码。
+Fiber 包含以下含义：
 
-:::
+    1. 在 React v16 之前，reconciler 采用递归的方式，数据保存在递归调用栈内，因此也叫 **stack reconciler**。而在 React v16 之后，基于 Fiber 实现，因此也叫 **Fiber reconciler**；
+    2. 每个Fiber节点对应一个 React Element，保存了该组件的全部信息，包括：类型、DOM节点信息、本次更新组件状态、要执行的操作等；
+
+## FiberNode
+
+FiberNode 构造函数接受 `tag, pendingProps, key, mode` 作为参数，其中 tag 用来标记当前 FiberNode 类型，参考 [ReactWorkTags](https://github.com/facebook/react/blob/9e3b772b8cabbd8cadc7522ebe3dde3279e79d9e/packages/react-reconciler/src/ReactWorkTags.js)
+
+**FiberNode 是一个链表结构，用 `return, child, sibling` 来表示关联关系**
+
+```jsx title="packages/react-reconciler/src/ReactFiber.new.js"
+function FiberNode(
+  tag: WorkTag,
+  pendingProps: mixed,
+  key: null | string,
+  mode: TypeOfMode
+) {
+  // Instance
+  this.tag = tag
+  this.key = key // key 是当前 Fiber 的唯一标识，用于区分同一个父节点下的不同子节点
+  this.elementType = null // 其值来源于 element.type，用来标记当前 Fiber 对应的组件类型，大部分情况同type，某些情况不同，比如FunctionComponent使用React.memo包裹
+  this.type = null // 标记当前组件是 class component 或者 function component，对于 FunctionComponent，指函数本身，对于ClassComponent，指class，对于HostComponent，指DOM节点tagName
+  this.stateNode = null // Fiber对应的真实DOM节点
+
+  // Fiber，用来表示当前 FiberNode 的关联关系
+  this.return = null // return指节点执行完completeWork后会返回的下一个节点，通常为父节点
+  this.child = null
+  this.sibling = null // 右边第一个兄弟节点
+  this.index = 0
+
+  this.ref = null
+
+  // 保存本次更新造成的状态改变相关信息
+  this.pendingProps = pendingProps
+  this.memoizedProps = null
+  this.updateQueue = null // 状态更新队列
+  this.memoizedState = null
+  this.dependencies = null
+
+  this.mode = mode
+
+  // Effects
+  this.flags = NoFlags
+  this.subtreeFlags = NoFlags
+  this.deletions = null
+
+  // lanes 用来控制调度优先级
+  this.lanes = NoLanes
+  this.childLanes = NoLanes
+
+  this.alternate = null
+}
+```
 
 ## beginWork
 
@@ -161,105 +212,4 @@ function updateFunctionComponent(
   reconcileChildren(current, workInProgress, nextChildren, renderLanes)
   return workInProgress.child
 }
-```
-
-## Type Defination
-
-### Fiber
-
-Fiber 在 reconciler 内大量使用，它是 current, workInProgress 的基础，它是一个链表结构，每个节点都是一个 Fiber 对象，它的结构如下：
-
-```ts
-
-export type Fiber = {
-  // Tag 用来标记当前 Fiber 的类型，比如 ClassComponent、HostRoot、HostComponent、HostText 等
-  tag: WorkTag,
-
-  // key 是当前 Fiber 的唯一标识，用于区分同一个父节点下的不同子节点
-  key: null | string,
-
-  // 其值来源于 element.type，用来标记当前 Fiber 对应的组件类型
-  elementType: any,
-
-  // type 用来标记当前组件是 class component 或者 function component
-  type: any,
-
-  // 当前 Fiber 的状态，比如是否更新、是否有副作用等
-  stateNode: any,
-
-  // 由于 Fiber type 混合了 Fiber 和 Instance，如果是 Fiber，则 return 实际上是指 parent
-  return: Fiber | null,
-
-  child: Fiber | null,
-  sibling: Fiber | null,
-  index: number,
-
-  // 最后用于附加此节点的 ref
-  ref:
-    | null
-    | (((handle: mixed) => void) & {_stringRef: ?string, ...})
-    | RefObject,
-
-  refCleanup: null | (() => void),
-
-  // Input is the data coming into process this fiber. Arguments. Props.
-  pendingProps: any, // This type will be more specific once we overload the tag.
-  memoizedProps: any, // The props used to create the output.
-
-  // 状态更新队列
-  updateQueue: mixed,
-
-  // 用于创建输出状态
-  memoizedState: any,
-
-  // 当前 Fiber 的依赖，比如 (contexts, events)
-  dependencies: Dependencies | null,
-
-  // 描述 Fiber 及其子节点的比特字段，比如 ConcurrentMode 用来标记当前子树是否是异步渲染的
-  // 一般来说，在创建时会确定该字段，并且后在后续更新时不会改变。默认情况下，子树会沿用父节点的 mode
-  mode: TypeOfMode,
-
-  // Effect
-  flags: Flags,
-  subtreeFlags: Flags,
-  deletions: Array<Fiber> | null,
-
-  // Singly linked list fast path to the next fiber with side-effects.
-  nextEffect: Fiber | null,
-
-  // The first and last fiber with side-effect within this subtree. This allows
-  // us to reuse a slice of the linked list when we reuse the work done within
-  // this fiber.
-  firstEffect: Fiber | null,
-  lastEffect: Fiber | null,
-
-  lanes: Lanes,
-  childLanes: Lanes,
-
-  // This is a pooled version of a Fiber. Every fiber that gets updated will
-  // eventually have a pair. There are cases when we can clean up pairs to save
-  // memory if we need to.
-  alternate: Fiber | null,
-
-  // Time spent rendering this Fiber and its descendants for the current update.
-  // This tells us how well the tree makes use of sCU for memoization.
-  // It is reset to 0 each time we render and only updated when we don't bailout.
-  // This field is only set when the enableProfilerTimer flag is enabled.
-  actualDuration?: number,
-
-  // If the Fiber is currently active in the "render" phase,
-  // This marks the time at which the work began.
-  // This field is only set when the enableProfilerTimer flag is enabled.
-  actualStartTime?: number,
-
-  // Duration of the most recent render time for this Fiber.
-  // This value is not updated when we bailout for memoization purposes.
-  // This field is only set when the enableProfilerTimer flag is enabled.
-  selfBaseDuration?: number,
-
-  // Sum of base times for all descendants of this Fiber.
-  // This value bubbles up during the "complete" phase.
-  // This field is only set when the enableProfilerTimer flag is enabled.
-  treeBaseDuration?: number,
-};
 ```

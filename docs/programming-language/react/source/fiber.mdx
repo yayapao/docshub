@@ -11,7 +11,9 @@ Fiber 包含以下含义：
     1. 在 React v16 之前，reconciler 采用递归的方式，数据保存在递归调用栈内，因此也叫 **stack reconciler**。而在 React v16 之后，基于 Fiber 实现，因此也叫 **Fiber reconciler**；
     2. 每个Fiber节点对应一个 React Element，保存了该组件的全部信息，包括：类型、DOM节点信息、本次更新组件状态、要执行的操作等；
 
-## FiberNode
+## Fiber 基础概念
+
+### FiberNode
 
 FiberNode 构造函数接受 `tag, pendingProps, key, mode` 作为参数，其中 tag 用来标记当前 FiberNode 类型，参考 [ReactWorkTags](https://github.com/facebook/react/blob/9e3b772b8cabbd8cadc7522ebe3dde3279e79d9e/packages/react-reconciler/src/ReactWorkTags.js)
 
@@ -48,7 +50,7 @@ function FiberNode(
 
   this.mode = mode
 
-  // Effects
+  // Effects，render 相关
   this.flags = NoFlags
   this.subtreeFlags = NoFlags
   this.deletions = null
@@ -57,9 +59,20 @@ function FiberNode(
   this.lanes = NoLanes
   this.childLanes = NoLanes
 
+  // 缓存相关
   this.alternate = null
 }
 ```
+
+### HostRootFiber
+
+`HostRootFiber` 是使用 `createHostRootFiber` 创建的 Fiber 根节点，它包含整棵 Fiber 树信息。在源码内同 `rootFiber`，React 应用内可以同时存在多个 `rootFiber`。
+
+### FiberRootNode
+
+`FiberRootNode` 表示应用根节点，一个 React 应用内只有一个，在源码内也用 `FiberRoot` 表示。它保存着应用的状态和组件信息。
+
+## render 阶段
 
 ## beginWork
 

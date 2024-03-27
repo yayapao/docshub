@@ -74,6 +74,30 @@ function FiberNode(
 
 ## render 阶段
 
+render 阶段用于处理 React 内 workinprogress 树的计算和生成。在 React 源码内，render 开始于 `performSyncWorkOnRoot` 或者 `performConcurrentWorkOnRoot`，分别表示同步或者异步更新。
+
+```js
+// 同步更新 performSyncWorkOnRoot => renderRootSync => workLoopSync
+function workLoopSync() {
+  while (workInProgress !== null) {
+    performUnitOfWork(workInProgress)
+  }
+}
+
+// 异步更新 performConcurrentWorkOnRoot => renderRootConcurrent => workLoopConcurrent
+function workLoopConcurrent() {
+  while (workInProgress !== null && !shouldYield()) {
+    performUnitOfWork(workInProgress)
+  }
+}
+```
+
+可以看出，`workLoopSync` 和 `workLoopConcurrent` 都是循环执行 `performUnitOfWork` 方法，区别在于 workLoopConcurrent 能够通过 `shouldYield()` 方法来结束循环。**如果当前浏览器帧没有剩余时间，shouldYield 会中止循环，直到浏览器有空闲时间后再继续遍历。**
+
+`workInProgress` 表示创建的 workInProgress Fiber Tree。
+
+`performUnitOfWork` 方法会创建下一个 Fiber 节点并赋值给 workInProgress，两者共同构成 Fiber Tree。
+
 ## beginWork
 
 ```js title="/packages/react-reconciler/src/ReactFiberBeginWork.js"

@@ -98,10 +98,16 @@ function workLoopConcurrent() {
 
 `performUnitOfWork` 方法会创建下一个 Fiber 节点并赋值给 workInProgress，两者共同构成 Fiber Tree。
 
-## beginWork
+### beginWork
+
+每次循环 React Fiber 会进行深度优先遍历，每个被遍历到的节点会调用 `beginWork` 方法，该方法用于处理当前节点的更新逻辑。
+
+beginWork 接受当前 Fiber 节点和 workInProgress Fiber 节点作为参数，目的是根据当前节点的类型，生成新的 Fiber 节点，在函数体内会判断本次是否需要更新/创建，以及是否有待更新的任务需要执行。由源码可以推断：
+
+1. 如果希望执行更新，则需要设置 `didReceiveUpdate` 为 true；
+2. 使用 `attemptEarlyBailoutIfNoScheduledUpdate` 来释放当前节点；
 
 ```js title="/packages/react-reconciler/src/ReactFiberBeginWork.js"
-
 function beginWork(
   current: Fiber | null,
   workInProgress: Fiber,
@@ -109,18 +115,14 @@ function beginWork(
 ): Fiber | null {
   // 判断当前节点是否需要更新，如果 current 不为 null，则说明当前节点已经存在，需要进行更新，否则需要进行创建
   if (current !== null) {
-    // updated 阶段
+    // updated 阶段，比较当前节点内缓存的 props 和新的 props 是否发生变化
     const oldProps = current.memoizedProps
     const newProps = workInProgress.pendingProps
-
     // 判断 props 或者 context 是否发生变化，如果发生变化，则需要进行更新
-    if (
-      oldProps !== newProps ||
-      hasLegacyContextChanged() ||
-    ) {
+    if (oldProps !== newProps || hasLegacyContextChanged()) {
       didReceiveUpdate = true
     } else {
-      // 检查是否有正在执行的 context 或者 update 改变任务，如果没有，则直接释放
+      // 如果没有发生变化，则检查是否有待执行的 effect，如果有，则执行 effect，否则，直接释放
       const hasScheduledUpdateOrContext = checkScheduledUpdateOrContext(
         current,
         renderLanes
@@ -139,6 +141,7 @@ function beginWork(
     }
   } else {
     didReceiveUpdate = false
+    // 创建流程
     // 检查当前 workInProgress 是否有兄弟节点，即是否属于一个分叉子组件
     // 由此判断是否需要**在并行渲染线程**上渲染子组件，并代表一个新的渲染线程
     // pushTreeId 根据 workInProgress, numberOfForks（分叉数）, slotIndex（槽索引）计算新的
@@ -152,51 +155,68 @@ function beginWork(
 
   // 如果是 mount 阶段，会根据 workInProgress.tag 的不同类型，新建不同的 Fiber 节点
   switch (workInProgress.tag) {
-    case IndeterminateComponent // ...省略
-    case LazyComponent // ...省略
     case FunctionComponent: {
-      const Component = workInProgress.type
-      const unresolvedProps = workInProgress.pendingProps
-      const resolvedProps =
-        workInProgress.elementType === Component
-          ? unresolvedProps
-          : resolveDefaultProps(Component, unresolvedProps)
-      return updateFunctionComponent(
-        current,
-        workInProgress,
-        Component,
-        resolvedProps,
-        renderLanes
-      )
+      // 函数组件
     }
-    case ClassComponent // ...省略
-    case HostRoot // ...省略
-    case HostHoistable // ...省略
-    case HostSingleton // ...省略
-    case HostComponent // ...省略
-    case HostText // ...省略
-    case SuspenseComponent // ...省略
-    case HostPortal // ...省略
-    case ForwardRef // ...省略
-    case Fragment // ...省略
-    case Mode // ...省略
-    case Profiler // ...省略
-    case ContextProvider // ...省略
-    case ContextConsumer // ...省略
-    case MemoComponent // ...省略
-    case SimpleMemoComponent // ...省略
-    case IncompleteClassComponent // ...省略
-    case SuspenseListComponent // ...省略
-    case ScopeComponent // ...省略
-    case OffscreenComponent // ...省略
-    case LegacyHiddenComponent // ...省略
-    case CacheComponent // ...省略
-    case TracingMarkerComponent // ...省略
+    case HostRoot: {
+      // 根节点
+    }
+  }
+}
+```
+
+### HostRoot
+
+在 beginWork 内，当 tag 为 HostRoot 时，表示当前节点为根节点，会执行 `updateHostRoot(current, workInProgress, renderLanes)` 进行根节点创建。
+
+根据源码可以推断：
+
+1. `workInProgress.pendingProps` 表示传入的 props，`workInProgress.memoizedState` 表示当前节点的状态，调用 `processUpdateQueue` 计算出新的状态；
+2. `workInProgress.stateNode` 类型为 FiberRootNode，表示根节点，保存了应用的状态和组件信息；
+3. `bailoutOnAlreadyFinishedWork` 用来跳过节点的比对过程，如果节点没有变动，则执行该方法来提升性能；
+4. `reconcileChildren` 用来处理子节点的比对过程；
+
+```js title="/packages/react-reconciler/src/ReactFiberBeginWork.js"
+function updateHostRoot(current, workInProgress, renderLanes) {
+  pushHostRootContext(workInProgress)
+
+  if (current === null) {
+    throw new Error('Should have a current fiber. This is a bug in React.')
   }
 
-  // 如果没有匹配类型，会直接抛出错误
-}
+  const nextProps = workInProgress.pendingProps
+  const prevState = workInProgress.memoizedState
+  const prevChildren = prevState.element
+  cloneUpdateQueue(current, workInProgress)
+  processUpdateQueue(workInProgress, nextProps, null, renderLanes)
 
+  const nextState: RootState = workInProgress.memoizedState
+  const root: FiberRoot = workInProgress.stateNode
+  pushRootTransition(workInProgress, root, renderLanes)
+
+  if (enableCache) {
+    const nextCache: Cache = nextState.cache
+    pushCacheProvider(workInProgress, nextCache)
+    if (nextCache !== prevState.cache) {
+      // The root cache refreshed.
+      propagateContextChange(workInProgress, CacheContext, renderLanes)
+    }
+  }
+
+  const nextChildren = nextState.element
+  if (supportsHydration && prevState.isDehydrated) {
+    // 用户处理服务端渲染的情况，暂时不看
+  } else {
+    resetHydrationState()
+    // 如果新的子节点和旧的子节点一样，=== 比较引用地址，相同表示没有变动，则不用继续处理了，直接跳过剩下的比对过程
+    if (nextChildren === prevChildren) {
+      return bailoutOnAlreadyFinishedWork(current, workInProgress, renderLanes)
+    }
+    // 否则，需要继续处理子节点
+    reconcileChildren(current, workInProgress, nextChildren, renderLanes)
+  }
+  return workInProgress.child
+}
 ```
 
 ## updateFunctionComponent

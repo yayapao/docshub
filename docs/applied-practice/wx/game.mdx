@@ -1,0 +1,209 @@
+---
+id: game
+title: ''
+sidebar_label: minigame
+---
+
+import { DocsHeader } from '/src/components/Layout/DocsHeader'
+
+<DocsHeader
+  title="MiniGame"
+  description="Deep in wx minigame."
+  github=""
+  tags={['wx', 'minigame']}
+  links={[]}
+/>
+
+## Compile JavaScript
+
+在本章节，我们研究微信开发者工具，如何编译 JavaScript 代码。**关注的重点在于如何编译源码。**通过开发者工具的控制台查看可以发现，所有的源码都被包裹 `define` 方法。如下：
+
+```javascript
+define('game.js', function (require, module, exports, process) {
+  'use strict'
+
+  // 用户代码
+})
+```
+
+通过工具解析 `core.wxvpkg` 的内容，我们继续其 runtime 源码。
+
+### 模块管理
+
+下面代码组织整个项目的依赖关系，通过 `GameMainPackage` 类来管理项目的主包模块，通过 `GameSubPackage` 类来管理项目的子包模块。
+
+**N** 模块依赖管理, deps 管理依赖的模块
+
+```javascript
+// e 为 fileHelper 类
+// t 为文件信息对象
+class N {
+  constructor(e, t) {
+    if (
+      ((this.parentDeps = new Set()),
+      (this.deps = new Set()),
+      (this.warnings = []),
+      (this.errors = []),
+      (this.mtime = 0),
+      (this.buildError = null),
+      (this.type = t.type),
+      !t.path)
+    )
+      throw new Error('dep.path is null')
+    ;(this.path = t.path),
+      (this.id = this.type + ':' + this.path),
+      this.parentDeps.add(t),
+      (this.fileHelper = e),
+      (this.mtime = this.fileHelper.mtime(this.path))
+  }
+  // 通过比较文件最后一次修改时间，判断当前模块是否有效
+  isValid() {
+    return this.mtime === this.fileHelper.mtime(this.path)
+  }
+  addDep(e) {
+    this.deps.add(e)
+  }
+  removeDep(e) {
+    var t
+    this.deps.delete(e),
+      null === (t = e.module) || void 0 === t || t.parentDeps.delete(e)
+  }
+  removeAllDeps() {
+    this.deps.forEach((e) => {
+      this.removeDep(e)
+    })
+  }
+  addParentDep(e) {
+    ;(e.module = this), this.parentDeps.add(e)
+  }
+  markError(e) {
+    e instanceof Error
+      ? this.errors.push(e)
+      : this.errors.push(new Error(String(e)))
+  }
+  // 返回一个包含模块信息的对象
+  serialize() {
+    return {
+      id: this.id,
+      type: this.type,
+      path: this.path,
+      parentDeps: Array.from(this.parentDeps)
+        .sort((e, t) => (e.originModule.id > t.originModule.id ? 1 : -1))
+        .map((e) => e.serialize()),
+      deps: Array.from(this.deps).map((e) => e.serialize()),
+      errors:
+        this.errors.length > 0 ? this.errors.map((e) => e.message) : void 0,
+      buildError: this.buildError ? this.buildError.message : void 0,
+    }
+  }
+  get childModules() {
+    const e = []
+    for (const t of this.deps.values()) t.module && e.push(t.module)
+    return e
+  }
+  findChild(e) {
+    var t
+    for (const n of this.deps.values())
+      if ((null === (t = n.module) || void 0 === t ? void 0 : t.type) === e)
+        return n.module
+    return null
+  }
+  findChildren(e) {
+    return this.childModules.filter((t) => t.type === e)
+  }
+}
+```
+
+**GameMainPackage** 主包模块，继承自 **N** 模块，主要是项目的主包模块，包含了项目的所有依赖。
+
+```javascript
+const In = {
+  GameMainPackage: class extends N {
+    constructor(e, t) {
+      super(e, t), (t.originModule = this)
+    }
+    // 返回 type 或者 module 为 GameSubPackage 的子模块
+    get subpackages() {
+      return Array.from(this.deps)
+        .filter((e) => 'GameSubPackage' === e.type && e.module)
+        .map((e) => e.module)
+    }
+    addParentDep(e) {
+      super.addParentDep(e), (e.originModule = this)
+    }
+    // 返回项目的所有依赖
+    async build(e) {
+      let t = this
+      // 添加 game.js 为依赖
+      this.addDep(new b('game.js', t, { needResolve: !1, necessary: !0 }))
+      // 加载 game.json 文件
+      let n = await this.loadGameJSON()
+      if (n) {
+        if (
+          ((this.config = n),
+          n.subPackages &&
+            n.subPackages.forEach((e) => {
+              this.addDep(new T(e, t, this.fileHelper))
+            }),
+          n.subpackages &&
+            n.subpackages.forEach((e) => {
+              this.addDep(new T(e, t, this.fileHelper))
+            }),
+          n.workers)
+        ) {
+          const e = 'string' == typeof n.workers ? n.workers : n.workers.path
+          this.addDep(new M(e, t, this.fileHelper))
+        }
+        n.openDataContext &&
+          this.addDep(
+            new b(s.default.posix.join(n.openDataContext, 'index.js'), t, {
+              needResolve: !1,
+              necessary: !0,
+            })
+          ),
+          // 添加 project.config.json 为依赖
+          this.fileHelper.existFile('project.config.json') &&
+            this.addDep(
+              new A('project.config.json', t, this.fileHelper, 'rule')
+            )
+      }
+      return Array.from(this.deps)
+    }
+    async loadGameJSON() {
+      const e = this.fileHelper,
+        t = 'game.json'
+      if (!e.existFile(t)) throw new Error("Couldn't find the game.json file")
+      try {
+        return await e.getJSON(t)
+      } catch (e) {
+        throw new Error(`Couldn't parse the game.json file: ${e.message}`)
+      }
+    }
+  },
+  GameSubPackage: class extends N {
+    constructor(e, t) {
+      super(e, t),
+        (this.config = t.config),
+        (this.mtime = this.fileHelper.mtime('game.json'))
+    }
+    isValid() {
+      return this.mtime === this.fileHelper.mtime('game.json')
+    }
+    async build(e) {
+      return (
+        this.fileHelper.existFile(this.config.root)
+          ? this.addDep(
+              new b(this.config.root, this, { needResolve: !1, necessary: !0 })
+            )
+          : this.addDep(
+              new b(s.default.posix.join(this.config.root, 'game.js'), this, {
+                needResolve: !1,
+                necessary: !0,
+              })
+            ),
+        Array.from(this.deps)
+      )
+    }
+  },
+}
+```

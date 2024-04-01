@@ -23,6 +23,12 @@ const appliedPracticeConfig: SidebarsConfig = {
       collapsed: true,
       items: genSiderItem(`${prefix}/react`, ['iosapp']),
     },
+    {
+      type: 'category',
+      label: 'WX Mini Program',
+      collapsed: true,
+      items: genSiderItem(`${prefix}/wx`, ['game']),
+    },
   ],
 }
 

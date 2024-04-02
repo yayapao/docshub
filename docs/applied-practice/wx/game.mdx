@@ -14,25 +14,89 @@ import { DocsHeader } from '/src/components/Layout/DocsHeader'
   links={[]}
 />
 
-## Compile JavaScript
+在本章节，我们研究在微信开发者工具内对游戏代码进行编译，以及游戏预览，我们关注的重点在于：
 
-在本章节，我们研究微信开发者工具，如何编译 JavaScript 代码。**关注的重点在于如何编译源码。**通过开发者工具的控制台查看可以发现，所有的源码都被包裹 `define` 方法。如下：
+- **运行时环境的加载、执行**
+- **对 JS 脚本的编译细节**
+- **游戏脚本的加载、执行**
 
-```javascript
-define('game.js', function (require, module, exports, process) {
-  'use strict'
+:::info
 
-  // 用户代码
-})
-```
+通过工具解析出 `core.wxvpkg` 的源码内容，对其进行研究。
 
-通过工具解析出 `core.wxvpkg` 的内容，继续对其进行研究。
+:::
 
 ### 在开发者工具内 debug
 
 在微信开发者工具内，我们可以在控制台查看源码。微信本身对 **DEV** 等位置的代码做了处理，直接打开会显示 `/// The code has been hidden by Wechat Devtools`。因此我们需要一些技巧来绕过这个限制。
 
 一个比较粗暴的方法是，在代码内写一些 global 暴露的方法，然后疯狂 step into 进去。另一种方法是，在控制台内打印一些函数，之后右键 `show function definition`，这样可以绕过限制找到源码，在使用浏览器的 format 功能，进行查看和 debug。
+
+## 运行时环境
+
+在开发者工具内执行编译操作，我们发现：
+
+- `127.0.0.1:63151` 内加载 `gamePage.html` 文件，在该文件内定义了 runtime 的基础配置
+
+### gamePage.html
+
+`gamePage.html` 作为容器的入口文件，会在加载 `asdebug.js` 执行初始化操作，之后按顺序加载 `subasdebug.js` 和 `WAGame.js`。
+
+```html
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>小游戏运行时</title>
+    <script>
+      var __subVendorCode__ = {},
+        __subContextCode__ = {},
+        FontFace = window.FontFace
+      global = {}
+      var __WeixinJSContext = (WeixinJSContext = {}),
+        __workerVendorCode__ = {},
+        __workersCode__ = {},
+        __WeixinWorker = (WeixinWorker = {})
+    </script>
+    <script charset="UTF-8">
+      // 挂载 __devtoolsConfig 对象到 window
+    </script>
+    <script charset="UTF-8">
+      // 挂载 __wxConfig 对象
+    </script>
+    <script src="__dev__/asdebug.js" charset="UTF-8"></script>
+  </head>
+  <body>
+    <canvas id="myCanvas" width="320" height="568"></canvas>
+    <script>
+      ;(function () {
+        // 1. 初始化 canvas 实例；
+        // 2. 挂载全局 global 对象；
+        // 3. 添加 doucment 全局监听事件；
+        // 4. 加载字体等资源；
+      })()
+    </script>
+    <script src="__dev__/subasdebug.js" charset="UTF-8"></script>
+    <script src="__dev__/WAGame.js" charset="UTF-8"></script>
+  </body>
+</html>
+```
+
+## Compile JavaScript
+
+我们发现，所有的游戏代码都在编译后，包裹在 `define` 函数内，该函数用来管理模块的映射关系。
+
+```javascript
+define('game.js', function (require, module, exports, process) {
+  'use strict'
+  // 用户代码
+})
+```
+
+:::warning
+
+其中 `define`，`require` 等函数都在 `WAGame.js` 内定义，它是一个基础库
+
+:::
 
 ### 模块管理
 

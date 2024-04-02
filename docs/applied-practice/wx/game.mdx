@@ -26,7 +26,13 @@ define('game.js', function (require, module, exports, process) {
 })
 ```
 
-通过工具解析 `core.wxvpkg` 的内容，我们继续其 runtime 源码。
+通过工具解析出 `core.wxvpkg` 的内容，继续对其进行研究。
+
+### 在开发者工具内 debug
+
+在微信开发者工具内，我们可以在控制台查看源码。微信本身对 **DEV** 等位置的代码做了处理，直接打开会显示 `/// The code has been hidden by Wechat Devtools`。因此我们需要一些技巧来绕过这个限制。
+
+一个比较粗暴的方法是，在代码内写一些 global 暴露的方法，然后疯狂 step into 进去。另一种方法是，在控制台内打印一些函数，之后右键 `show function definition`，这样可以绕过限制找到源码，在使用浏览器的 format 功能，进行查看和 debug。
 
 ### 模块管理
 

@@ -30,7 +30,7 @@ import { DocsHeader } from '/src/components/Layout/DocsHeader'
 
 在微信开发者工具内，我们可以在控制台查看源码。微信本身对 **DEV** 等位置的代码做了处理，直接打开会显示 `/// The code has been hidden by Wechat Devtools`。因此我们需要一些技巧来绕过这个限制。
 
-一个比较粗暴的方法是，在代码内写一些 global 暴露的方法，然后疯狂 step into 进去。另一种方法是，在控制台内打印一些函数，之后右键 `show function definition`，这样可以绕过限制找到源码，在使用浏览器的 format 功能，进行查看和 debug。
+一个比较粗暴的方法是，在代码内写一些 global 暴露的方法，然后疯狂 step into 进去。另一种方法是，在控制台内打印一些函数，之后右键 `show function definition`，这样可以绕过限制找到源码，再使用浏览器的 format 功能，进行查看和 debug。
 
 ## 运行时环境
 
@@ -79,6 +79,53 @@ import { DocsHeader } from '/src/components/Layout/DocsHeader'
     <script src="__dev__/WAGame.js" charset="UTF-8"></script>
   </body>
 </html>
+```
+
+### asdebug.js
+
+`asdebug.js` 作为运行时的初始化脚本，主要作用是为画布添加事件监听，以及初始化 `window.WeixinJSBridge` 实例对象。
+
+:::warning
+
+突出显示的代码为我们关注的重点
+
+:::
+
+```js
+const m = u.navigator.userAgent;
+// g.init() 用来为 canvas 添加事件监听
+-1 !== m.indexOf('game') ? g.init() : d()
+
+// 初始化 WeixinJSBridge 实例
+window.__global.getNewWeixinJSBridge = (e, t) => {
+  return {
+      const { invoke: e } = i(n),
+        { publish: t } = s(n),
+        { publishSync: o } = c(n),
+        { subscribe: d, triggerSubscribeEvent: u } = l(),
+        { on: g, triggerOnEvent: p } = r(),
+        { beforeinvoke: f, afterinvoke: h } = a(n)
+      return {
+        invoke: e,
+        publish: t,
+        subscribe: d,
+        on: g,
+        publishSync: o,
+        beforeinvoke: f,
+        afterinvoke: h,
+        get __triggerOnEvent() {
+          return p
+        },
+        get __triggerSubscribeEvent() {
+          return u
+        },
+        __unblock: () => {},
+        __setCommonPayload(e, t) {
+          n[e] = t
+        },
+      }
+    }
+}
 ```
 
 ## Compile JavaScript

@@ -87,7 +87,7 @@ import { DocsHeader } from '/src/components/Layout/DocsHeader'
 
 :::warning
 
-突出显示的代码为我们关注的重点
+这里仅保留关键代码，具体实现细节请查看源码。
 
 :::
 
@@ -125,6 +125,94 @@ window.__global.getNewWeixinJSBridge = (e, t) => {
         },
       }
     }
+}
+```
+
+### subasdebug.js
+
+为 `window` 对象添加一些属性和方法，包括 `window.__global.__contextSupport`, `window.__global.__getNewWeixinJSContext` 以及 `window.__WeixinJSContext` 等，并创建一个在 ifrmame 内执行的沙盒环境，该环境用于执行游戏代码。
+
+在这个过程中，会为 `window.__subcontext_ready__` 和 `t.__subcontext_ready_to_evaluate__` 设置生命周期回调。
+
+并将 `alloc`, `allocEmpty`, `create`, `evaluateScriptFile`, `loadJsFiles`, `loadLibFiles`, `destroy` 挂载到 `window.__WeixinJSContext` 对象上
+
+```js
+// t => window.__WeixinJSContext
+// e => window
+// o => window
+// n => window.__global
+// i => window.__global.__contextSupport
+e._private_doGetNewWeixinJSContext = function (t, e, o, n, i, r, l, a) {
+  // m => window.__global.contextFrameMaps 是一个 Map 对象
+  ;(e.__subcontext_ready__ = (t) => {
+    const e = m.get(String(t))
+    if (e) {
+      for (const t in e.globalObject)
+        e.iframe.contentWindow[t] = e.globalObject[t]
+      e.setPrepared()
+    } else w('[Context] unknown context ready', t)
+  }),
+    (e.__subcontext_ready_to_evaluate__ = (t) => {
+      const e = m.get(String(t))
+      e ? e.setReady() : w('[Context] unknown context eval ready', t)
+    })
+}
+```
+
+上文中 `const e = m.get(String(t))` 获取的是一个 S 类的实例，它可以看作是一个用 iframe 创建的沙盒，在里面执行 js 代码（隔离 js 执行环境），管理上下文环境。
+
+```js
+class S {
+  constructor(e, i, l, a) {
+    ;(this.id = e),
+      (this.name = i),
+      (this.empty = l),
+      (this.creationBarrier = a),
+      (this._destroyed = !1),
+      (this._ready = !1),
+      (this._prepared = !1),
+      (this._delayedTasks = []),
+      (this._evalCounter = 1),
+      (this.fullId = b(String(e))),
+      (this.iframe = n.document.createElement('iframe')),
+      (this.iframe.style.pointerEvents = 'none'),
+      (this.iframe.dataset.contextFrameId = this.fullId),
+      (this.iframe.dataset.contextFrameName = String(i))
+    const s = b(`subcontext_${e}`)
+    let d = r
+    r || ((d = n.getNewWeixinJSBridge(s)), (n.WeixinJSBridgeMap[s] = r)),
+      (this.globalObject = {
+        WeixinJSContext: t,
+        __wxConfig: o.__wxConfig,
+      })
+  }
+
+  // 加载 js 脚本，/game/gameContext 在这里被加载
+  install(t) {}
+
+  doInstall(t) {}
+
+  uninstall() {}
+
+  throwIfDestroyed() {}
+
+  destroy() {}
+
+  onDidReady(t) {}
+
+  setPrepared() {}
+
+  setReady() {}
+
+  loadScriptContent(t) {}
+
+  evalScript(t, e = 'script', o) {}
+
+  evalScriptSync(t, e) {}
+
+  get window() {}
+
+  get head() {}
 }
 ```
 

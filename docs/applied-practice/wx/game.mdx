@@ -70,7 +70,7 @@ import { DocsHeader } from '/src/components/Layout/DocsHeader'
     <script>
       ;(function () {
         // 1. 初始化 canvas 实例；
-        // 2. 挂载全局 global 对象；
+        // 2. 挂载原生对象，到 NativeGlobal 对象上；
         // 3. 添加 doucment 全局监听事件；
         // 4. 加载字体等资源；
       })()
@@ -134,7 +134,15 @@ window.__global.getNewWeixinJSBridge = (e, t) => {
 
 在这个过程中，会为 `window.__subcontext_ready__` 和 `t.__subcontext_ready_to_evaluate__` 设置生命周期回调。
 
-并将 `alloc`, `allocEmpty`, `create`, `evaluateScriptFile`, `loadJsFiles`, `loadLibFiles`, `destroy` 挂载到 `window.__WeixinJSContext` 对象上
+window.WeixinJSContext
+
+- alloc
+- allocEmpty
+- create
+- destroy
+- evaluateScriptFile
+- loadJsFiles
+- loadLibFiles
 
 ```js
 // t => window.__WeixinJSContext
@@ -215,6 +223,10 @@ class S {
   get head() {}
 }
 ```
+
+### WAGame.js
+
+`WAGame.js` 作为游戏的基础库，主要用于管理游戏的模块依赖，以及游戏的生命周期管理。
 
 ## Compile JavaScript
 

@@ -130,7 +130,7 @@ window.__global.getNewWeixinJSBridge = (e, t) => {
 
 ### subasdebug.js
 
-为 `window` 对象添加一些属性和方法，包括 `window.__global.__contextSupport`, `window.__global.__getNewWeixinJSContext` 以及 `window.__WeixinJSContext` 等，并创建一个在 ifrmame 内执行的沙盒环境，该环境用于执行游戏代码。
+为 `window` 对象添加一些属性和方法，包括 `window.__global.__contextSupport`, `window.__global.__getNewWeixinJSContext` 以及 `window.__WeixinJSContext` 等，并创建一个在 iframe 内执行的沙盒环境，该环境用于执行游戏代码。
 
 在这个过程中，会为 `window.__subcontext_ready__` 和 `t.__subcontext_ready_to_evaluate__` 设置生命周期回调。
 
@@ -227,6 +227,72 @@ class S {
 ### WAGame.js
 
 `WAGame.js` 作为游戏的基础库，主要用于管理游戏的模块依赖，以及游戏的生命周期管理。
+
+```js
+// 加载完成后，执行 initGameRelatedContexts 方法
+o.onLoad(function () {
+  b.initGameRelatedContexts()
+})
+```
+
+```js
+E = () => {
+  var e, t
+  if (1 === i.envPreloadType) {
+    var r = I.getGameRelatedContextsExportsWx()
+    ;(e = r.game), (t = r.gameSkipCondom)
+  }
+
+  function a() {
+    var e = I.getGameRelatedContextsExports(),
+      t = e.game.FunctionalPage,
+      r = i.appLaunchInfo
+    if (
+      t.parseCompletePath(r.path).isFunctionalPage &&
+      t.VALID_SCENE.includes(r.scene)
+    )
+      M(e)
+    else if ((0, g.c6)(r.scene)) {
+      var a = (0, g.Qj)(r.path, i.subPackages)
+      if (a) {
+        var n
+        if (
+          'playable' ===
+            (null == a || null === (n = a.meta) || void 0 === n
+              ? void 0
+              : n.type) &&
+          (I.runPlayableGameJS(a.root, a.meta), (0, g.Dt)() || (0, g.gn)())
+        )
+          return
+        var o = (0, l.eC)(),
+          s = a.root
+        s.endsWith('.js') ||
+          (s.endsWith('/') || (s = `${s}/`), (s = `${s}game.js`)),
+          o.setEntry([s]),
+          console.log('exportEnvs ==', e),
+          R(e, (e) => {
+            e &&
+              (console.error('run game independent subpackage fail', e),
+              f.error('run game independent subpackage fail', e),
+              o.evaluateScriptFile('game.js'),
+              w.reportIDKey({
+                key: 'loadGameIndependentSubPackageFail',
+              }))
+          })
+      } else R(e)
+    } else R(e)
+  }
+
+  1 === i.envPreloadType &&
+    (I.loadPreloadSdkSubPackage(), f.info('load subpackage finish')),
+    (0, l.xC)(e, t),
+    i.onReady(() => {
+      ;((0, g.G$)() || v.isAsync()) && (0, g.N0)()
+        ? (0, p.K0)().then(() => (a(), null))
+        : a()
+    })
+}
+```
 
 ## Compile JavaScript
 

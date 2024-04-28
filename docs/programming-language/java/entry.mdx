@@ -1,0 +1,48 @@
+## MacOS 上安装 java 环境
+
+:::warning
+
+强烈建议通过 idea IDE 开发工具来管理不同项目的 JDK 版本，省心省力。
+
+:::
+
+在 MacOS 内使用 homebrew 来安装 JDK 步骤如下：
+
+```shell
+# 查看需要安装版本的信息，通过 @version 来执行版本号，比如 openjdk@8 => 1.8
+brew info openjdk
+
+# 安装，设置 HOMEBREW_NO_AUTO_UPDATE=1 前缀表示不自动更新
+brew install openjdk
+```
+
+查看系统内已安装的 JDK 版本：
+
+```shell
+/usr/libexec/java_home -verbose
+```
+
+如上操作已经安装了最新的 JDK，之后在 `~/.zsh` 内设置一下环境变量即可。
+
+```bash
+# JAVA
+export JAVA_HOME=/usr/local/Cellar/openjdk/20.0.1/libexec/openjdk.jdk/Contents/Home
+```
+
+### 不同版本切换
+
+执行上述方法可以安装不同版本的 JDK 到系统，通过 `export JAVA_HOME=xxx` 来切换不同版本。
+
+除此之外，我们还可以通过 `jenv` 工具来进行 JDK 版本的切换。
+
+```shell
+# 安装 jenv
+brew install jenv
+
+# 注释掉上面的 JAVA_HOME 环境变量，并添加如下代码，之后 source ~/.zshrc 即可
+if which jenv > /dev/null; then eval "$(jenv init -)"; fi
+```
+
+执行 `jenv add /usr/local/Cellar/openjdk/20.0.1/libexec/openjdk.jdk/Contents/Home` 来添加 JDK 版本，之后通过 `jenv versions` 来查看已安装的 JDK 版本。
+
+如果希望全局使用某个 JDK 版本，可以通过 `jenv global 1.8` 来设置全局 JDK 版本。否则，通过 `jenv local 1.8` 来设置指定项目 JDK 版本。

@@ -12,12 +12,9 @@ import { HighlightWithText } from '/src/components/Highlights'
   description="基于 React Native 从 0 到 1 创建一个 ios 应用"
   tags={['React Native']}
   links={[
-    {
-      link: 'https://medium.com/@vimniky/how-to-use-vector-icons-in-your-react-native-project-8212ac6a8f06',
-      label: 'How to use vector icons in your react-native project',
-    },
-  ]}
-/>{' '}
+
+]}
+/>
 
 :::info
 
@@ -25,9 +22,9 @@ React Native 可以看成是 React 在 ios/android 运行环境的实现，它�
 
 :::
 
-众所周知，React 通过建立内存 DOM，即虚拟数来进行 Diff 比较、计算后，调用浏览器 API 进行重新渲染。那么只要我们能够掌握不同运行时或者执行环境下的底层渲染接口，这一套逻辑仍然行之有效。
+众所周知，React 通过在内存中保持虚拟 DOM，通过虚拟树进行 Diff 比较、计算后，调用浏览器 API 进行重新渲染。树和 Diff 比较实际上就是处理数据，那么只要我们能够掌握不同运行时或者执行环境下的底层渲染接口，这一套逻辑仍然行之有效。
 
-React Native 正是利用 Bridge 和 Virtual DOM 来在手机端内进行。
+React Native 正是利用 JSBridge 和 Virtual DOM 来在手机端内进行。
 
 **RN 与 React 的区别？**
 
@@ -46,7 +43,7 @@ React Native 正是利用 Bridge 和 Virtual DOM 来在手机端内进行。
 - watchman，`brew install watchman`
 - Xcode > 12.5，通过 App Store 安装
 - CocoaPods，管理 ios 依赖
-- Metro，React Native 的打包工具
+- Metro，React Native 的打包工具，编译 JS 资源
 
 准备完毕之后，执行 `npx react-native@latest init AwesomeProject` 创建项目，**注意项目名称**，初始化完毕之后，按照提示继续执行：
 
@@ -67,6 +64,21 @@ Run instructions for iOS:
 
 ```
 
+### 快速启动
+
+在启动项目时，首先启动 Metro 服务，执行 `yarn start`，之后在新的终端执行 `yarn ios`，这样可以保证 Metro 服务不会被关闭。
+
+### 快速刷新
+
+类似 hot reload，React Native 可以快速更新更改内容，其更新策略和组件树更新一致，如果更新内容不在组件树内，则会全部重新加载。
+
+:::warning
+
+- 快速刷新默认保持函数组件（和 Hooks）的本地 state。
+- 有时候你可能想要 _强制_ 状态被重置，某个组件被重新挂载。例如你正在调试一个发生在挂载期间的动画，这种情况是很有用的。为了做到这一点，你可以在文件的任何地方增加 `// @refresh reset`。这个指令是文件的本地指令，指示快速刷新在每次编辑时重新加载该文件中定义的组件。
+
+:::
+
 ### 在真机上运行
 
 查看 [Running On Device · React Native](https://reactnative.dev/docs/running-on-device)，这里浓缩步骤：
@@ -81,37 +93,42 @@ Run instructions for iOS:
 - 清除缓存，`npx react-native start --reset-cache`
 - 重新编译，`npx react-native run-ios`
 
-## 选择 UI 库
+#### 手动安装模拟器/基础库
 
-我们选择 [react-native-paper](https://callstack.github.io/react-native-paper/docs/guides/getting-started) 作为 UI 库，它提供了一套 Material Design 风格的组件，同时提供了一些常用的功能组件。
+如果运行应用需要指定最新模拟器，但是 xcode 下载报网络错误，可以尝试手动下载模拟器并安装。
 
-直接安装即可，这里特别说明引入 Icon 的方式：在 react-native-paper 内很多组件都需要使用 [oblador/react-native-vector-icons: Customizable Icons for React Native with support for image source and full styling.](https://github.com/oblador/react-native-vector-icons) 这个库，所以我们需要安装这个库，并将其资源拷贝到 ios 项目内，并编辑 `Info.plist` 文件。
+参考 [installing-additional-simulator-runtimes](https://developer.apple.com/documentation/xcode/installing-additional-simulator-runtimes)
 
-:::warning
+执行如下命令：
 
-添加 icon 文件之后，需要重新编译
-
-:::
-
-完成之后，通过 `import Icon from 'react-native-vector-icons/FontAwesome'` 即可使用
-
-```tsx
-import Icon from 'react-native-vector-icons/FontAwesome'
-const myButton = (
-  <Icon.Button
-    name="facebook"
-    backgroundColor="#3b5998"
-    onPress={this.loginWithFacebook}
-  >
-    Login with Facebook
-  </Icon.Button>
-)
+```bash
+xcode-select -s /Applications/Xcode-beta.app
+xcodebuild -runFirstLaunch
+xcrun simctl runtime add "~/Downloads/iOS_17.4_Simulator_Runtime.dmg"
 ```
+
+#### 删除过期模拟器
+
+打开 ** Xcode > Settings > Platforms **，选择需要删除的模拟器即可。
+
+## 安装外部依赖
+
+1. 通过 `yarn add [package]` 在根目录下安装外部依赖；
+2. 进入 `ios/` 目录下，执行 `pod install` 安装原声依赖，因为该库可能依赖原生实现；
+3. 重新编译项目，`yarn ios`;
 
 ## 封装请求方法
 
 ## Q&A
 
+#### CocoaPods could not find compatible versions
+
 [CocoaPods could not find compatible versions](https://github.com/rnmods/react-native-document-picker/issues/313)
 
 - 通过 `cd ios && pod install --repo-update` 解决
+
+#### 如何为 React Native 项目重命名？
+
+- 使用 [react-native-rename](https://www.npmjs.com/package/react-native-rename) 插件，执行 `npx react-native-rename <newName>` 即可
+- 完成后，全局替换名称，检查是否有遗漏
+- 清空后，重新编译

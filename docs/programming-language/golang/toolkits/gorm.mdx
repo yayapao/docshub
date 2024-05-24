@@ -19,16 +19,45 @@ import { HighlightWithText } from '/src/components/Highlights'
 
 ## Usage
 
-### hasmany 使用
+### 建立一对多关系
 
-在创建 hasmany 关联时，尤其需要注意：
+:::warning
 
-1. 创建 Table 时的顺序；
-2. 创建 Record 时的顺序；
+在创建一对多关联关系时，需要注意 `one Table` 在 `many Table` 之前。
 
-**均需要保持 `one Table` 在 `many Table` 之前**，比如一个人有多张信用卡，需要优先创建 User 表，再创建 Creditcard 表，在创建记录时同理。
+:::
 
-观察数据表结构会发现，虽然会在 User 表内定义 `Creditcards Creditcard[]`，但是实际创建时不会创建该字段，仅为语义上的保证。
+比如一个人有多张信用卡，需要优先创建 User 表，再创建 Creditcard 表，在创建记录时也是如此。
+
+现在有 User 和 Creditcard 两个表，User 表如下：
+
+```go
+type User struct {
+	ID         uint
+	Creditcard []Creditcard
+}
+```
+
+Creditcard 表如下：
+
+```go
+type Creditcard struct {
+	ID     uint
+	UserID uint
+}
+```
+
+**注意，gorm 会自动建立关联关系，必须保证 `表名 + ID` 来为字段命名。**此外，也可以在通过 **Creditcard []Creditcard `gorm:"foreignKey:UserID"`** 来指定外键。
+
+#### 查询
+
+查询时，通过 `Preload` 方法来加载关联数据，注意 Preload 的参数必须为 `表名 + s`，即复数形式。
+
+```go
+
+db.Modal(&User{}).Preload("Creditcards").Find(&users)
+
+```
 
 ### many2many update
 

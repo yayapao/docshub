@@ -18,7 +18,7 @@ Nginx 是一款轻量级的 HTTP 服务器，采用事件驱动的异步非阻�
 
 ### 配置无误,但是访问网页时返回 403/500
 
-403/500 的情况可能权限问题导致:
+403/500 的情况可能**权限问题**导致:
 
 查看 nginx 的启动用户和工作用户是否对应
 
@@ -27,6 +27,20 @@ Nginx 是一款轻量级的 HTTP 服务器，采用事件驱动的异步非阻�
 # 修改 nginx.conf 的 user 为 root 即可
 $ ps aux | grep "nginx: worker process"
 ```
+
+### 处理 413 Request Entity Too Large
+
+当客户端上传文件超过 **nginx 默认允许的请求体大小（1M）时**，会发生该问题。
+
+解决办法：修改 `client_max_body_size` 可以在 http/server/location 任意处进行修改。
+
+```
+server {
+	client_max_body_size 100M;
+}
+
+```
+
 
 ### 修改 `server` 发现 80 端口仍未默认页面
 

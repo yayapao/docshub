@@ -15,6 +15,31 @@ import { FieldsetCase } from '/src/docase/html5/element'
   links={[]}
 />{' '}
 
+import {
+  infoIcon,
+  filterIcon,
+  sortIcon,
+  sortAscIcon,
+  sortDescIcon,
+} from './css.ts'
+
+## 表格绘制规范
+
+### 表格标题
+
+1. 表头分为两种：**可交互的表头（支持筛选<i style={filterIcon} role="img" aria-label="filter"></i>、排序<i style={sortIcon} role="img" aria-label="sort"></i> <i style={sortAscIcon} role="img" aria-label="asc"></i> <i style={sortDescIcon} role="img" aria-label="desc"></i>）**，和<span style={{color: 'rgba(0,0,0,.4)', textDecoration: 'underline'}}>不可交互的表头</span>（支持提示<i style={infoIcon} role="img" aria-label="info"></i>）；
+2. 表头默认置灰，可交互表头在鼠标悬浮/点击后变色，保持最后一个点击的表头高亮；
+3. 筛选支持多选/单选，多选需要确定/重置按钮，点击确定按钮后筛选内容，单选点击选项后直接筛选内容；**数据来源：自定义或者对表格数据自动去重后生成**；
+4. 筛选、排序、提示，一般两两组合，一般排序和筛选不组合；
+5. 表头文字部分默认居左展示，交互按钮采用 space-around 方式占据剩余空间；
+
+### 单元格内容
+
+1. 文本内容居左展示（在 DataGrip 数字内容居右展示，根据含义进行千位分割）；
+2. 对于支持 checkbox 行，<span style={{ backgroundColor: '#ebeef2', display: 'inline-block' }}>在 hover/selected 需要更新背景色</span>；已选中的选项，在切换时尽量保证其选中状态；
+3. tbody 内一般不使用竖线分割，表格之间使用横线分割；
+4. **执行刷新或者其他操作时，根据实际情况 disable 功能按钮，避免误操作；**
+
 ## Handle DOM Element
 
 ```js

@@ -17,7 +17,7 @@ import { HighlightWithText } from '/src/components/Highlights'
   ]}
 />{' '}
 
-## Usage
+## 设计表
 
 ### 建立一对多关系
 
@@ -61,7 +61,7 @@ db.Modal(&User{}).Preload("Creditcards").Find(&users)
 
 ### many2many update
 
-在使用 Grom 的关系模型时，体验是不如 Node.js 生态的 `typeorm`，主要体现在：
+在使用 Grom 的关系模型时，体验不如 Node.js 生态的 `typeorm`，主要体现在：
 
 - many2many 更新数据
 - 更改值时，不会主动变更零值
@@ -127,6 +127,57 @@ func (o *Objective) UpdateObjective() error {
 	}
 	return nil
 }
+```
+
+### 使用 JSON 字段
+
+1. 在 model 内声明字段，并在 types 内声明具体类型
+
+:::warning
+
+model 是面对数据库，types 面对用户/web应用，两者之间通过 service 进行处理关联。
+
+:::
+
+```go title="/model/house.go"
+
+import (
+	"gorm.io/datatypes"
+)
+
+type House struct {
+	Desc datatypes.JSON `gorm:"type:json;" json:"desc"`
+}
+
+```
+
+**如有需要，需要声明具体类型，供 gin 解析用，也方便对其中数据进行处理。**
+
+```go title="/types/house.go"
+
+type HouseDesc struct {
+	ImageURL string `json:"imageURL"`
+	Title    string `json:"title"`
+	Subtitle string `json:"subtitle"`
+}
+
+type FindHouseRes struct {
+	Desc     []HouseDesc    `json:"desc"`
+}
+
+```
+
+2. 在 service 内处理查询、更新等操作。
+
+```go title="/service/house.go"
+
+// 写入时，转换为 JSON 字节数据
+byteDesc, err := json.Marshal(data.Desc)
+
+// 查询时，转换为 JSON 数据
+var desc []httpOperation.HouseDesc
+_ = json.Unmarshal(v.Desc, &desc)
+
 ```
 
 ## FAQ

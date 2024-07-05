@@ -26,6 +26,7 @@
     "clsx": "^2.1.1",
     "docusaurus-lunr-search": "^3.4.0",
     "docusaurus-plugin-sass": "^0.2.5",
+    "docusaurus-theme-search-typesense": "^0.20.0-0",
     "ele-utility": "^1.1.16",
     "prism-react-renderer": "^2.3.1",
     "react": "^18.3.1",

@@ -20,12 +20,12 @@ const config: Config = {
   onBrokenMarkdownLinks: 'warn',
 
   plugins: [
-    [
-      'docusaurus-lunr-search',
-      {
-        languages: ['en', 'zh'], // language codes
-      },
-    ],
+    // [
+    //   'docusaurus-lunr-search',
+    //   {
+    //     languages: ['en', 'zh'], // language codes
+    //   },
+    // ],
   ],
 
   // Even if you don't use internationalization, you can use this field to set
@@ -77,7 +77,7 @@ const config: Config = {
       } satisfies Preset.Options,
     ],
   ],
-
+  themes: ['docusaurus-theme-search-typesense'],
   themeConfig: themeConfigs,
   customFields: {
     githubUrl: 'https://github.com/yayapao',

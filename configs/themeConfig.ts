@@ -108,4 +108,19 @@ export const themeConfigs: Config['themeConfig'] = {
       hideable: true,
     },
   },
+  typesense: {
+    typesenseCollectionName: 'docshub',
+    typesenseServerConfig: {
+      nodes: [
+        {
+          host: '124.222.19.90',
+          port: 8108,
+          protocol: 'http',
+        },
+      ],
+      apiKey: 'joyjoy',
+    },
+    typesenseSearchParameters: {},
+    contextualSearch: true,
+  },
 } satisfies Preset.ThemeConfig

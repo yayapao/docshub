@@ -1,0 +1,205 @@
+---
+id: ios-app
+title: ''
+sidebar_label: App(ios)
+---
+
+import { DocsHeader } from '/src/components/Layout/DocsHeader'
+import { HighlightWithText } from '/src/components/Highlights'
+
+<DocsHeader
+  title="React Native Application(ios)"
+  description="基于 React Native 从 0 到 1 创建一个 ios 应用"
+  tags={['React Native']}
+  links={[
+
+]}
+/>
+
+:::info
+
+React Native 可以看成是 React 在 ios/android 运行环境的实现，它提供编译器将 jsx 语法转换成 ios/android 原生组件，同时提供了一套原生组件的封装。
+
+:::
+
+众所周知，React 通过在内存中保持虚拟 DOM，通过虚拟树进行 Diff 比较、计算后，调用浏览器 API 进行重新渲染。树和 Diff 比较实际上就是处理数据，那么只要我们能够掌握不同运行时或者执行环境下的底层渲染接口，这一套逻辑仍然行之有效。
+
+React Native 正是利用 JSBridge 和 Virtual DOM 来在手机端内进行。
+
+**RN 与 React 的区别？**
+
+- 元素标签，实际上在于浏览器和手机端的渲染方式不同，其支持原生组件不同，从而导致了标签的差异
+- 生命周期
+
+**React Native 相比 webview 的优势？**
+
+就凭 RN 编译的内容，能够直接使用原生组件渲染，就已经吊打 webview 了。webview 相当于在原生应用内嵌入一个 V8 引擎，然后在这个引擎内运行一个网页，天然存在安全、性能、样式交互问题。
+
+## 环境准备
+
+查看 [Setting up the development environment · React Native](https://reactnative.dev/docs/set-up-your-environment) 这里介绍通过 React-Native-CLI 进行安装，需要：
+
+- Node.js > 18，通过 volta 解决
+- watchman，`brew install watchman`
+- Xcode 保持最新即可，通过 App Store 安装
+- CocoaPods，管理 ios 依赖
+- Metro，React Native 的打包工具，编译 JS 资源
+
+:::warning
+
+**推荐使用 [expo](https://expo.dev/) 进行开发**，以避免使用原生 API 时的兼容问题。
+
+:::
+
+## 使用 Expo 开发
+
+在 [Get Started with React Native · React Native](https://reactnative.dev/docs/environment-setup) 中，推荐使用 Expo 进行开发。
+
+其优势在于：
+
+- 开箱即用，无需安装 Xcode、Android Studio 等 IDE 也能进行开发，使用 Expo Go(通过 AppStore 下载) 即可在手机上运行
+- 支持原生 API，通过 `expo install [package]` 安装原生依赖，比如步数、地理位置、系统通知等
+- 使用 eas-cli 进行打包，支持 OTA 更新
+
+### 创建项目
+
+查看 [create-expo-app - Expo Documentation](https://docs.expo.dev/more/create-expo/#--template) 了解不同的创建模版。
+
+```bash
+
+# 创建项目
+npx create-expo-app@latest
+
+```
+
+### 开发项目
+
+在 AppStore 上下载 Expo Go，通过扫描二维码即可在手机上运行项目。
+
+```bash
+# 运行项目
+yarn start
+
+# 在真机上运行-ios，注意需要添加 --devide 参数，即 expo run:ios --device
+yarn ios
+```
+
+<img src="/img/langs/react/expo-start.png" height="300" />
+
+### 开始开发
+
+如果之前是使用 _default_ 作为模版，先执行 `yarn reset-project` 重置项目，然后执行 `yarn start` 即可。
+
+## 基于原生开发（不推荐）
+
+准备完毕之后，执行 `npx react-native@latest init AwesomeProject` 创建项目，**注意项目名称**，初始化完毕之后，按照提示继续执行：
+
+```bash
+# 仅针对 ios
+Run instructions for iOS:
+  • cd "/Users/yango/github/apps/joyappRn/ios"
+
+  • Install Cocoapods
+    • bundle install # you need to run this only once in your project.
+    • bundle exec pod install # 如果遇到问题，尝试执行 pod repo update 更新本地仓库
+    • cd ..
+
+  • npx react-native run-ios
+  - or -
+  • Open joyappRn/ios/joyappRn.xcodeproj in Xcode or run "xed -b ios"
+  • Hit the Run button
+
+```
+
+### 快速启动
+
+在启动项目时，首先启动 Metro 服务，执行 `yarn start`，之后在新的终端执行 `yarn ios`，这样可以保证 Metro 服务不会被关闭。
+
+### 快速刷新
+
+类似 hot reload，React Native 可以快速更新更改内容，其更新策略和组件树更新一致，如果更新内容不在组件树内，则会全部重新加载。
+
+:::warning
+
+- 快速刷新默认保持函数组件（和 Hooks）的本地 state。
+- 有时候你可能想要 _强制_ 状态被重置，某个组件被重新挂载。例如你正在调试一个发生在挂载期间的动画，这种情况是很有用的。为了做到这一点，你可以在文件的任何地方增加 `// @refresh reset`。这个指令是文件的本地指令，指示快速刷新在每次编辑时重新加载该文件中定义的组件。
+
+:::
+
+### 在真机上运行
+
+查看 [Running On Device · React Native](https://reactnative.dev/docs/running-on-device)，这里浓缩步骤：
+
+- 通过 Xcode 打开 **ios/xxx.xcworkspace**，分别确认项目名称、签名、bundle id 等信息
+- 之后在导航栏选择设备，点击运行即可，这个过程中可能会遇到一些问题，**尝试重启 Xcode、电脑、手机**
+
+**注意让电脑信任手机设备，让手机设备信任开发者证书。**
+
+遇到代码更新后，无法在真机上运行的问题，可以尝试：
+
+- 清除缓存，`npx react-native start --reset-cache`
+- 重新编译，`npx react-native run-ios`
+
+#### 手动安装模拟器/基础库
+
+如果运行应用需要指定最新模拟器，但是 xcode 下载报网络错误，可以尝试手动下载模拟器并安装。
+
+参考 [installing-additional-simulator-runtimes](https://developer.apple.com/documentation/xcode/installing-additional-simulator-runtimes)
+
+执行如下命令：
+
+```bash
+xcode-select -s /Applications/Xcode-beta.app
+xcodebuild -runFirstLaunch
+xcrun simctl runtime add "~/Downloads/iOS_17.4_Simulator_Runtime.dmg"
+```
+
+#### 删除过期模拟器
+
+打开 ** Xcode > Settings > Platforms **，选择需要删除的模拟器即可。
+
+## 安装外部依赖
+
+1. 通过 `yarn add [package]` 在根目录下安装外部依赖；
+2. 进入 `ios/` 目录下，执行 `pod install` 安装原声依赖，因为该库可能依赖原生实现；
+3. 重新编译项目，`yarn ios`;
+
+## 集成 nativewind
+
+使用 [nativewind](https://www.nativewind.dev/v4/overview) 在 React Native 内使用 [Tailwind CSS](https://tailwindcss.com/)
+
+## Q&A
+
+#### CocoaPods could not find compatible versions
+
+[CocoaPods could not find compatible versions](https://github.com/rnmods/react-native-document-picker/issues/313)
+
+- 通过 `cd ios && pod install --repo-update` 解决
+
+#### 如何为 React Native 项目重命名？
+
+- 使用 [react-native-rename](https://www.npmjs.com/package/react-native-rename) 插件，执行 `npx react-native-rename <newName>` 即可
+- 完成后，全局替换名称，检查是否有遗漏
+- 清空后，重新编译
+
+#### 解决 nativewind 与 react-native-paper UI 组件样式冲突
+
+使用 react-native-paper 的组件时，比如 `<Text>` 组件，可能设置 className 后样式没有生效，这是因为 react-native-paper 的组件样式是通过 `style` 属性传递的，而不是 `className`。
+
+通过 nativewind 提供的 `cssInterop` 方法解决，参考[Styling third-party components | NativeWind](https://www.nativewind.dev/v4/guides/third-party-components)
+
+**它用来将组件 className 转换为样式，并传入组件的 style 属性。**
+
+```tsx title='InteropRNPaper.tsx'
+import { cssInterop } from 'nativewind'
+import { Text } from 'react-native-paper'
+
+// 这里覆盖 React-Native-Paper 的组件，解决 NativeWind 注入问题
+cssInterop(Text, {
+  className: {
+    target: 'style',
+  },
+})
+
+export { Text }
+```

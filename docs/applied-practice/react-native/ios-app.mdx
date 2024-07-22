@@ -176,13 +176,13 @@ xcrun simctl runtime add "~/Downloads/iOS_17.4_Simulator_Runtime.dmg"
 
 - 通过 `cd ios && pod install --repo-update` 解决
 
-#### 如何为 React Native 项目重命名？
+#### RN - 如何为 React Native 项目重命名？
 
 - 使用 [react-native-rename](https://www.npmjs.com/package/react-native-rename) 插件，执行 `npx react-native-rename <newName>` 即可
 - 完成后，全局替换名称，检查是否有遗漏
 - 清空后，重新编译
 
-#### 解决 nativewind 与 react-native-paper UI 组件样式冲突
+#### expo - 解决 nativewind 与 react-native-paper UI 组件样式冲突
 
 使用 react-native-paper 的组件时，比如 `<Text>` 组件，可能设置 className 后样式没有生效，这是因为 react-native-paper 的组件样式是通过 `style` 属性传递的，而不是 `className`。
 
@@ -202,4 +202,22 @@ cssInterop(Text, {
 })
 
 export { Text }
+```
+
+#### expo - Replace Hermes for the right configuration...
+
+在执行 `yarn ios` 时，可能会遇到如下错误：`iOS Release build from XCode fails at "[CP-User] [Hermes] Replace Hermes for the right configuration, if needed" step after adding a package`
+
+该问题原因是因为 Hermes 引擎在 Release 模式下编译失败。[通过以下方式解决](https://github.com/facebook/react-native/issues/39903)
+
+```
+{
+    ...
+    "scripts": {
+        ...
+        "ios": "yarn expo prebuild; rm ios/.xcode.env.local; echo \"export NODE_BINARY=$(printf '%s' \"$(node -e 'console.log(process.execPath)')\")\" > ./ios/.xcode.env.local; yarn expo run:ios",
+        ...
+    }
+    ...
+}
 ```

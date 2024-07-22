@@ -25,12 +25,6 @@ const sidebarConfig: SidebarsConfig = {
   librarySiderbar: [
     {
       type: 'category',
-      label: 'Library',
-      collapsed: true,
-      items: ['library/python'],
-    },
-    {
-      type: 'category',
       label: 'Vue',
       collapsed: true,
       items: ['library/vue/concept', 'library/vue/libs'],

@@ -5,17 +5,19 @@ import { genSiderItem } from './utils'
 const nodejsToolkitPrefix = 'programming-language/nodejs/toolkits'
 const nodejsHandbookPrefix = 'programming-language/nodejs/handbook'
 // go
-const goToolkitPrefix = 'programming-language/golang/toolkits'
-const goHandbookPrefix = 'programming-language/golang/handbook'
+const goToolkitPrefix = 'programming-language/go/toolkits'
+const goHandbookPrefix = 'programming-language/go/handbook'
 // html5
 const htmlHandbookPrefix = 'programming-language/html5/handbook'
 const htmlBrowserPrefix = 'programming-language/html5/browser'
 // js
-const jsHandbookPrefix = 'programming-language/javascript/handbook'
-const tsPrefix = 'programming-language/javascript/typescript'
+const jsHandbookPrefix = 'programming-language/js/handbook'
+const tsPrefix = 'programming-language/js/typescript'
 // react
 const reactSourcePrefix = 'programming-language/react/source'
 const reactPrefix = 'programming-language/react/react'
+// python
+const pyHandbookPrefix = 'programming-language/py/handbook'
 
 const programmingLanguageConfig: SidebarsConfig = {
   nodejsProgrammingSidbar: [
@@ -39,7 +41,7 @@ const programmingLanguageConfig: SidebarsConfig = {
   golangProgrammingSidbar: [
     {
       type: 'doc',
-      id: 'programming-language/golang/entry',
+      id: 'programming-language/go/entry',
     },
     {
       type: 'category',
@@ -80,7 +82,7 @@ const programmingLanguageConfig: SidebarsConfig = {
   javascriptProgrammingSidbar: [
     {
       type: 'doc',
-      id: 'programming-language/javascript/entry',
+      id: 'programming-language/js/entry',
     },
     {
       type: 'category',
@@ -117,6 +119,18 @@ const programmingLanguageConfig: SidebarsConfig = {
         'libs',
         'qa',
       ]),
+    },
+  ],
+  pythonProgrammingSidbar: [
+    {
+      type: 'doc',
+      id: 'programming-language/py/entry',
+    },
+    {
+      type: 'category',
+      label: 'Handbook',
+      collapsed: true,
+      items: genSiderItem(pyHandbookPrefix, ['concept', 'grammar']),
     },
   ],
 }

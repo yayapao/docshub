@@ -65,9 +65,9 @@ const navbarConfig: Config['themeConfig'] = {
           activeBaseRegex: 'html5/*',
         },
         {
-          label: 'Python3',
-          to: '/docs/langs/python/concept',
-          activeBaseRegex: '/docs/langs/python',
+          label: 'Python',
+          to: '/docs/programming-language/py/entry',
+          activeBaseRegex: 'py/*',
         },
       ],
     },

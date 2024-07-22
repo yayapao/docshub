@@ -1,0 +1,42 @@
+---
+id: entry
+title: ''
+sidebar_label: Nice Python
+---
+
+import { DocsHeader } from '/src/components/Layout/DocsHeader'
+
+<DocsHeader
+  title="Nice Python"
+  description="Python is a programming language that lets you work quickly
+and integrate systems more effectively."
+  github="https://github.com/python"
+  tags={[]}
+  links={[
+    {
+      label: 'pipy',
+      link: 'https://pypi.org/',
+    },
+    {
+      label: 'Deleted PyPI Package index',
+      link: 'https://dashboard.stablebuild.com/pypi-deleted-packages/',
+    },
+  ]}
+/>
+
+## Q&A
+
+### 获取脚本传递参数
+
+通过 `sys.argv` 在脚本内获取外部传递参数
+
+```python
+import sys
+
+# 例如执行命令 python3 file.py yang 666
+# 传递参数通过空格进行分隔
+# 则会获取一个 list，其值为 ['file.py', 'yang', '666']
+if __name__ == '__main__':
+	name = sys.argv[1]
+	label = sys.argv[2]
+```

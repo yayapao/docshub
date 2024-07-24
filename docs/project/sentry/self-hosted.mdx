@@ -323,7 +323,7 @@ Snuba 是 CK 的代理服务，用户查询和写入数据。
 
 ### ClickHouse
 
-参考[ck运维脚本](https://doc.joyjoy.cc/docs/before-dev/data-services/entry#%E5%B8%B8%E7%94%A8%E8%BF%90%E7%BB%B4%E8%84%9A%E6%9C%AC)
+参考[ck 运维脚本](https://doc.joyjoy.cc/docs/before-dev/data-services/entry#%E5%B8%B8%E7%94%A8%E8%BF%90%E7%BB%B4%E8%84%9A%E6%9C%AC)
 
 在 ClickHouse 内，Sentry 会创建如下表，由 Snuba 服务对其进行代理，负责插入和代理查询数据：
 
@@ -343,3 +343,25 @@ transactions_local
 2. memcached 服务需要挂载到域名下，因此更新分组后需要重新配置 memcached 域名的后端容器；
 3. 开发 sentry plugins 后需要更新 web 和 worker-default 分组，分别对应 `sentry run web` 和 `sentry run worker default` 启动命令；
 4. Sentry 服务都要挂在同一个分布式文件地址，否则会出现 SourceMaps 文件上传失败的情况；
+
+### pipy 导致的构建问题
+
+因为自部署 Sentry 版本为 21.6.3，Sentry 官方在 2024 年出于 pipy 容量考虑，删除了一部分公共版本。**因此根据 requirements.txt 内的版本号，我们可能存在拉不到指定版本的包，或者拉取的包和源码不匹配的情况。**
+
+比如：
+
+```
+xmlsec.InternalError: (-1, 'lxml & xmlsec libxml2 library version mismatch')
+```
+
+解决这种问题，我们需要根据日志依次排查，修改 requirements.txt 内容后重新编译。下面记录可能存在问题的包：
+
+```bash
+pip show sentry-relay
+
+pip show lxml
+pip show xmlsec
+pip show sentry-auth-gitlab-v2
+
+dpkg -l | grep libxml2
+```

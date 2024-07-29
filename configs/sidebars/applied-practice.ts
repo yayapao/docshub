@@ -13,12 +13,6 @@ const appliedPracticeConfig: SidebarsConfig = {
     },
     {
       type: 'category',
-      label: 'Go',
-      collapsed: true,
-      items: genSiderItem(`${prefix}/go`, ['webapp']),
-    },
-    {
-      type: 'category',
       label: 'React Native',
       collapsed: true,
       items: genSiderItem(`${prefix}/react-native`, ['ios-app']),

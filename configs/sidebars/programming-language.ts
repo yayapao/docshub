@@ -7,6 +7,7 @@ const nodejsHandbookPrefix = 'programming-language/nodejs/handbook'
 // go
 const goToolkitPrefix = 'programming-language/go/toolkits'
 const goHandbookPrefix = 'programming-language/go/handbook'
+const goAppliedPrefix = 'programming-language/go/applied'
 // html5
 const htmlHandbookPrefix = 'programming-language/html5/handbook'
 const htmlBrowserPrefix = 'programming-language/html5/browser'
@@ -45,15 +46,21 @@ const programmingLanguageConfig: SidebarsConfig = {
     },
     {
       type: 'category',
-      label: 'Go Handbook',
+      label: 'Handbook',
       collapsed: true,
       items: genSiderItem(goHandbookPrefix, ['grammar']),
     },
     {
       type: 'category',
-      label: 'Go Toolkits',
+      label: 'Toolkits',
       collapsed: true,
-      items: genSiderItem(goToolkitPrefix, ['gorm']),
+      items: genSiderItem(goToolkitPrefix, ['gin', 'gorm']),
+    },
+    {
+      type: 'category',
+      label: 'Applied',
+      collapsed: true,
+      items: genSiderItem(goAppliedPrefix, ['gin-web-app']),
     },
   ],
   HTML5ProgrammingSidbar: [

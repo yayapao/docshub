@@ -1,5 +1,5 @@
 ---
-id: webapp
+id: gin-web-app
 title: ''
 sidebar_label: Gin WebAPP
 ---
@@ -236,6 +236,18 @@ Highly Recommended using **Goland RUN Configurations** to start APP.
 		w.(http.Flusher).Flush()
 	}
 ```
+
+## 使用 Redis 缓存数据
+
+在项目内基于[Redis client for Go](https://github.com/redis/go-redis?tab=readme-ov-file)封装数据缓存方法。
+
+:::warning
+
+我们使用 v9 版本，对应 redis-server v7。
+
+:::
+
+[实现参考](https://github.com/yayapao/goars/blob/main/pkg/redis/client.go)
 
 ## Features Design
 

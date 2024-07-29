@@ -55,9 +55,9 @@ const navbarConfig: Config['themeConfig'] = {
           activeBaseRegex: '/docs/programming-language/nodejs',
         },
         {
-          label: 'Golang',
-          to: '/docs/programming-language/golang/entry',
-          activeBaseRegex: '/docs/programming-language/golang',
+          label: 'Go',
+          to: '/docs/programming-language/go/entry',
+          activeBaseRegex: '/docs/programming-language/go',
         },
         {
           label: 'HTML5',

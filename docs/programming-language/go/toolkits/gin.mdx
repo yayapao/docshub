@@ -76,7 +76,10 @@ func PostObjective(c *gin.Context) {
 
 在 Gin 中，我们通过缓存中间件来提高接口性能，减少查询数据库的次数。一般，提供内存缓存和 Redis 缓存两种方式。这里我们以 Redis 缓存为例：
 
-我们使用 [gin-cache](https://github.com/chenyahui/gin-cache) 作为解决方案。**接入前，需要保证已经有一个 redis client 实例。**
+我们使用 [gin-cache](https://github.com/chenyahui/gin-cache) 作为解决方案。简单来说，我们需要准备：
+
+- Redis Client 实例
+- CacheStore 实例
 
 基于 gin-cache，我们封装了一个 RedisStore，用于请求时的缓存处理。
 

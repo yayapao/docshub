@@ -465,14 +465,14 @@ CREATE TABLE sentry.errors_analysis_local
     `url` Nullable(String)
 ) ENGINE = ReplicatedReplacingMergeTree('/clickhouse/tables/errors/shard3/sentry/errors_analysis_local', 'replica3')
 PARTITION BY toMonday(timestamp)
-PRIMARY KEY (project_id, timestamp)
 ORDER BY (project_id, timestamp)
+TTL timestamp + toIntervalDay(30)
 SETTINGS index_granularity = 256, storage_policy = 'hdd_in_order';
 ```
 
 查看当前集群信息 `SELECT * FROM system.clusters;`
 
-2. **创建分布式表，注意字段要一致**，引擎为 `Distributed`，将数据分发到 `errors_analysis_local` 表内
+2. **创建分布式表，注意字段要和 local 一致**，引擎为 `Distributed`，将数据分发到 `errors_analysis_local` 表内
 
 ```sql
 CREATE TABLE sentry.errors_analysis_dist
@@ -502,6 +502,35 @@ FROM sentry.errors_local;
 ```
 
 如果在操作过程中发现错误，可以执行 `DROP TABLE IF EXISTS sentry.mv_errors_analysis_local;` 删除物化视图，不然可能影响到数据写入。
+
+### 在 Linux 升级 clickhouse-client
+
+clickhouse-client 帮助我们连接 clickhouse 服务，执行语句。但是在使用过程中发现版本过低，无法支持新特性。**比如 TTL 是 ck v19.1 版本的新特性，如果 clickhouse-client 小于该版本，那么无法执行 TTL 相关语句。**为了解决该问题，我们需要手动升级 clickhouse-client。
+
+```bash
+# 配置源和证书
+sudo apt-get install -y apt-transport-https ca-certificates dirmngr
+GNUPGHOME=$(mktemp -d)
+sudo GNUPGHOME="$GNUPGHOME" gpg --no-default-keyring --keyring /usr/share/keyrings/clickhouse-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 8919F6BD2B48D754
+sudo rm -r "$GNUPGHOME"
+sudo chmod +r /usr/share/keyrings/clickhouse-keyring.gpg
+
+echo "deb [signed-by=/usr/share/keyrings/clickhouse-keyring.gpg] https://packages.clickhouse.com/deb stable main" | sudo tee \
+    /etc/apt/sources.list.d/clickhouse.list
+```
+
+查看支持的 clickhouse-client 版本
+
+```bash
+apt-cache policy clickhouse-client
+```
+
+指定版本进行安装，不然会使用版本较低的默认源（如果同时配置了 aliyun 和 ck 源）
+
+```bash
+sudo apt-get update
+sudo apt-get install -y clickhouse-client=x.x.x.x
+```
 
 ## Kafka
 

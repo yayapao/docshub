@@ -40,6 +40,9 @@
     "@docusaurus/types": "^3.4.0",
     "typescript": "~5.5.3"
   },
+  "resolutions": {
+    "image-size": "~1.0.2"
+  },
   "browserslist": {
     "production": [
       ">0.5%",

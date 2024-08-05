@@ -205,6 +205,16 @@ import { HighlightWithCode } from '/src/components/Highlights'
 
 ## Q&A
 
+### Seeing warnings about unsupported file type: undefined for SVG images
+
+在构建时出现 `unsupported file type: undefined (file: /Users/yango/github/react/docshub/static/img/langs/go/sentence-module.svg)` 警告。参考 [issues](https://github.com/facebook/docusaurus/issues/9715)。通过配置 package.json 文件解决：
+
+```json
+  "resolutions": {
+    "image-size": "~1.0.2"
+  },
+```
+
 ### 使用 `@docusaurus/plugin-ideal-image`
 
 参考 [plugin-ideal-image
@@ -387,7 +397,3 @@ $ docker run -it --env-file=/root/apps/typesense/.env -e "CONFIG=$(cat config.js
 - hogan.js
 
 由于 `docusaurus-lunr-search` 并不支持开发环境，因此需要在 build 之后，执行 `pnpx http-server ./dist` 来查看最终效果，但是本地搜索并不是最优解，后期需要替换为线上搜索方案。
-
-```
-
-```

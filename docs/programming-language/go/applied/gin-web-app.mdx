@@ -147,23 +147,131 @@ GOOS=windows GOARCH=386 go build app.go
 
 之后会将初始化的路由对象实例化，启动服务。
 
-## Start
+## 开发
 
 Highly Recommended using **Goland RUN Configurations** to start APP.
 
 > CAUTION: add `APP_ENV=development`
 
-### Develop an API Interface
+### 创建 API 接口
 
 以下定义开发一个接口的主要流程：
 
-1. Defined ORM Model struct in DIR `models/`;
-2. In `models/[module]`, make common methods, like: `Save`, `Query`, `Exist` etc;
-3. Defined Request/Response structs in DIR `http_operation/[module]`;
-4. Defined API handlers in DIR `service/[module]`;
-5. Defined GIN handle response in DIR `router/api/[module]`;
-6. Defined the mapping of GIN response handler and GIN routes, in DIR `router/routes/[module]`;
-7. Defined the mapping of router and GIN routes in `router/router.go`.
+1. 在 `models/[module]` 下定义 ORM 数据模型，包括结构体定义和数据库操作方法；**表名为单数**，建议实现方法如下：
+
+```go
+// 必须定义字段 ID、CreatedAt、UpdatedAt
+type Plan struct {
+	ID        uint      `gorm:"autoIncrement" json:"id"`
+	Name      string    `json:"name"`
+	CreatedAt time.Time `gorm:"autoCreateTime" json:"createdAt"`
+	UpdatedAt time.Time `gorm:"autoUpdateTime" json:"updatedAt"`
+}
+
+func QueryPlanByID(id uint) (*Plan, error) {}
+func QueryPlans() ([]Plan, error) {} // 按需进行请求参数处理
+
+// Save plan 表示一个指向 FamilyPlan 的指针
+// 注意：使用 grom Save 方法时，不要和 Model 一起使用
+func (plan *Plan) Save() error {
+	return DBClient.Save(plan).Error
+}
+
+```
+
+2. 在 `http_operation/[module]` 定义 http 请求/返回结构体，请求统一用 `Req` 结尾，返回统一用 `Res` 结尾；开头根据请求类型，支持 `Find`, `Save`, `Update ` 选择，比如：
+
+:::info
+
+这里使用 Find 而不是 GET/POST 等 http 方法，是因为请求接口不必与 http 方法一一对应，而是根据业务逻辑来定义。POST 同样可以用于请求！
+
+:::
+
+```go
+// get 请求对应 form 参数
+type FindPlanReq struct {
+	ID uint `form:"id"`
+}
+
+// post/put/patch 使用 json 参数
+type SavePlanReq struct {
+	Name string `json:"name"`
+}
+
+// 直接继承 SavePlanReq，表示 UpdatePlanReq 也包含 SavePlanReq 的字段
+type UpdatePlanReq struct {
+	ID   uint   `json:"id"`
+	SavePlanReq
+}
+
+// 返回结构体
+type FindPlanRes struct {
+	ID        uint      `json:"id"`
+	Name      string    `json:"name"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+```
+
+:::warning
+
+对于 Update 请求，建议通过 ID 获取实例后，按需更新字段，而不是直接传入所有字段。
+
+:::
+
+3. 在 `service/[module]` 下定义业务逻辑处理方法，包括数据处理、数据校验、数据返回等，函数名以 `Query`, `Save`, `Update` 等开头，根据需求，以单数/复数形式命名；比如：
+
+:::info
+
+这里使用 `Query` 而不是 `Find` 避免全局搜索时出现冲突。
+
+:::
+
+```go
+func QueryPlans() ([]models.Plan, error) {}
+
+func SavePlan(data *httpOperation.SavePlanReq) error {}
+
+func UpdatePlan(data *httpOperation.UpdatePlanReq) error {}
+```
+
+4. 在 `router/api/[module]` 下定义路由处理方法，包括请求参数解析、调用 service 方法、返回数据等，**使用 http 方法作为函数名前缀**；
+
+```go
+func GetPlans(c *gin.Context) {}
+
+func PostPlan(c *gin.Context) {}
+
+func UpdatePlan(c *gin.Context) {}
+```
+
+5. 在 `router/routes/[module]` 下定义路由规则，包括请求方法、请求路径、请求处理方法等，路径使用 `-` 进行连接；
+
+```go
+func InitPlanRoutes(r *gin.RouterGroup) {
+	group := r.Group("plan")
+	group.GET("my-list", api.GetPlans)
+	group.POST("", api.PostPlan)
+	group.PATCH("", api.UpdatePlan)
+}
+```
+
+6. 在 `router/router.go` 下注册路由，将 `routes/[module]` 下的路由规则注册到全局路由对象中；
+
+```go
+func InitRouter() *gin.Engine {
+	router := gin.Default()
+	// 注册中间件
+	router.Use(gin.Logger())
+	router.Use(middleware.CorsMiddleware())
+	// 新建 router group，添加全局前缀
+	apiGroup := router.Group("/api")
+	// 注册业务路由
+	routes.InitPlanRoutes(apiGroup)
+	return router
+}
+```
 
 ### 处理 Stream 流
 

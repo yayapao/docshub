@@ -15,7 +15,7 @@ import { HighlightWithText } from '/src/components/Highlights'
   links={[
     { label: 'Getting Started', link: 'https://gorm.io/zh_CN/docs/index.html' },
   ]}
-/>{' '}
+/>
 
 ## 设计表
 
@@ -135,7 +135,7 @@ func (o *Objective) UpdateObjective() error {
 
 :::warning
 
-model 是面对数据库，types 面对用户/web应用，两者之间通过 service 进行处理关联。
+model 是面对数据库，types 面对用户/web 应用，两者之间通过 service 进行处理关联。
 
 :::
 
@@ -179,6 +179,37 @@ var desc []httpOperation.HouseDesc
 _ = json.Unmarshal(v.Desc, &desc)
 
 ```
+
+## 使用
+
+### 更新数据
+
+在 gorm 内，可以使用 `Update`, `Updates` 来更新数据，前者用于更新单个字段，后者用于更新多个字段。同时，也支持 `Save` 方法来更新数据。参考 [Update](https://gorm.io/docs/update.html)。
+
+这里我们推荐使用 Save 方法来更新数据，因为其会自动判断数据是否存在，如果存在则更新，如果不存在则插入。
+
+```go
+// UpdateFamilyPlan 更新家庭计划
+func UpdatePlan(data *httpOperation.UpdatePlanReq) error {
+	// 获取原始数据-实例
+	plan, err := models.QueryPlanByID(data.ID)
+	if err != nil {
+		return err
+	}
+	// 条件判断后，重新赋值数据
+	if data.Status != 0 {
+		plan.Status = data.Status
+	}
+	// 调用 Save 方法
+	return DBClient.Save(plan).Error
+}
+```
+
+:::warning
+
+使用 `Save` 方法不允许和 `Model` 方法同时使用，`Update/Updates` 方法需要使用 `Model`。
+
+:::
 
 ## FAQ
 

@@ -48,7 +48,7 @@ const programmingLanguageConfig: SidebarsConfig = {
       type: 'category',
       label: 'Handbook',
       collapsed: true,
-      items: genSiderItem(goHandbookPrefix, ['grammar']),
+      items: genSiderItem(goHandbookPrefix, ['grammar', 'tips']),
     },
     {
       type: 'category',

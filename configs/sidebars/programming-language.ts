@@ -17,6 +17,7 @@ const tsPrefix = 'programming-language/js/typescript'
 // react
 const reactSourcePrefix = 'programming-language/react/source'
 const reactPrefix = 'programming-language/react/react'
+const rnPrefix = 'programming-language/react/react-native'
 // python
 const pyHandbookPrefix = 'programming-language/py/handbook'
 
@@ -126,6 +127,12 @@ const programmingLanguageConfig: SidebarsConfig = {
         'libs',
         'qa',
       ]),
+    },
+    {
+      type: 'category',
+      label: 'ReactNative',
+      collapsed: true,
+      items: genSiderItem(rnPrefix, ['app']),
     },
   ],
   pythonProgrammingSidbar: [

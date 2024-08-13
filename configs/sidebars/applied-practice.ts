@@ -13,12 +13,6 @@ const appliedPracticeConfig: SidebarsConfig = {
     },
     {
       type: 'category',
-      label: 'React Native',
-      collapsed: true,
-      items: genSiderItem(`${prefix}/react-native`, ['ios-app']),
-    },
-    {
-      type: 'category',
       label: 'WX Mini Program',
       collapsed: true,
       items: genSiderItem(`${prefix}/wx`, ['game']),

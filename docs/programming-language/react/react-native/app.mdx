@@ -8,7 +8,7 @@ import { DocsHeader } from '/src/components/Layout/DocsHeader'
 import { HighlightWithText } from '/src/components/Highlights'
 
 <DocsHeader
-  title="Create A React Native App"
+  title="Create React Native App"
   description="基于 React Native 从 0 到 1 创建一个 ios 应用"
   tags={['React Native']}
   links={[
@@ -24,7 +24,7 @@ React Native 可以看成是 React 在 ios/android 运行环境的实现，它�
 
 众所周知，React 通过在内存中保持虚拟 DOM，通过虚拟树进行 Diff 比较、计算后，调用浏览器 API 进行重新渲染。树和 Diff 比较实际上就是处理数据，那么只要我们能够掌握不同运行时或者执行环境下的底层渲染接口，这一套逻辑仍然行之有效。
 
-React Native 正是利用 JSBridge 和 Virtual DOM 来在手机端内进行。
+React Native 正是利用 JSBridge 和 Virtual DOM 来在客户端内实现。
 
 **RN 与 React 的区别？**
 
@@ -33,13 +33,13 @@ React Native 正是利用 JSBridge 和 Virtual DOM 来在手机端内进行。
 
 **React Native 相比 webview 的优势？**
 
-就凭 RN 编译的内容，能够直接使用原生组件渲染，就已经吊打 webview 了。webview 相当于在原生应用内嵌入一个 V8 引擎，然后在这个引擎内运行一个网页，天然存在安全、性能、样式交互问题。
+就凭 RN 编译的内容，能够直接使用原生组件渲染，就已经吊打 webview 了。**webview 相当于在原生应用内嵌入一个 V8 引擎，然后在这个引擎内运行一个网页，天然存在安全、性能、样式交互问题。**
 
 ## 环境准备
 
 查看 [Setting up the development environment · React Native](https://reactnative.dev/docs/set-up-your-environment) 这里介绍通过 React-Native-CLI 进行安装，需要：
 
-- Node.js > 18，通过 volta 解决
+- Node.js > 18，通过 volta 解决。_在安装依赖过程中，如何 nodejs 版本不符合会报错_
 - watchman，`brew install watchman`
 - Xcode 保持最新即可，通过 App Store 安装
 - CocoaPods，管理 ios 依赖
@@ -47,7 +47,9 @@ React Native 正是利用 JSBridge 和 Virtual DOM 来在手机端内进行。
 
 :::warning
 
-**推荐使用 [expo](https://expo.dev/) 进行开发**，以避免使用原生 API 时的兼容问题。
+推荐使用 [expo](https://expo.dev/) 进行开发
+
+> **后面的内容以 expo 为基础进行介绍**
 
 :::
 
@@ -58,10 +60,11 @@ React Native 正是利用 JSBridge 和 Virtual DOM 来在手机端内进行。
 其优势在于：
 
 - 开箱即用，无需安装 Xcode、Android Studio 等 IDE 也能进行开发，使用 Expo Go(通过 AppStore 下载) 即可在手机上运行
-- 支持原生 API，通过 `expo install [package]` 安装原生依赖，比如步数、地理位置、系统通知等
+- 支持丰富的原生 API，通过 `expo install [package]` 安装原生依赖，比如步数、地理位置、系统通知等
+- 通过 expo 安装依赖，无需关心原生依赖的安装，比如 `expo install react-native-maps`，expo 会帮助处理原生依赖
 - 使用 eas-cli 进行打包，支持 OTA 更新
 
-### 创建项目
+### 快速开始
 
 查看 [create-expo-app - Expo Documentation](https://docs.expo.dev/more/create-expo/#--template) 了解不同的创建模版。
 
@@ -71,8 +74,6 @@ React Native 正是利用 JSBridge 和 Virtual DOM 来在手机端内进行。
 npx create-expo-app@latest
 
 ```
-
-### 开发项目
 
 在 AppStore 上下载 Expo Go，通过扫描二维码即可在手机上运行项目。
 
@@ -86,9 +87,71 @@ yarn ios
 
 <img src="/img/langs/react/expo-start.png" height="300" />
 
-### 开始开发
+:::warning
 
 如果之前是使用 _default_ 作为模版，先执行 `yarn reset-project` 重置项目，然后执行 `yarn start` 即可。
+
+:::
+
+## expo router
+
+## 集成 nativewind
+
+使用 [nativewind](https://www.nativewind.dev/v4/overview) 在 React Native 内使用 [Tailwind CSS](https://tailwindcss.com/)
+
+### 解决 nativewind 与 react-native-paper UI 组件样式冲突
+
+使用 react-native-paper 的组件时，比如 `<Text>` 组件，可能设置 className 后样式没有生效，这是因为 react-native-paper 的组件样式是通过 `style` 属性传递的，而不是 `className`。
+
+通过 nativewind 提供的 `cssInterop` 方法解决，参考[Styling third-party components | NativeWind](https://www.nativewind.dev/v4/guides/third-party-components)
+
+**它用来将组件 className 转换为样式，并传入组件的 style 属性。**
+
+```tsx title='InteropRNPaper.tsx'
+import { cssInterop } from 'nativewind'
+import { Text } from 'react-native-paper'
+
+// 这里覆盖 React-Native-Paper 的组件，解决 NativeWind 注入问题
+cssInterop(Text, {
+  className: {
+    target: 'style',
+  },
+})
+
+export { Text }
+```
+
+### Replace Hermes for the right configuration...
+
+在执行 `yarn ios` 时，可能会遇到如下错误：`iOS Release build from XCode fails at "[CP-User] [Hermes] Replace Hermes for the right configuration, if needed" step after adding a package`
+
+该问题原因是因为 Hermes 引擎在 Release 模式下编译失败。[通过以下方式解决](https://github.com/facebook/react-native/issues/39903)
+
+```
+{
+    ...
+    "scripts": {
+        ...
+        "ios": "yarn expo prebuild; rm ios/.xcode.env.local; echo \"export NODE_BINARY=$(printf '%s' \"$(node -e 'console.log(process.execPath)')\")\" > ./ios/.xcode.env.local; yarn expo run:ios",
+        ...
+    }
+    ...
+}
+```
+
+## Q&A
+
+#### CocoaPods could not find compatible versions
+
+[CocoaPods could not find compatible versions](https://github.com/rnmods/react-native-document-picker/issues/313)
+
+- 通过 `cd ios && pod install --repo-update` 解决
+
+#### RN - 如何为 React Native 项目重命名？
+
+- 使用 [react-native-rename](https://www.npmjs.com/package/react-native-rename) 插件，执行 `npx react-native-rename <newName>` 即可
+- 完成后，全局替换名称，检查是否有遗漏
+- 清空后，重新编译
 
 ## 基于原生开发（不推荐）
 
@@ -158,66 +221,8 @@ xcrun simctl runtime add "~/Downloads/iOS_17.4_Simulator_Runtime.dmg"
 
 打开 ** Xcode > Settings > Platforms **，选择需要删除的模拟器即可。
 
-## 安装外部依赖
+### 安装外部依赖
 
 1. 通过 `yarn add [package]` 在根目录下安装外部依赖；
 2. 进入 `ios/` 目录下，执行 `pod install` 安装原声依赖，因为该库可能依赖原生实现；
 3. 重新编译项目，`yarn ios`;
-
-## 集成 nativewind
-
-使用 [nativewind](https://www.nativewind.dev/v4/overview) 在 React Native 内使用 [Tailwind CSS](https://tailwindcss.com/)
-
-## Q&A
-
-#### CocoaPods could not find compatible versions
-
-[CocoaPods could not find compatible versions](https://github.com/rnmods/react-native-document-picker/issues/313)
-
-- 通过 `cd ios && pod install --repo-update` 解决
-
-#### RN - 如何为 React Native 项目重命名？
-
-- 使用 [react-native-rename](https://www.npmjs.com/package/react-native-rename) 插件，执行 `npx react-native-rename <newName>` 即可
-- 完成后，全局替换名称，检查是否有遗漏
-- 清空后，重新编译
-
-#### expo - 解决 nativewind 与 react-native-paper UI 组件样式冲突
-
-使用 react-native-paper 的组件时，比如 `<Text>` 组件，可能设置 className 后样式没有生效，这是因为 react-native-paper 的组件样式是通过 `style` 属性传递的，而不是 `className`。
-
-通过 nativewind 提供的 `cssInterop` 方法解决，参考[Styling third-party components | NativeWind](https://www.nativewind.dev/v4/guides/third-party-components)
-
-**它用来将组件 className 转换为样式，并传入组件的 style 属性。**
-
-```tsx title='InteropRNPaper.tsx'
-import { cssInterop } from 'nativewind'
-import { Text } from 'react-native-paper'
-
-// 这里覆盖 React-Native-Paper 的组件，解决 NativeWind 注入问题
-cssInterop(Text, {
-  className: {
-    target: 'style',
-  },
-})
-
-export { Text }
-```
-
-#### expo - Replace Hermes for the right configuration...
-
-在执行 `yarn ios` 时，可能会遇到如下错误：`iOS Release build from XCode fails at "[CP-User] [Hermes] Replace Hermes for the right configuration, if needed" step after adding a package`
-
-该问题原因是因为 Hermes 引擎在 Release 模式下编译失败。[通过以下方式解决](https://github.com/facebook/react-native/issues/39903)
-
-```
-{
-    ...
-    "scripts": {
-        ...
-        "ios": "yarn expo prebuild; rm ios/.xcode.env.local; echo \"export NODE_BINARY=$(printf '%s' \"$(node -e 'console.log(process.execPath)')\")\" > ./ios/.xcode.env.local; yarn expo run:ios",
-        ...
-    }
-    ...
-}
-```

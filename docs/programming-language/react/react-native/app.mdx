@@ -112,8 +112,91 @@ app/
      index.tsx      --- tab 导航入口，进入 app 后展示的页面，必须有
      _layout.tsx    --- 配置 tab 导航
   home/
-  _layout.tsx       --- 配置全局路由，通常设置 Provider、全局样式等
+  _layout.tsx       --- RootLayout 配置全局路由，通常设置 Provider、全局样式等
   +not-found.tsx
+```
+
+### RootLayout
+
+配置在 `app/_layout.tsx` 即为 RootLayout，用于配置全局路由，比如 Provider、全局样式等。**并且我们在 RootLayout 能够定制每个页面的导航栏展示。**
+
+如下，我们定义了全局 QueryClientProvider 和 ThemeProvider，同时配置了全局导航栏。同时配置了 Tabs, Modal 以及 404 页面。
+
+```tsx
+export default function RootLayout() {
+  return (
+    <ThemeProvider>
+      <QueryClientProvider client={queryClient}>
+        <Stack
+          screenOptions={{
+            header: (props) => <CustomNavigationBar {...props} />,
+          }}
+        >
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen
+            name="(modal)/loan/[id]"
+            options={{ headerShown: false, presentation: 'modal' }}
+          />
+          <Stack.Screen name="+not-found" />
+        </Stack>
+      </QueryClientProvider>
+    </ThemeProvider>
+  )
+}
+```
+
+我们在 `CustomNavigationBar` 内自定义内容展示，如下所示：
+
+```tsx
+export default function CustomNavigationBar({
+  back,
+  navigation,
+  route,
+}: NativeStackHeaderProps): JSX.Element {
+  const params: any = route.params
+  const screen = params?.screen
+  return (
+    <Appbar.Header>
+      {back ? (
+        <Appbar.BackAction size={16} onPress={navigation.goBack} />
+      ) : null}
+      {/*自定义导航栏内容*/}
+    </Appbar.Header>
+  )
+}
+
+const styles = StyleSheet.create({
+  content: {
+    fontSize: 26,
+    fontWeight: 500,
+    textTransform: 'capitalize',
+  },
+})
+```
+
+### Stack
+
+Stack Navigator 堆栈导航器是 expo-router 的一种路由类型，用于管理页面的堆栈，类似于 web 内的路由。通常在模块的 `_layout.tsx` 实现。
+
+- 配置 `Stack.screenOptions` 设置当前页面样式，比如隐藏 header。可以在具体的页面配置 `Stack.Screen.options` 进行覆盖
+
+```tsx
+import { Stack } from 'expo-router'
+
+const HouseLayout = () => {
+  return (
+    <Stack screenOptions={}>
+      <Stack.Screen
+        name="index"
+        options={{
+          headerShown: false,
+        }}
+      />
+    </Stack>
+  )
+}
+
+export default HouseLayout
 ```
 
 ### 配置 Tabs

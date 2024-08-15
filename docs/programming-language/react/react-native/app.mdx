@@ -95,6 +95,160 @@ yarn ios
 
 ## expo router
 
+:::info
+
+在 expo 内，基于文件系统来管理路由，也就是说路由是约定式的。
+
+:::
+
+所有在 `/app` 目录下创建的文件都会被 expo 识别为路由，**expo 会针对特殊约定文件夹，执行不同动作。** 比如：
+
+```
+app/
+  (modal)/
+    [id].tsx   --- 动态路由
+  (tabs)/
+     explore/       --- tab explore 导航
+     index.tsx      --- tab 导航入口，进入 app 后展示的页面，必须有
+     _layout.tsx    --- 配置 tab 导航
+  home/
+  _layout.tsx       --- 配置全局路由，通常设置 Provider、全局样式等
+  +not-found.tsx
+```
+
+### 配置 Tabs
+
+在 `app/(tabs)` 目录下，配置 tab 导航，需要 `index.tsx` 定义首页，`_layout.tsx` 定义 tab 导航配置。
+
+在 `app/_layout.tsx` 配置使 tabs 生效。如下：
+
+```tsx
+import { Stack } from 'expo-router'
+
+export default function RootLayout() {
+  return (
+    <Stack>
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+    </Stack>
+  )
+}
+```
+
+在 `app/(tabs)/_layout.tsx` 配置每个页面具体的 tab 导航，可以自定义 tab 样式。具体支持的配置参考：[bottom-tab-navigator](https://reactnavigation.org/docs/bottom-tab-navigator/)
+
+```tsx
+import { Tabs } from 'expo-router'
+import React from 'react'
+import { Text } from 'react-native-paper'
+
+import { TabBarIcon } from '@/components/ui/TabBarIcon'
+
+export const unstable_settings = {
+  // Ensure that reloading on `/modal` keeps a back button present.
+  initialRouteName: '(tabs)',
+}
+
+export default function TabLayout() {
+  // 自定义文字
+  const genTabBarLabel = (label: string, focused: boolean) => {
+    return <Text>{label}</Text>
+  }
+
+  // 自定义图标
+  const genTabBarIcon = (name: any, focused: boolean) => {
+    return <TabBarIcon name={focused ? name : `${name}-outline`} size={24} />
+  }
+
+  return (
+    <Tabs
+      screenOptions={{
+        headerShown: false,
+        tabBarStyle: {
+          backgroundColor: '#000',
+        },
+      }}
+    >
+      <Tabs.Screen
+        name="index"
+        options={{
+          tabBarLabel: ({ color, focused }) => genTabBarLabel('Home', focused),
+          tabBarIcon: ({ color, focused }) => genTabBarIcon('home', focused),
+        }}
+      />
+    </Tabs>
+  )
+}
+```
+
+### 动态路由
+
+expo 支持 `[id].tsx` 和 `[...id].tsx` 两只动态路由匹配模式。比如：
+
+```
+
+app/
+user/
+[id].tsx --- 匹配 /user/1 、 /user/2 等
+[...id].tsx --- 匹配 /user/1/settings 等
+
+```
+
+路由匹配参数通过 `useLocalSearchParams` 获取。
+
+```ts
+import { useLocalSearchParams } from 'expo-router'
+
+export default function User() {
+  const { id } = useLocalSearchParams()
+}
+```
+
+### 路由间跳转
+
+expo 支持通过 **Link 标签**和**router API** 进行路由跳转。
+
+**通过 router API 进行跳转：**
+
+```tsx
+import { router } from 'expo-router'
+
+export default function Home() {
+  function handlePress() {
+    // router.push('/user/1')
+    // router.back()
+    // router.replace('/user/1')
+  }
+
+  return (
+    <Pressable onPress={handlePress} className="absolute top-6 left-6 z-10">
+      <AntDesign name="leftcircleo" size={20} color="white" />
+    </Pressable>
+  )
+}
+```
+
+**通过 Link 标签，类比 web 内的 a 标签：**
+
+```tsx
+import { Link } from 'expo-router'
+import { View } from 'react-native'
+
+export default function Page() {
+  return (
+    <View>
+      <Link
+        href={{
+          pathname: '/user/[id]',
+          params: { id: 'bacon' },
+        }}
+      >
+        View user
+      </Link>
+    </View>
+  )
+}
+```
+
 ## 集成 nativewind
 
 使用 [nativewind](https://www.nativewind.dev/v4/overview) 在 React Native 内使用 [Tailwind CSS](https://tailwindcss.com/)

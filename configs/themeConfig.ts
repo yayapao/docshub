@@ -41,8 +41,8 @@ const navbarConfig: Config['themeConfig'] = {
         },
         {
           label: 'JavaScript',
-          to: '/docs/programming-language/javascript/entry',
-          activeBaseRegex: '/docs/programming-language/javascript/entry',
+          to: '/docs/programming-language/js/entry',
+          activeBaseRegex: '/docs/programming-language/js/entry',
         },
         {
           label: 'React',

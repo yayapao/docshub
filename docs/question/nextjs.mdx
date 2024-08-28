@@ -1,0 +1,39 @@
+---
+id: nextjs
+title: ''
+sidebar_label: Next.js
+---
+
+import { DocsHeader } from '/src/components/Layout/DocsHeader'
+
+<DocsHeader
+  title="Next.js"
+  description="The React Framework for the Web."
+  tags={['react']}
+  links={[]}
+/>
+
+### Next.js 解决了什么问题？
+
+最核心的一点是，它作为框架，封装了强大的底层能力，开箱即用。同时结合 vercel 的 serverless 部署，使得开发者可以专注于业务逻辑，而不用关心底层的配置。
+
+- 基于文件系统的路由
+- 更加智能的代码分割
+- 静态生成（SSG）和服务端渲染（SSR）
+- 预取功能
+- 天然国际化支持
+
+### 对比 SPA 方案，Next.js 有什么优势？
+
+1. SEO 优化：浏览器通过爬虫抓取页面内容，而 SPA 由于是动态生成的，爬虫无法获取到内容，导致 SEO 不友好。而 Next.js 可以通过服务端渲染，生成静态页面，提高 SEO。
+
+2. 减少白屏时间：SPA 首次加载时，需要加载整个 JS 包，从 HTML 渲染到实际产生内容，存在延迟。
+
+### Next.js 是 SSR 还是 SSG？
+
+Next.js 既支持服务端渲染（SSR），也支持静态生成（SSG）。更严格来说，它是同构渲染，即在服务端（ssr）和客户端（csr）都可以渲染。
+
+根据使用场景，可以选择不同的渲染方式：
+
+- SSR：适用于内容频繁变化的页面，Next.js 需要在服务器上运行，生成并返回对应的 HTML，比如 blog、新闻等。
+- SSG：在构建时生成静态页面，适用于内容不频繁变化的页面，如首页、产品页等。

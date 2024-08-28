@@ -155,28 +155,32 @@ export default function CustomNavigationBar({
 }: NativeStackHeaderProps): JSX.Element {
   const params: any = route.params
   const screen = params?.screen
+  const name = route.name
+
+  function renderContent() {
+    if (name === '(pages)') {
+      if (screen.startsWith('house')) {
+        return <Appbar.Content title={'House'} titleStyle={styles.content} />
+      }
+      // 其他页面...
+    }
+    return null
+  }
+
   return (
     <Appbar.Header>
       {back ? (
         <Appbar.BackAction size={16} onPress={navigation.goBack} />
       ) : null}
-      {/*自定义导航栏内容*/}
+      {renderContent()}
     </Appbar.Header>
   )
 }
-
-const styles = StyleSheet.create({
-  content: {
-    fontSize: 26,
-    fontWeight: 500,
-    textTransform: 'capitalize',
-  },
-})
 ```
 
 ### Stack
 
-Stack Navigator 堆栈导航器是 expo-router 的一种路由类型，用于管理页面的堆栈，类似于 web 内的路由。通常在模块的 `_layout.tsx` 实现。
+Stack Navigator 堆栈导航器是 expo-router 的一种路由类型，用于管理页面的堆栈，类似于 web 内的路由。通常在模块的 `_layout.tsx` 进行定义。
 
 - 配置 `Stack.screenOptions` 设置当前页面样式，比如隐藏 header。可以在具体的页面配置 `Stack.Screen.options` 进行覆盖
 
@@ -201,9 +205,13 @@ export default HouseLayout
 
 ### 配置 Tabs
 
+在 `app/_layout.tsx` 配置使 tabs 生效。如下：
+
+:::warning
+
 在 `app/(tabs)` 目录下，配置 tab 导航，需要 `index.tsx` 定义首页，`_layout.tsx` 定义 tab 导航配置。
 
-在 `app/_layout.tsx` 配置使 tabs 生效。如下：
+:::
 
 ```tsx
 import { Stack } from 'expo-router'
@@ -358,6 +366,8 @@ cssInterop(Text, {
 export { Text }
 ```
 
+## Q&A
+
 ### Replace Hermes for the right configuration...
 
 在执行 `yarn ios` 时，可能会遇到如下错误：`iOS Release build from XCode fails at "[CP-User] [Hermes] Replace Hermes for the right configuration, if needed" step after adding a package`
@@ -376,15 +386,13 @@ export { Text }
 }
 ```
 
-## Q&A
-
-#### CocoaPods could not find compatible versions
+### CocoaPods could not find compatible versions
 
 [CocoaPods could not find compatible versions](https://github.com/rnmods/react-native-document-picker/issues/313)
 
 - 通过 `cd ios && pod install --repo-update` 解决
 
-#### RN - 如何为 React Native 项目重命名？
+### RN - 如何为 React Native 项目重命名？
 
 - 使用 [react-native-rename](https://www.npmjs.com/package/react-native-rename) 插件，执行 `npx react-native-rename <newName>` 即可
 - 完成后，全局替换名称，检查是否有遗漏

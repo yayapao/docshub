@@ -1,0 +1,31 @@
+---
+id: handbook
+title: ''
+sidebar_label: Handbook
+---
+
+import { DocsHeader } from '/src/components/Layout/DocsHeader'
+import { HighlightWithText } from '/src/components/Highlights'
+
+<DocsHeader
+  title="React Native Handbook"
+  description="概念明晰"
+  tags={['React Native']}
+  links={[]}
+/>
+
+## 概念
+
+### Pressable VS TouchableOpacity
+
+在 React Native 中，`Pressable` 和 `TouchableOpacity` 都是可以用来处理点击事件的组件。我们在使用时如何选择？
+
+:::info
+
+一言以蔽之，`Pressable` 是一个更加通用的组件，适合复杂、多样的交互需求。
+
+:::
+
+`Pressable` 支持多种交互事件，包括 `onPress`、`onLongPress`、`onPressIn`、`onPressOut` 等。而 `TouchableOpacity` 只支持 `onPress` 事件。
+
+`TouchableOpacity` 特殊之处在于，它会在用户点击时降低按钮的不透明度，以示反馈。这种效果在 iOS 上是默认的。

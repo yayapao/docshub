@@ -5,23 +5,102 @@ sidebar_label: Git
 ---
 
 import { DocsHeader } from '/src/components/Layout/DocsHeader'
-import { TextWithIndex } from '/src/components/Highlights'
+import { CommonTable } from '/src/components/material/Table'
 
 <DocsHeader
   title="Git KonwledgeBase"
   description="Git 是一个分布式的版本管理系统，旨在快速高效地维护项目"
   tags={['codebase', 'git', 'github']}
   github="https://git-scm.com/"
-  links={[]}
-/>{' '}
+  links={[
+    {
+      label: 'gitmoji | An emoji guide for your commit messages',
+      link: 'https://gitmoji.dev/',
+    },
+  ]}
+/>
 
-### 处理 `.gitignore` 不生效
+## Coomit Message 规范
 
-`.gitignore` 不生效通常发生在 merge 之后，或者之前已经将不希望提交的文件提交到 github 上，此时我们：
+提交信息需要遵循以下格式：
 
-- `git stash` 将本地缓存放入缓存区，这里是为了兜底；
-- `git rm -r --cache .` 清理当前项目的缓存文件，此时 git 会根据 `.gitignore` 规则来发现哪些文件不需要 trace，将其进行删除
-- `git add . && git commit -m "fix: untracked files && git push"` 将清理文件提交
+```shell
+<type>(<scope>): <subject>
+
+<body>
+```
+
+- body 用来描述 why 和 how，可以省略，换行分隔
+- subject 需要控制在 70 字以内，且首字母大写，结尾不加句号
+- scope 用来描述 commit 影响的范围，可以省略，通常是根据业务模块/monorepo 进行划分
+
+举个例子：
+
+```shell
+feat(home): Add new home card
+
+Create new card component to home page. Add `display` and `hover` effect to card.
+```
+
+### 支持 Type
+
+通常项目内使用 type 如下，emoji 和文字，使用其一即可。
+
+<CommonTable
+  data={{
+    columns: [{ name: 'name' }, { name: 'emoji' }, { name: 'description' }],
+    rows: [
+      {
+        name: 'feat',
+        emoji: ':sparkles:',
+        description: 'A new feature',
+      },
+      {
+        name: 'docs',
+        emoji: ':memo:',
+        description: 'Add or update documentation only',
+      },
+      {
+        name: 'fix',
+        emoji: ':bug:',
+        description: 'A bug fix',
+      },
+      {
+        name: 'perf',
+        emoji: ':zap:',
+        description: 'Performance improvement',
+      },
+      {
+        name: 'tada',
+        emoji: ':tada:',
+        description: 'Begin a new project',
+      },
+      {
+        name: 'style',
+        emoji: ':art:',
+        description: 'Improve structure / format of the code',
+      },
+      {
+        name: 'build',
+        emoji: ':construction_worker:',
+        description:
+          'Changes that affect the build system or external dependencies',
+      },
+      {
+        name: 'revert',
+        emoji: ':rewind:',
+        description:
+          'Revert to target commit, `subject` should be the commit hash',
+      },
+      {
+        name: 'ref',
+        emoji: ':recycle:',
+        description:
+          'Refactor, a code change that neither fixes a bug nor adds a feature',
+      },
+    ],
+  }}
+/>
 
 ### CHANGELOG
 
@@ -32,7 +111,7 @@ import { TextWithIndex } from '/src/components/Highlights'
 - 一般在 package.json 内配置 `"changelog": "conventional-changelog -p angular -i CHANGELOG.md -s -r 0"`，来指定使用 angular 规范，且重新生成 CHANGELOG.md 文件
 - 通过 `npm run changelog`来执行
 
-### 添加 SSH keys
+## 添加 SSH keys
 
 rsa(非对称加密)
 
@@ -43,9 +122,9 @@ rsa(非对称加密)
 
 之后到指定目录内复制 `pub` 内容到 github 即可
 
-**如果不希望内次提交都输入密码，在生成 keys 时直接 enter**
+**如果不希望每次提交都输入密码，在生成 keys 时直接 enter**
 
-#### 切换当前项目 http to ssh
+### 切换当前项目 http to ssh
 
 一般而言，当你配置好 SSH 验证方式之后，将之前 https 的连接方式切换成 ssh 是更优的选择
 
@@ -53,21 +132,27 @@ rsa(非对称加密)
 - `git remote set-url origin git@gitlab.xxxxxxx` 切换当前的连接方式
 - `git pull origin master` 验证是否成功
 
-### rebase
+## rebase
 
-#### 合并多个 commit
+:::warning
+
+推荐在项目内使用 rebase 模式，避免使用 merge 模式，因为 rebase 可以保持提交历史的整洁
+
+:::
+
+### 合并多个 commit
 
 1. 通过 `git log` 查看提交历史，找到需要合并的 commit 段
    - `git rebase -i HEAD~3` 表示合并最新的三个 commit
    - `git rebase -i xxxxxx` 通过版本号控制合并，注意标识版本号（即 xxxxxx）的 commit 不参与合并
-2. 接着，再次确认需要合并的分支，将 `pick` 变更为 `squash`，注意第一行提交信息必须为 `pick`，保存后退出
+2. 接着，再次确认需要合并的 commit，将 `pick` 变更为 `squash`，注意第一行提交信息必须为 `pick`，保存后退出
    - `git rebase --continue` 在当前修改上继续操作
    - `git rebase --abort` 撤销当前的 rebase 操作
 3. 再次编辑提交信息后提交
 
-### 查看 log
+## 查看 log
 
-```powershell
+```shell
 # 展示 commit 历史以及每次 commit 发生变更的文件
 git log --stat
 
@@ -75,7 +160,7 @@ git log --stat
 git shortlog -sn
 ```
 
-### tag
+## tag
 
 :::warning
 
@@ -105,12 +190,28 @@ git push origin -d v0.1 v0.2
 git checkout v0.1
 ```
 
-### branch
+## branch
+
+创建分支：
+
+```bash
+# 创建并切换到新分支
+git checkout -b [branch name]
+
+# 基于指定提交创建新分支
+git checkout -b [branch name] [commit hash]
+```
+
+查看分支：
 
 ```bash
 # 查看仓库分支, -a 查看所有分支，-r 查看远程分支
 git branch [-a | -r]
+```
 
+删除分支：
+
+```bash
 # 删除分支
 git push origin -d [branch name]
 
@@ -118,13 +219,42 @@ git push origin -d [branch name]
 git branch -r | grep 'key_word' | sed 's/origin\///'| xargs git push origin -d
 ```
 
-### push
+## 代码回退
 
-如果你在本地 `reset head` 到一个历史 commit，同时在此基础上进行开发，然后不希望再使用 `remote/master` 上的一些提交，跳过他们直接覆盖本地提交，则可以使用 `git push --force` 将本地 commit 强行推送至服务端
+在 git 内支持 `git reset` 和 `git revert` 两种方式进行代码回退。两者区别在于：**reset 会改变历史提交内容，revert 会在逆向代码后，创建一个新的提交。**
 
-这种操作带来的风险点：如果另一个人在该分支上也提交了内容，那么会将他的提交内容也覆盖（清空）
+更加推荐使用 `git revert` 来进行代码回退。
 
-### submodule
+```bash
+
+git revert [commit hash] # 回退指定 commit
+
+git revert HEAD~3 # 回退最近的三次提交
+
+git revert HEAD # 回退最近一次提交
+```
+
+### reset
+
+`reset` 支持 `--soft`、`--mixed`、`--hard` 三种模式，分别表示：
+
+- `--soft` 仅仅回退 commit，不会改变 index 和 working 目录
+- `--mixed` 回退 commit，同时会改变 index，但不会改变 working 目录
+- `--hard` 三者都会改变
+
+```bash
+git reset --soft HEAD~3 # 回退最近的三次提交
+```
+
+如果你在本地 `reset head` 到一个历史 commit，同时在此基础上进行开发，然后不希望再使用 `remote/master` 上的一些提交，跳过他们直接覆盖本地提交，则可以使用 `git push --force` 将本地 commit 强行推送至服务端。
+
+:::danger
+
+如果另一个人在该分支上也提交了内容，那么会将他的提交内容也覆盖（清空）
+
+:::
+
+## submodule
 
 有种情况我们经常会遇到：某个工作中的项目需要包含并使用另一个项目。 也许是第三方库，或者你独立开发的，用于多个父项目的库。 现在问题来了：你想要把它们当做两个独立的项目，同时又想在一个项目中使用另一个项目。
 
@@ -145,28 +275,12 @@ git submodule add git@github.com:yayapao/xxxxxx.git ./submodules/xxxxxx
 3. 删除 `.git/modules` 内相关内容；
 4. 执行 `git submodule deinit -f <子模块路径>` 删除子模块目录
 
-## Github
+## QA
 
-:::note what's Github?
-Github 是一个帮助开发者管理代码的云上服务。
-:::
+### 处理 `.gitignore` 不生效
 
-### 如何向开源仓库提交 pr?
+`.gitignore` 不生效通常发生在 merge 之后，或者之前已经将不希望提交的文件提交到 github 上，此时我们：
 
-<TextWithIndex
-  data={[
-    { text: `找到开源作品的 github 仓库，fork 其到自己的组织；` },
-    { text: `克隆 forked 后的仓库到本地；` },
-    {
-      text: `新建一个分支(<code>git checkout -b [branch_name]</code>)，同时设置其 upstream 为原开源作品的地址(<code>git remote add upstream [open-source repo's address]</code>)；`,
-    },
-    {
-      text: `通过 <code>git remote -v</code> 来检查 remote 和 upstream
-地址，理论上 remote 指向 fork 地址，upstream 指向原仓库地址；`,
-    },
-    { text: `在当前分支上修改代码，并推送到 origin；` },
-    {
-      text: `在 github 上可以看到一个 pull&request 的按钮，点击后继续创建一个 pr 即可；`,
-    },
-  ]}
-/>
+- `git stash` 将本地缓存放入缓存区，这里是为了兜底；
+- `git rm -r --cache .` 清理当前项目的缓存文件，此时 git 会根据 `.gitignore` 规则来发现哪些文件不需要 trace，将其进行删除
+- `git add . && git commit -m "fix: untracked files && git push"` 将清理文件提交

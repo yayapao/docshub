@@ -132,7 +132,7 @@ const programmingLanguageConfig: SidebarsConfig = {
       type: 'category',
       label: 'ReactNative',
       collapsed: true,
-      items: genSiderItem(rnPrefix, ['app']),
+      items: genSiderItem(rnPrefix, ['app', 'handbook']),
     },
   ],
   pythonProgrammingSidbar: [

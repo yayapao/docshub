@@ -175,13 +175,7 @@ relay
 
 ## Relay
 
-:::note
-The Sentry Relay is a service that pushes some functionality from the Sentry SDKs as well as the Sentry server into a proxy process.
-:::
-
-Relay Server 是一个运行在应用和 Sentry.io 之间的独立中间层服务，它被设计能够清洗用户信息和提高响应速度，它是事件上报的入口，承担 Event Ingestion 的工作。
-
-这里我们从源码编译和构建镜像两方面介绍如何在容器内部署 realy 服务。
+我们从**源码编译**和**构建镜像**两方面介绍如何在容器内部署 realy 服务。
 
 ### 源码编译
 

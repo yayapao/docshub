@@ -9,9 +9,9 @@ import { DocsHeader } from '/src/components/Layout/DocsHeader'
 
 <DocsHeader
   title="Sentry"
-  description="Sentry 是我在研究前端可信赖工程的一个重要课题，它是一个 toB 商业化平台，能够对线应用进行错误追踪和性能监控，进而了解用户的真实使用情况。"
+  description="Sentry 是我在研究前端可信赖工程的一个重要课题，它是一个 toB 商业化平台，能够对应用进行错误追踪和性能监控，进而了解用户的真实使用情况。"
   github="https://github.com/getsentry/sentry"
-  tags={['Error', 'Performance']}
+  tags={['Error', 'Performance', 'Tracing']}
   links={[
     {
       label: 'Sentry Product',
@@ -32,14 +32,21 @@ import { DocsHeader } from '/src/components/Layout/DocsHeader'
   ]}
 />
 
-我在实践过程中，对 Sentry 服务和 SDK 侧进行了深度的研究和改造，以满足实际业务需求。在这个过程中，我对 Sentry 进行前置思考，并针对性地提出值得思考的问题。
+:::info
 
-**1.为什么要基于 Sentry （来做前端监控）？**
+在研究 Sentry 时，我深入 Sentry 服务（使用 Python, Rust） 以及 SDK（浏览器 runtime），进行改造以满足业务需求。
 
-第一个问题用来思考 Sentry 服务的价值，以及为什么要基于 Sentry 来做前端监控。基于它实现的可行性、可扩展性、可维护性、可用性等方面进行分析。
+:::
 
-- Sentry 社区是否活跃，以及是否对开发者友好？
-- Sentry 对比其他监控平台的优势？比如云厂商 RUM，datadog 等
+在开始之前，我们需要思考：
+
+**1.为什么要基于 Sentry 来做前端监控？**
+
+针对该问题，我们需要思考：1. Sentry 本身的价值和优势；2. Sentry 的可行性、可扩展性、可维护性、可用性等方面的分析。
+
+1. **Sentry 本身是一个成熟的商业化产品**，它提供了完整的前端监控解决方案，包括错误监控、性能监控、事务监控等，并且有专门的团队进行维护，保持前沿技术更新；（功能强大）
+
+2. **Sentry 是开源的**，同时它针对不同语言提供了丰富的 SDK，能够满足不同业务的需求。我们可以基于 Sentry 进行二次开发，并且社区活跃，能够及时获取到最新的技术支持；（开源）
 
 **2.如何开发、部署、运维？**
 

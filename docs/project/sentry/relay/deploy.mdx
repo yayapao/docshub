@@ -1,0 +1,36 @@
+---
+id: index
+title: ''
+sidebar_label: Deploy
+---
+
+import { DocsHeader } from '/src/components/Layout/DocsHeader'
+import {
+  HighlightWithCode,
+  HighlightWithText,
+} from '/src/components/Highlights/TextContent'
+import { ResolvedTag } from '/src/components/Highlights/CustomizedTag'
+
+<DocsHeader
+  title="How to Deploy Relay"
+  description="The Sentry Relay is a service that pushes some functionality from the Sentry SDKs as well as the Sentry server into a proxy process."
+  tags={['sentry']}
+  links={[
+    {
+      label: `Snuba Structure`,
+      link: 'https://getsentry.github.io/snuba/architecture/overview.html',
+    },
+  ]}
+/>
+
+在本章节，我会介绍如何对 Relay 进行编译和构建。**（VERSION=22.7.0）**
+
+## 编译
+
+编译的目的是获得 Relay 构建产物，包括：可执行的二进制文件、配置文件、必须的依赖等。
+
+### 通过 Docker 进行构建
+
+思路：拉取官方镜像，并成功启动后，通过 `docker cp` 获取其产物。
+
+### 基于源码构建

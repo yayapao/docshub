@@ -1,0 +1,123 @@
+---
+id: index
+title: ''
+sidebar_label: Develop
+---
+
+import { DocsHeader } from '/src/components/Layout/DocsHeader'
+import {
+  HighlightWithCode,
+  HighlightWithText,
+} from '/src/components/Highlights/TextContent'
+import { ResolvedTag } from '/src/components/Highlights/CustomizedTag'
+
+<DocsHeader
+  title="How to Develop Relay"
+  description="The Sentry Relay is a service that pushes some functionality from the Sentry SDKs as well as the Sentry server into a proxy process."
+  tags={['sentry']}
+  links={[
+    {
+      label: `Snuba Structure`,
+      link: 'https://getsentry.github.io/snuba/architecture/overview.html',
+    },
+  ]}
+/>
+
+Relay Server 是一个运行在应用和 Sentry.io 之间的独立中间层服务，它被设计能够清洗用户信息和提高响应速度，它是事件上报的入口，承担 Event Ingestion 的工作。
+
+## 环境搭建
+
+Relay 依赖：
+
+1. [安装最新版本 Rust](https://www.rust-lang.org/zh-CN/tools/install)
+
+```bash
+
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+
+```
+
+其他环境依赖，理论上在安装 Sentry 环境时就已经就绪。
+
+## Running
+
+**在启动 Relay 之前，需要保证 Sentry 服务已经启动。同时，要关闭 Sentry 自启的 Relay 服务。**
+
+在 _sentry/conf/server.py_ 文件内，注释掉 relay 配置：
+
+```python title="sentry/conf/server.py"
+
+SENTRY_DEVSERVICES = {
+    # ...
+    # "relay": {
+    #     "image": "us.gcr.io/sentryio/relay:nightly",
+    #     "pull": True,
+    #     "ports": {"7899/tcp": SENTRY_RELAY_PORT},
+    #     "volumes": {RELAY_CONFIG_DIR: {"bind": "/etc/relay"}},
+    #     "command": ["run", "--config", "/etc/relay"],
+    #     "only_if": lambda settings, options: settings.SENTRY_USE_RELAY,
+    #     "with_devserver": True,
+    # },
+    # ...
+}
+
+```
+
+:::warning
+
+启动 Sentry 实例后，在 docker 内验证 Relay 服务是否已经关闭。
+
+:::
+
+之后，在根目录启动 Relay 服务：
+
+```bash
+
+# 第一次启动 Relay 服务，会初始化配置文件
+cargo run --all-features -- config init
+
+# 启动 Relay 服务
+cargo run --all-features -- run
+
+```
+
+### 热更新
+
+通过 `cargo-watch` 和 `systemfd` 来实现代码热更新：
+
+```bash
+
+cargo install systemfd cargo-watch
+make devserver
+
+```
+
+### 开启 processing
+
+**Relay 服务通过开启 `processing` 功能，来增强数据链路的处理能力**。建议开启：
+
+- Relay 会将事件写入 Kafka 队列，而不是直接通过 Http 发送到上游接口
+- 执行完整的事件处理，包括：normalization, filtering, and rate limiting（基于 Redis）
+- 通过接口从 Sentry 服务获取项目配置，而不是从本地配置文件读取
+
+```yaml title="config.yaml"
+relay:
+  mode: managed
+  upstream: http://localhost:8000/ # Sentry 服务地址
+  host: 0.0.0.0
+  port: 7899 # Relay 服务端口，本地不要设置 3000 避免冲突
+logging:
+  # Enable full logging and backraces:
+  level: trace
+  enable_backtraces: true
+limits:
+  # Speed up shutdown on ^C
+  shutdown_timeout: 0
+processing:
+  # Enable processing mode with store normalization and post data to Kafka:
+  enabled: true
+  kafka_config:
+    - { name: 'bootstrap.servers', value: '0.0.0.0:9092' }
+    - { name: 'message.max.bytes', value: 50000000 } # 50MB
+  redis: redis://0.0.0.0:6379
+```

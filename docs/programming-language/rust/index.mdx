@@ -1,0 +1,131 @@
+## Rust
+
+### use
+
+通过 `use` 关键字进行引用：
+
+```rust
+use std::borrow::Cow;
+```
+
+表示使用 Rust 的 use 关键字来引入标准库 std 中的 borrow 模块的 Cow 类型。
+
+### struct
+
+使用 `struct` 关键字定义结构体：
+
+```rust
+#[derive(Clone, Copy, Eq, Hash, Ord, PartialOrd, PartialEq)]
+pub struct ProjectKey([u8; 32]);
+```
+
+pub 表明该结构体为公共的，可以被其他模块访问。名称为 `ProjectKey`，其值为 `[u8; 32]` 类型的数组（32 bytes）。
+
+通过 `#[derive]` 定义其派生属性，比如上述代码定义 ProjectKey 支持：
+
+- Clone：允许这个类型的实例被克隆
+- Copy：允许这个类型的值在赋值操作时进行按位复制，意味着不需要特别的内存管理
+- Eq：表示这个类型支持相等判定运算（==），是 PartialEq 的增强，要求比较的两侧确实完全相等
+- Hash：允许这个类型的实例可以被用来计算哈希值，使其可以安全地用作哈希表（如 HashMap）的键
+- Ord 和 PartialOrd：Ord 允许这个类型的实例可以进行完全排序，而 PartialOrd 为部分排序。Ord 是 PartialOrd 的超集，提供了比较运算符（如 `< <= > >=`）
+- PartialEq：允许这个类型的实例支持部分相等判定运算（例如 ==）
+
+```rust
+pub struct GetProjectStates {
+    public_keys: Vec<ProjectKey>,
+    full_config: bool,
+    no_cache: bool,
+}
+```
+
+- `Vec<ProjectKey>`：表示一个 ProjectKey 类型的不定长数组
+
+### trait
+
+使用 `trait` 关键字定义特性（接口）：
+
+```rust
+pub trait UpstreamQuery: Serialize + Send + 'static {
+    type Response: DeserializeOwned + 'static + Send;
+
+    /// The HTTP method of the request.
+    fn method(&self) -> Method;
+
+    /// The path relative to the upstream.
+    fn path(&self) -> Cow<'static, str>;
+
+    /// Whether this request should retry on network errors.
+    fn retry() -> bool;
+
+    /// The queueing priority of the request. Defaults to `Low`.
+    fn priority() -> RequestPriority {
+        RequestPriority::Low
+    }
+}
+```
+
+以上代码定义了一个 UpstreamQuery 特性，它继承了 Serialize（要求结构体能够被序列化） 和 Send（可以在线程内安全地传送） 特性，并且具有静态生命周期。其中：
+
+- `type Response: DeserializeOwned + 'static + Send` 定义了一个关联类型 Response，它要求实现 DeserializeOwned 特性，具有静态生命周期，可以在线程内安全地传送
+- `fn method(&self) -> Method` 定义了一个实例方法 method，返回一个 Method 类型的值
+- `fn retry() -> bool` 定义了一个静态方法 retry，返回一个布尔值
+
+### impl
+
+通过 `impl` 关键字为结构体实现特定特性：
+
+```rust
+impl UpstreamQuery for GetProjectStates {
+    type Response = GetProjectStatesResponse;
+
+    fn method(&self) -> Method {
+        Method::POST
+    }
+
+    fn path(&self) -> Cow<'static, str> {
+        Cow::Borrowed("/api/0/relays/projectconfigs/?version=3")
+    }
+
+    fn priority() -> RequestPriority {
+        RequestPriority::High
+    }
+
+    fn retry() -> bool {
+        false
+    }
+}
+```
+
+rust 这样设计的好处：
+
+- 代码抽象和封装：通过特性，可以将行为的定义与实现分离，提高代码的模块化和可复用性
+- 多态：Rust 通过特性对象支持多态。这允许在运行时处理不同类型的值，只要它们实现了相同的特性
+- 约束和泛型：在函数或结构体中使用特性作为泛型约束，可以写出更灵活和安全的代码。函数或方法可以接受任何实现了指定特性的类型
+
+## 库
+
+### borrow::Cow
+
+```rust
+use std::borrow::Cow;
+```
+
+Cow 是一个枚举（Enum），代表克隆（Clone）和写时拷贝（Copy-On-Write），它有助于优化内存使用。使用 Cow, 可以提高应用程序在处理只读数据与需要修改数据的情景下的性能和效率。
+
+当你只需要读取数据时，Cow 可以直接借用原始数据，避免不必要的数据复制。
+当需要修改数据时，如果原始数据被多个地方引用，Cow 会自动进行数据复制以保持原始数据的不变性，从而实现安全的数据修改。
+
+它主要有两个变体：
+
+- Borrowed: 表示数据被借用
+- Owned: 表示拥有数据的实例
+
+```rust
+fn path(&self) -> Cow<'static, str> {
+    Cow::Borrowed("/api/0/relays/projectconfigs/?version=3")
+}
+```
+
+定义一个名为 `path` 的函数，用于返回一个 `Cow` 类型的数据，数据类型为 `str`，数据值为 `"/api/0/relays/projectconfigs/?version=3"`
+
+`'static` 生命周期表示返回的字符串字面量 "/api/0/relays/projectconfigs/?version=3" 的生命周期是静态的，即其存活时间贯穿整个程序的生命周期。

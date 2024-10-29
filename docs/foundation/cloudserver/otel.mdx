@@ -5,6 +5,7 @@ sidebar_label: otel
 ---
 
 import { DocsHeader } from '/src/components/Layout/DocsHeader'
+import { CommonTable } from '/src/components/material/Table'
 
 <DocsHeader
   title="OpenTelemetry(OTel)"
@@ -25,28 +26,84 @@ import { DocsHeader } from '/src/components/Layout/DocsHeader'
 
 :::
 
-什么是**可观测性（observablity）** ？
+**本文介绍 OpenTelemetry 的基本概念。**
 
-    通俗来说，可观测性是指用户在不了解系统内部执行机制的前提下，仍然能够通过系统的外部可视化，来定位问题和排障。
-
-什么是**遥测数据** ？
-
-    遥测数据是指跨越分布式系统的数据，包括*跟踪（traces）、指标（metrics）和日志（logs）*。遥测数据可以帮助你了解系统的行为和性能，以便更好地管理和调试系统。
-
-    traces 和 logs 的重要区别在于其是否需要与用户请求/事务绑定。trace 能够记录执行顺序和上下文。
-
-
-什么是**OTel Collector** ？
-
-    OTel Collector 一个独立于供应商的代理（即独立于后端系统），可*接收（receivers）、处理（processors）和导出（exporters）*遥测数据。它支持以多种格式接收遥测数据，以及在导出前对遥测数据进行处理和筛选。
-
-    ![otel collector](https://opentelemetry.io/docs/collector/img/otel-collector.svg)
-
+traces 和 logs 的重要区别在于其是否需要与用户请求/事务绑定。trace 能够记录执行顺序和上下文。
 
 ## 基本概念
 
-### span & traces
+1. 什么是可观测性（observablity）？
+
+通俗来说，可观测性是指用户在不了解系统内部执行机制的前提下，仍然能够通过系统的外部可视化，来定位问题和排障。
+
+2. 什么是遥测数据？
+
+遥测数据是指跨越分布式系统的数据，包括*跟踪（traces）、指标（metrics）和日志（logs）*。遥测数据可以帮助你了解系统的行为和性能，以便更好地管理和调试系统。
+
+### span
 
 span 代表单元操作/事务，用它来追踪具体的操作。它通常由名称、时间相关数据、结构化日志信息以及其他元信息组成。
 
 第一个 span 叫做 root span。trace 通常由一个或者多个 span 组成。
+
+### trace
+
+trace 代表一个事务的执行过程，通常由一个或者多个 span 组成。
+
+## Otel 相关概念
+
+罗列 otel 相关概念。
+
+<CommonTable
+  data={{
+    columns: [
+      { name: 'name', label: '名称' },
+      { name: 'definition', label: '定义' },
+      { name: 'description', label: '功能描述' },
+    ],
+    rows: [
+      {
+        name: 'Propagator',
+        definition: '解析和注入上下文信息',
+        description:
+          '跨进程/服务传递上下文信息。比如在微服务架构中，一个请求可能需要跨越多个服务，这时候就需要使用 Propagator 来解析和注入上下文信息',
+      },
+      {
+        name: 'otel sdk',
+        definition: '客户端语言相关 sdk',
+        description: '在客户端使用，负责采集和上报 trace 数据，在客户端使用',
+      },
+      {
+        name: 'Processor（span）',
+        definition: 'SDK 处理 span 的组件',
+        description: '在客户端内自定义加工 span 数据',
+      },
+      {
+        name: 'Exporter（Span）',
+        definition: 'SDK 处理 span 的组件',
+        description:
+          '在客户端内自定义处理 span 数据。比如将遥测数据从客户端直接上报到 Sentry 等系统',
+      },
+      {
+        name: 'Otel Collector',
+        definition: '链路采集后端组件，独立于 vendor 的代理',
+        description:
+          '接收、处理、导出遥测数据。它支持以多种格式接收遥测数据，以及在导出前对遥测数据进行处理和筛选',
+      },
+      {
+        name: 'Exporter（Trace）',
+        definition: 'Collector 处理 trace 数据的组件',
+        description:
+          '在 Otel Collector 内处理 trace 数据。比如将遥测数据导出到 Sentry 等系统',
+      },
+    ],
+  }}
+/>
+
+可以在 SDK 内自定义处理 span 数据，也可以在 Otel Collector 内自定义处理 trace 数据。通过通过自定义的 Processor 和 Exporter，来灵活的加工和上报 trace 数据。
+
+### Otel Collector
+
+OTel Collector 是一个独立于供应商的代理（即独立于后端系统，比如 Sentry, Datadog, Prometheus 等），可接收（receivers）、处理（processors）和导出（exporters）遥测数据。它支持以多种格式接收遥测数据，以及在导出前对遥测数据进行处理和筛选。
+
+![otel collector](https://opentelemetry.io/docs/collector/img/otel-collector.svg)

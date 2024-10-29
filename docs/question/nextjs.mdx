@@ -42,3 +42,82 @@ Next.js 既支持服务端渲染（SSR），也支持静态生成（SSG）。更
 
 - SSR：适用于内容频繁变化的页面，Next.js 需要在服务器上运行，生成并返回对应的 HTML，比如 blog、新闻等。
 - SSG：在构建时生成静态页面，适用于内容不频繁变化的页面，如首页、产品页等。
+
+### 什么情况下使用 client side rendering？
+
+Next.js 提供 Client Side Rendering（CSR）的能力，目的是为了处理：
+
+- **需要使用浏览器 API 的组件**，比如 `document` 等，以及在客户端处理的数据，比如 `localStorage`；
+- **需要频繁交互的页面**，比如聊天室、实时数据展示等；这样做能够提供更好的用户体验；
+- **性能瓶颈在服务端**，需要将部分渲染逻辑放到客户端，减轻服务端压力；
+
+通过在组件页面首行添加 `'use client'` 指令开启 CSR。一旦添加，其子组件都会使用 CSR 渲染，被视为客户端包体的一部分。
+
+### next/navigation 和 next/router 有什么区别？
+
+`next/navigation` 是 nextjs13 新引入的导航库，用于管理页面之间的导航。**提供了更好的性能和更好的开发体验，并针对服务端渲染和客户端渲染提供了统一的 API。**
+
+`next/router` 在服务端渲染时，不能使用路由跳转（push, replace）和监听路由事件，`next/navigation` 则解决了该问题。
+
+### 如何在 Next.js 内应用 Dark Mode？
+
+结合 [next-themes](https://github.com/pacocoursey/next-themes) 和 tailwindcss，可以实现 Dark Mode 的切换。
+
+1. 引入 ThemeProvider，指定 `attribute` 为 `class`，该配置会在 `body` 上添加 `dark` 类名；
+
+```ts title="app/layout.tsx"
+import './globals.css'
+import { ThemeProvider } from 'next-themes'
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode
+}>) {
+  return (
+    <html lang="en" suppressHydrationWarning>
+      <body className="antialiased dark:bg-foreground dark:text-zinc-50">
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+          {children}
+        </ThemeProvider>
+      </body>
+    </html>
+  )
+}
+```
+
+2. 配置 tailwind.config.js，添加 `darkMode` 配置；
+
+```ts title="tailwind.config.js"
+import type { Config } from 'tailwindcss'
+
+const config: Config = {
+  darkMode: ['class'],
+  // ...
+}
+```
+
+3. 在组件内添加 dark 样式，比如 `dark:text-zinc-50`；
+
+#### 如何实现应用模式切换？
+
+通过 `next-themes` 提供的 `useTheme` hook，可以实现应用模式的切换。
+
+```tsx title="components/ThemeSwitch.tsx"
+import { useTheme } from 'next-themes'
+
+export default function ThemeSwitch() {
+  const { theme, setTheme } = useTheme()
+
+  return (
+    <button
+      onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+      className="p-2 text-white bg-black rounded-full"
+    >
+      {theme === 'dark' ? 'Light' : 'Dark'}
+    </button>
+  )
+}
+```
+
+### 如何优雅处理 SSR 和 CSR 样式同步问题？

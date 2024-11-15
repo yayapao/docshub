@@ -1,0 +1,35 @@
+---
+id: browser
+title: ''
+sidebar_label: Browser
+---
+
+import {
+  HighlightWithText,
+  HighlightWithCode,
+} from '/src/components/Highlights'
+
+import { DocsHeader } from '/src/components/Layout/DocsHeader'
+
+<DocsHeader
+  title="Sentry SDK Browser"
+  description="Development of Official Sentry SDK for Browser."
+  github="https://github.com/getsentry/sentry-javascript"
+  tags={['Sentry']}
+  links={[
+    {
+      label: 'JavaScript SDKs',
+      link: 'https://develop.sentry.dev/sdk/platform-specifics/javascript-sdks/',
+    },
+  ]}
+/>
+
+本章节介绍如何对 Sentry JavaScript SDK 进行二次开发。
+
+## 准备工作
+
+1. 克隆指定版本项目到本地
+
+```bash
+git clone https://github.com/getsentry/sentry-javascript.git
+```

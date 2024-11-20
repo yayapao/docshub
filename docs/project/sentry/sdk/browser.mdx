@@ -28,8 +28,49 @@ import { DocsHeader } from '/src/components/Layout/DocsHeader'
 
 ## 准备工作
 
-1. 克隆指定版本项目到本地
+**克隆指定版本项目到本地，这里我们以 7.119.2 版本为例。**
 
 ```bash
 git clone https://github.com/getsentry/sentry-javascript.git
+cd sentry-javascript
+
+# 基于指定版本创建分支
+git checkout -b browser-sdk v7.119.2
 ```
+
+由于我们只需要浏览器运行时相关的 SDK，因此可以删除部分 package 以提升我们的开发效率。最终我们只需要保留以下 package：
+
+- browser
+- core
+- eslint-config-sdk
+- eslint-plugin-sdk
+- feedback
+- hub
+- integration-shims
+- integrations
+- opentelemetry
+- otel-trace
+- react
+- replay
+- replay-canvas
+- replay-worker
+- tracing
+- tracing-internal
+- types
+- typescript
+- utils
+- vue
+- wasm
+
+**开始安装项目依赖，并执行第一次构建。** 项目会自动构建所有 package。
+
+```bash
+yarn install
+yarn build
+```
+
+:::info
+
+项目构建完成后，会在每个 package 目录下生成 `dist` 目录，其中包含了该 package 的构建产物。
+
+:::

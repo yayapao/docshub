@@ -50,6 +50,12 @@ const projectSiderbarsConfig: SidebarsConfig = {
         'observability',
       ]),
     },
+    {
+      type: 'category',
+      label: 'SDK',
+      collapsed: true,
+      items: genSiderItem('project/sentry/sdk', ['entry', 'browser']),
+    },
   ],
   ftcSiderBar: [
     {

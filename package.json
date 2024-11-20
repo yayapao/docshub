@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "docusaurus": "docusaurus",
+    "release": "bash ./bash/rls.sh",
     "dev": "docusaurus start --port 3030",
     "build": "docusaurus build --out-dir dist",
     "build:ana": "docusaurus build --bundle-analyzer --out-dir dist",

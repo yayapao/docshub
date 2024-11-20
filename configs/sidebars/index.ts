@@ -53,10 +53,6 @@ const sidebarConfig: SidebarsConfig = {
       id: 'before-dev/frontend-handbook/entry',
     },
     {
-      type: 'doc',
-      id: 'before-dev/backend-handbook/entry',
-    },
-    {
       type: 'category',
       label: 'Git & GitHub',
       collapsed: true,

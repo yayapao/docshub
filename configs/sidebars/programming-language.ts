@@ -7,7 +7,7 @@ const nodejsHandbookPrefix = 'programming-language/nodejs/handbook'
 // go
 const goToolkitPrefix = 'programming-language/go/toolkits'
 const goHandbookPrefix = 'programming-language/go/handbook'
-const goAppliedPrefix = 'programming-language/go/applied'
+const goAppPrefix = 'programming-language/go/app'
 // html5
 const htmlHandbookPrefix = 'programming-language/html5/handbook'
 const htmlBrowserPrefix = 'programming-language/html5/browser'
@@ -59,9 +59,9 @@ const programmingLanguageConfig: SidebarsConfig = {
     },
     {
       type: 'category',
-      label: 'Applied',
+      label: 'Application',
       collapsed: true,
-      items: genSiderItem(goAppliedPrefix, ['gin-web-app']),
+      items: genSiderItem(goAppPrefix, ['before-start', 'applied']),
     },
   ],
   HTML5ProgrammingSidbar: [

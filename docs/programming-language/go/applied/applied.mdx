@@ -1,0 +1,117 @@
+---
+id: applied-in-projects
+title: ''
+sidebar_label: Applied in Projects
+---
+
+import { DocsHeader } from '/src/components/Layout/DocsHeader'
+import { HighlightWithText } from '/src/components/Highlights'
+
+<DocsHeader
+  title="Gin WebAPP"
+  description="Rules and resolutions for developing Go WebAPP."
+  github="https://github.com/YaYaPao/goars"
+  tags={['web']}
+  links={[
+    {
+      label: 'How to cross-compile Go programs for Windows, Linux and MacOS.',
+      link: 'https://freshman.tech/snippets/go/cross-compile-go-programs/',
+    },
+    {
+      label: 'GORM 指南',
+      link: 'https://gorm.io/zh_CN/docs/index.html',
+    },
+    {
+      label: 'Stemming vs Lemmatization',
+      link: 'https://towardsdatascience.com/stemming-vs-lemmatization-2daddabcb221',
+    },
+  ]}
+/>
+
+## 如何在 Go 内请求 Github API?
+
+在粗暴的方式是直接发起 HTTP 请求，这里我们基于 [go-github](https://github.com/google/go-github) 库来实现更优雅的方式。
+
+**设置全局 client 和 ctx**，该 client 将用于请求 Github API。
+
+```go
+import (
+	"crypto/tls"
+	"crypto/x509"
+	"github.com/google/go-github/v66/github"
+	kslog "github.com/yayapao/kk-cron/libs/kk-slog"
+	kviper "github.com/yayapao/kk-cron/libs/kk-viper"
+	"golang.org/x/net/context"
+	"log"
+	"net/http"
+)
+var client *github.Client
+var ctx = context.Background()
+
+func setupGithubClient() {
+	privateKey := kviper.System.GetString("github.api_key")
+
+	// 手动加载系统证书池
+	certPool, err := x509.SystemCertPool()
+	if err != nil {
+		kslog.Logger.Error("Failed to load cert pool: %v", err)
+	}
+
+	httpClient := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				RootCAs: certPool,
+			},
+		},
+	}
+
+	// 设置 token，注意不能使用 oauth2（供 app 使用的）
+	client = github.NewClient(httpClient).WithAuthToken(privateKey)
+}
+```
+
+- 我们需要**手动加载系统证书池**，以解决 MacOS 下：`x509: 'api.github.com' certificate is not standards compliant` 的问题
+- 使用 token 时，使用 `WithAuthToken` 方法，而不是 `OAuth2` 方法，因为我们这里使用场景是请求接口，而不是 OAuth2 授权
+
+接下来，我们介绍两个例子来展示如何使用该 client 来请求 Github API。
+
+### 调用 search API
+
+参考 [REST API endpoints for search - GitHub Docs](https://docs.github.com/en/rest/search/search?apiVersion=2022-11-28)
+
+```go
+// fetchActiveRepos 获取活跃的项目
+func fetchActiveRepos(perPage int, owner string) (github.RepositoriesSearchResult, error) {
+	result, _, err := client.Search.Repositories(ctx, "user:"+owner, &github.SearchOptions{
+		Sort:  "updated",
+		Order: "desc",
+		ListOptions: github.ListOptions{
+			Page:    1,
+			PerPage: perPage,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+```
+
+### 获取项目的 commit 信息
+
+参考 [REST API endpoints for commits - GitHub Docs](https://docs.github.com/en/rest/commits/commits?apiVersion=2022-11-28)
+
+```go
+// fetchCommitCountByRepo 获取提交数量
+func fetchCommitCountByRepo(owner string, repo string, since time.Time, until time.Time) ([]*github.RepositoryCommit, error) {
+	result, _, err := client.Repositories.ListCommits(ctx, owner, repo,
+		&github.CommitsListOptions{
+			Since: since,
+			Until: until,
+		})
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+```

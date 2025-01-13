@@ -4,16 +4,9 @@ import foundationConfig from './foundation'
 import projectSiderbarsConfig from './projects'
 import { genSiderItem } from './utils'
 import appliedPracticeConfig from './applied-practice'
+import infrastructureConfig from './infrastructure'
 
 const sidebarConfig: SidebarsConfig = {
-  serverSiderbar: [
-    {
-      type: 'category',
-      label: 'Site Reliability',
-      collapsed: true,
-      items: genSiderItem('server', ['cloudServer', 'linux', 'nginx']),
-    },
-  ],
   interviewSiderbar: [
     {
       type: 'category',
@@ -71,6 +64,7 @@ const sidebarConfig: SidebarsConfig = {
       items: genSiderItem('before-dev/data-services', ['entry']),
     },
   ],
+  ...infrastructureConfig,
   ...programmingLanguageConfig,
   ...projectSiderbarsConfig,
   ...foundationConfig,

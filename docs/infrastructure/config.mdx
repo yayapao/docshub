@@ -1,0 +1,178 @@
+---
+id: config
+title: ''
+sidebar_label: Config Server
+---
+
+import { HighlightWithText } from '/src/components/Highlights'
+import { DocsHeader } from '/src/components/Layout/DocsHeader'
+
+<DocsHeader
+  title="配置服务器"
+  description=""
+  github=""
+  tags={['SRE']}
+  links={[]}
+/>
+
+在本章节，我将分享配置服务器的相关经验。
+
+## 修改 root 密码
+
+两种方式：
+
+1. 在运营商页面，重置密码
+2. 登录服务器后，通过 `sudo passwd root` 命令修改密码
+
+## 配置 SSH 客户端登录
+
+核心点：
+
+- 在服务器配置 sshd_config 文件，处理权限和 SSH 相关问题
+- 在客户端生成公钥/私钥，并配置客户端工具
+
+### 服务器配置部分
+
+:::info
+
+必须开放 TCP 22 端口，可以在运营商实例管理页面进行设置。
+
+:::
+
+执行 `sudo vi /etc/ssh/sshd_config` 命令，修改如下配置：
+
+- 设置 `PermitRootLogin` 和 `PasswordAuthentication` 为 `yes`
+- 设置 `ClientAliveInterval` 和 `ClientAliveCountMax` 分别为 1200 和 3， 修改 ssh 超时时间
+- 设置 `PubkeyAuthentication` 为 `yes`
+- 设置 `KbdInteractiveAuthentication` 为 `no`
+- 设置 `PubkeyAcceptedKeyTypes` 为 `+ssh-rsa`
+- **添加** `AddressFamily inet`
+
+完成上述修改后，执行 `sudo service ssh restart` 命令，重启 ssh 服务。
+
+### 客户端配置部分
+
+我们可以利用 SSH 密钥建立信任关系来对本地机器进行授权。简单描述就是在客户端生成公钥/私钥，然后将公钥给到服务器指定位置，之后数据传输都会经过公钥加密，并且在客户端被私钥解密。
+
+新建密钥对（已有可以复用）
+
+```bash
+ssh-keygen -t rsa
+```
+
+通过 authorized_keys 建立信任关系，将客户端生成的 id_rsa.pub 内容拷贝到服务器 ~/.ssh/authorized_keys 文件内，如果服务器没有 authorized_keys，则自行创建！
+
+#### 配置客户端工具
+
+在 MacOS 通过 `brew install sshs` 添加 [Ternimal user interface for SSH](https://github.com/quantumsheep/sshs)
+
+之后配置 `~/.ssh/config` 文件，添加服务器信息，执行 `sshs` 选择指定服务器，即可完成登录。
+
+比如：
+
+```title=~/.ssh/config
+Host 1_aliyun
+HostName 1.1.1.1
+User root
+IdentityFile ~/.ssh/id_rsa
+```
+
+## 基于 `scp` 进行文件拷贝
+
+scp 是 secure copy 的缩写，是 lunix 系统下基于 SSH 协议进行安全数据拷贝的命令，常用命令形式：
+
+```bash
+# 将本地文件拷贝至服务器
+scp [file path] root@host:[server dir path]
+```
+
+但是直接使用 `scp` 会需要命令行交互来输入密码，在编写脚本时没有优势，社区通过 `sshpass` 来解决（brew 出于对 SSH 的尊重并没有 public 版本），参考 [Installing SSHPASS](https://gist.github.com/arunoda/7790979) 来安装 sshpass 之后，我们可以通过如下来执行命令：
+
+```bash
+sshpass -p [password] scp [file path] root@host:[server dir path]
+```
+
+## 搭建 FTP 服务
+
+:::warning
+
+使用 SSH 传输文件是最安全的方式，但是在某些情况下，我们需要使用 FTP 服务来进行文件传输，比如在使用 Cyberduck 时，我们需要使用 FTP 服务来进行文件传输。
+
+:::
+
+参考:
+
+- [Linux 云服务器搭建 FTP 服务](https://cloud.tencent.com/document/product/213/10912)
+- [Cyberduck FTP 客户端工具](https://cyberduck.io/)
+
+核心步骤:
+
+```bash
+# 根据腾讯云文档修改安装、启动并且配置 vsftpd 服务,相关配置:
+# 修改配置,并且注释 listen_ipv6=YES(即 ipv6 不生效)
+anonymous_enable=NO
+local_enable=YES
+chroot_local_user=YES
+chroot_list_enable=YES
+chroot_list_file=/etc/vsftpd/chroot_list
+listen=YES
+# 添加配置
+local_root=/home/xxx
+allow_writeable_chroot=YES
+pasv_enable=YES
+pasv_address=xxx.xx.xxx.xx #请修改为您的 Linux 云服务器公网 IP
+pasv_min_port=40000
+pasv_max_port=45000
+
+
+# 需要注意新建 linux 用户时,设置语义化的用户名
+$ useradd xxx
+$ passed xxx
+
+# 很重要的一步,腾讯云文档有误.在 home 目录下,需要以 /home/[用户名] 的形式创建文件夹,并且赋予权限
+# 否则, 客户端 ftp 连接时会出现问题
+$ mkdir /xxx
+$ chmod -R 777 /home/xxx
+
+# 最后开放 FTP 相关的防火墙设置,轻量服务器开通防火墙,CVM 设置相关安全组
+
+# 如果在上传文件时,出现 550 permission denied 错误,可以尝试设置:
+write_enable=YES
+anon_mkdir_write_enable=YES
+```
+
+## 升级 Ubuntu 系统
+
+有时候我们购买的服务器只能选择 Ubuntu 18 系统，这与轻量服务器或者使用习惯不符合，因此在开始之前可以选择升级 Ubuntu 系统。
+
+核心步骤如下：
+
+```bash
+# 更新 apt 源
+$ sudo apt update
+
+# 更新 apt 依赖包
+$ sudo apt full-upgrade
+
+# 升级系统，从 18 升级到 22，需要先升级到 20
+$ sudo do-release-upgrade
+
+# 查看版本信息，或者 `cat /etc/os-release`
+$ lsb_release -a
+```
+
+在升级过程中，可能会遇到如下问题：
+
+1. `cant upgrade, because reboot-required` 即使执行 `reboot` 仍然发生？
+
+   - 可以通过 `sudo rm /var/run/reboot-required` 来解决
+
+2. 系统无法升级，因为 `cloud-init` 没有升级到最新？
+
+   - 执行 `apt-mark unhold cloud-init` 取消对 cloud-init 的锁定
+   - 执行 `apt update` 来升级 cloud-init
+
+3. 没找到新版本，无法升级？
+
+   - 通常是由于没有正确设置 `/etc/update-manager/release-upgrades` 的 Prompt 属性。
+   - 如果设置为 LTS 则只会升级到长期支持版本，Never 表示不会升级，Normal 表示可以升级最新版本

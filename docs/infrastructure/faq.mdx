@@ -1,0 +1,24 @@
+---
+id: faq
+title: ''
+sidebar_label: FAQ
+---
+
+## 在服务器上拉取 github 的代码特别慢？
+
+通过配置 hosts 来指定 ip，减少 CDN 寻址时间
+
+通过 https://fastly.net.ipaddress.com/ 来查看指定域名的 IP 地址：
+
+1. github.com
+2. github.global.ssl.fastly.net
+
+之后将其添加到 hosts 文件内，最后执行 `sudo /etc/init.d/network restart` 刷新设置
+
+## 磁盘被打满的排障思路？
+
+通过 `du` 找到占用量大的文件，进行分析
+
+1. 通过监控查看磁盘周期内的磁盘使用情况，检查是否存在用量陡增，观察时间点是否存在发布事件
+2. 在指定服务器上查看磁盘占用情况，重点观察日志文件的磁盘占用
+3. 找到相应文件，执行不同处理

@@ -3,10 +3,10 @@ import type * as Preset from '@docusaurus/preset-classic'
 import { themeConfigs } from './configs/themeConfig'
 
 const metaConfig: Config = {
-  title: 'Docshub',
+  title: 'NiceDoc',
   // main page slogan
   tagline: 'Nice to doc, nice to code!',
-  organizationName: 'yayapao', // Usually your GitHub org/user name.
+  organizationName: 'yaya', // Usually your GitHub org/user name.
   projectName: 'docshub', // Usually your repo name.
   url: 'https://doc.joyjoy.cc/',
   baseUrl: '/',

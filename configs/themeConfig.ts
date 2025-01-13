@@ -10,28 +10,9 @@ const navbarConfig: Config['themeConfig'] = {
     src: 'img/logo.svg',
   },
   items: [
-    { to: '/blog', label: '📚', position: 'left' },
+    { to: '/blog', label: 'BLOG', position: 'left' },
     {
-      label: 'Foundation',
-      position: 'left',
-      items: [
-        {
-          label: 'cloudserver',
-          to: '/docs/foundation/cloudserver/otel',
-          // 设置高亮
-          activeBaseRegex: '/docs/foundation',
-        },
-        {
-          label: 'Applied Practice',
-          to: '/docs/applied-practice/android/handbook',
-          // 设置高亮
-          activeBaseRegex: '/docs/applied-practice',
-        },
-      ],
-    },
-
-    {
-      label: 'Progarmming Language',
+      label: 'PROGRAMMING',
       position: 'left',
       items: [
         {
@@ -68,6 +49,18 @@ const navbarConfig: Config['themeConfig'] = {
           label: 'Python',
           to: '/docs/programming-language/py/entry',
           activeBaseRegex: 'py/*',
+        },
+      ],
+    },
+    {
+      label: 'CAPACITY',
+      position: 'left',
+      items: [
+        {
+          label: 'Infrastructure',
+          to: '/docs/infrastructure/config',
+          // 设置高亮
+          activeBaseRegex: '/docs/infrastructure',
         },
       ],
     },

@@ -9,7 +9,7 @@ const infrastructureConfig: SidebarsConfig = {
       type: 'category',
       label: 'Infrastructure',
       collapsed: true,
-      items: genSiderItem(`${prefix}`, ['faq', 'linux', 'config']),
+      items: genSiderItem(`${prefix}`, ['faq', 'linux', 'config', 'nginx']),
     },
   ],
 }

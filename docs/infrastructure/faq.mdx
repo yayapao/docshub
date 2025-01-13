@@ -22,3 +22,68 @@ sidebar_label: FAQ
 1. 通过监控查看磁盘周期内的磁盘使用情况，检查是否存在用量陡增，观察时间点是否存在发布事件
 2. 在指定服务器上查看磁盘占用情况，重点观察日志文件的磁盘占用
 3. 找到相应文件，执行不同处理
+
+## Nginx
+
+### 配置无误,但是访问网页时返回 403/500
+
+403/500 的情况可能**权限问题**导致:
+
+查看 nginx 的启动用户和工作用户是否对应
+
+```bash
+# 执行发现工作用户为 root, 而在 nginx.conf 的 user 设置为 www-data
+# 修改 nginx.conf 的 user 为 root 即可
+$ ps aux | grep "nginx: worker process"
+```
+
+### 处理 413 Request Entity Too Large
+
+当客户端上传文件超过 **nginx 默认允许的请求体大小（1M）时**，会发生该问题。
+
+解决办法：修改 `client_max_body_size` 可以在 http/server/location 任意处进行修改。
+
+```
+server {
+	client_max_body_size 100M;
+}
+
+```
+
+### 修改 `server` 发现 80 端口仍未默认页面
+
+观察 `nginx.conf` 内 **includes** 指向的目录，比如 `site-enabled/*`。找到其下 default 文件，修改 80 指向。
+
+或者修改为 `site-enbaled/*.conf`，然后自定义 .conf 文件。
+
+### server_name 配置是正确的，但是访问子域名会被父域名拦截，返回 404
+
+发现是腾讯云 DNS 对子域名的解析配置为“默认”，无法解析，则移交给最上层父域名进行处理，找不到对应资源，返回 404，将 “默认” 修改为 “境内” 解决问题
+
+### `Incompatible SockJS! Main site uses: "1.4.0", the iframe: "1.3.0".`
+
+解决：添加如下配置
+
+```
+location / {
+    proxy_pass our_server;
+    proxy_redirect off;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+}
+```
+
+### `CreateDirectory()...failed (3: The system cannot find the path specified)`
+
+nginx 对于某个文件夹没有访问权限，无法创建 temp 文件夹
+
+解决办法，添加如下代码，同时在 nginx 根目录手动创建 temp 及子文件夹
+
+```
+http {
+		client_body_temp_path temp/client_body_temp;
+		proxy_temp_path temp/proxy_temp;
+    	fastcgi_temp_path temp/fastcgi_temp;
+	}
+```

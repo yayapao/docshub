@@ -106,9 +106,9 @@ export const themeConfigs: Config['themeConfig'] = {
     typesenseServerConfig: {
       nodes: [
         {
-          host: 'doc.joyjoy.cc',
-          port: 443,
-          protocol: 'https',
+          host: '8.138.6.227',
+          port: 8870,
+          protocol: 'http',
           path: '/typesense',
         },
       ],

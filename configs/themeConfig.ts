@@ -107,7 +107,7 @@ export const themeConfigs: Config['themeConfig'] = {
       nodes: [
         {
           host: '8.138.6.227',
-          port: 8870,
+          port: 8108,
           protocol: 'http',
           path: '/typesense',
         },

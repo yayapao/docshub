@@ -351,7 +351,7 @@ TYPESENSE_PROTOCOL=http
 3. 执行命令，开始爬取文档，并写入 typesense 服务（没有设置定时任务，因此每次发布后需要重新执行一次）
 
 ```bash
-$ docker run -it --env-file=/root/apps/typesense/.env -e "CONFIG=$(cat config.json | jq -r tostring)" typesense/docsearch-scraper:0.9.1 | tee scraper-output.txt
+docker run -it --env-file=/root/apps/typesense/.env -e "CONFIG=$(cat config.json | jq -r tostring)" typesense/docsearch-scraper:0.9.1 | tee scraper-output.txt
 ```
 
 **更新 docusaurus 插件**

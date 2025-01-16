@@ -8,7 +8,7 @@ const metaConfig: Config = {
   tagline: 'Nice to doc, nice to code!',
   organizationName: 'yaya', // Usually your GitHub org/user name.
   projectName: 'docshub', // Usually your repo name.
-  url: 'https://doc.joyjoy.cc/',
+  url: 'http://8.138.6.227:8870/',
   baseUrl: '/',
   favicon: '/img/favicon.png',
 }

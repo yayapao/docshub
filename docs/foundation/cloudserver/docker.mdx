@@ -18,7 +18,6 @@ Docker 的出现能够极大地提升开发效率：
 
 - [docker 基础概念](https://docs.docker.com/get-started/overview/)
 
-
 ## Composition
 
 ### damon
@@ -27,17 +26,37 @@ Docker daemon 是服务器组件，以 Linux 后台服务的方式运行，是 D
 
 它负责响应来自 Docker Client 的请求，然后将这些请求翻译成系统调用，完成容器管理操作
 
-
-
 ## Install
 
 在 centOS7 上安装 docker
 
 1. ran `curl -sSL https://get.daocloud.io/docker | sh` 一键安装
 2. ran `service restart docker` 重启 docker 服务
-2. ran `docker run hello-world` 验证安装是否成功
+3. ran `docker run hello-world` 验证安装是否成功
 
+## 配置镜像加速
 
+在 Linux 上，配置镜像加速，执行 `vim /etc/docker/daemon.json` 添加如下内容：
+
+```json
+{
+  "registry-mirrors": [
+    "https://docker-0.unsee.tech",
+    "https://docker-cf.registry.cyou",
+    "https://docker.1panel.live"
+  ]
+}
+```
+
+:::info
+在 MacOS 上，需要打开 `Docker Desktop -> Settings -> Docker Engine`，添加镜像加速。
+:::
+
+重启 docker 服务
+
+```bash
+$ sudo systemctl restart docker
+```
 
 ### 发布至 DockerHub
 
@@ -50,8 +69,6 @@ Docker daemon 是服务器组件，以 Linux 后台服务的方式运行，是 D
 5. ran `docker login` 在命令行内登陆
 6. ran `docker pull <your_username>/my-private-repo` 拉取镜像
 
-
-
 ## Commands
 
 ### 常用命令说明
@@ -63,9 +80,7 @@ Docker daemon 是服务器组件，以 Linux 后台服务的方式运行，是 D
 2. `docker build -t xxx .`
    - `-t` 表示 tag，为 image 设置标签或者名称
    - `.` 在这里表示<b>镜像构建上下文路径</b>，当构建时，由用户指定构建的上下文路径，而 `docker build` 会将这个路径下的所有文件都打包上传给 docker 引擎，docker 引擎会基于这些文件进行处理
-3. 
-
-
+3.
 
 ### 删除一个实例实例（container）
 
@@ -78,13 +93,10 @@ Docker daemon 是服务器组件，以 Linux 后台服务的方式运行，是 D
 - ran `docker images` 查看所有存在的镜像
 - ran `docker image rm [image id]` 删除指定的镜像
 
-
 ### 进入容器实例
 
 - ran `docker container ls` 查看所有实例
 - ran `docker exec -it [container id] bash` 通过命令行进行容器实例
-
-
 
 ## Dockerfile
 
@@ -134,8 +146,3 @@ RUN yum install wget \
     && wget -O redis.tar.gz "http://download.redis.io/releases/redis-5.0.3.tar.gz" \
     && tar -xvf redis.tar.gz
 ```
-
-
-
-
-

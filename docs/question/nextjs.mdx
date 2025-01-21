@@ -26,7 +26,7 @@ import { DocsHeader } from '/src/components/Layout/DocsHeader'
   ]}
 />
 
-### Next.js 解决了什么问题？
+## Next.js 解决了什么问题？
 
 最核心的一点是，它作为框架，封装了强大的底层能力，开箱即用。同时结合 vercel 的 serverless 部署，使得开发者可以专注于业务逻辑，而不用关心底层的配置。
 
@@ -36,13 +36,13 @@ import { DocsHeader } from '/src/components/Layout/DocsHeader'
 - 预取功能
 - 天然国际化支持
 
-### 对比 SPA 方案，Next.js 有什么优势？
+## 对比 SPA 方案，Next.js 有什么优势？
 
 1. SEO 优化：浏览器通过爬虫抓取页面内容，而 SPA 由于是动态生成的，爬虫无法获取到内容，导致 SEO 不友好。而 Next.js 可以通过服务端渲染，生成静态页面，提高 SEO。
 
 2. 减少白屏时间：SPA 首次加载时，需要加载整个 JS 包，从 HTML 渲染到实际产生内容，存在延迟。
 
-### Next.js 是 SSR 还是 SSG？
+## Next.js 是 SSR 还是 SSG？
 
 Next.js 既支持服务端渲染（SSR），也支持静态生成（SSG）。更严格来说，它是同构渲染，即在服务端（ssr）和客户端（csr）都可以渲染。
 
@@ -51,7 +51,7 @@ Next.js 既支持服务端渲染（SSR），也支持静态生成（SSG）。更
 - SSR：适用于内容频繁变化的页面，Next.js 需要在服务器上运行，生成并返回对应的 HTML，比如 blog、新闻等。
 - SSG：在构建时生成静态页面，适用于内容不频繁变化的页面，如首页、产品页等。
 
-### 什么情况下使用 client side rendering？
+## 什么情况下使用 client side rendering？
 
 Next.js 提供 Client Side Rendering（CSR）的能力，目的是为了处理：
 
@@ -61,13 +61,13 @@ Next.js 提供 Client Side Rendering（CSR）的能力，目的是为了处理�
 
 通过在组件页面首行添加 `'use client'` 指令开启 CSR。一旦添加，其子组件都会使用 CSR 渲染，被视为客户端包体的一部分。
 
-### next/navigation 和 next/router 有什么区别？
+## next/navigation 和 next/router 有什么区别？
 
 `next/navigation` 是 nextjs13 新引入的导航库，用于管理页面之间的导航。**提供了更好的性能和更好的开发体验，并针对服务端渲染和客户端渲染提供了统一的 API。**
 
 `next/router` 在服务端渲染时，不能使用路由跳转（push, replace）和监听路由事件，`next/navigation` 则解决了该问题。
 
-### 如何在 Next.js 内应用 Dark Mode？
+## 如何在 Next.js 内应用 Dark Mode？
 
 结合 [next-themes](https://github.com/pacocoursey/next-themes) 和 tailwindcss，可以实现 Dark Mode 的切换。
 
@@ -107,7 +107,7 @@ const config: Config = {
 
 3. 在组件内添加 dark 样式，比如 `dark:text-zinc-50`；
 
-#### 如何实现应用模式切换？
+### 如何实现应用模式切换？
 
 通过 `next-themes` 提供的 `useTheme` hook，可以实现应用模式的切换。
 
@@ -128,7 +128,7 @@ export default function ThemeSwitch() {
 }
 ```
 
-### 如何优雅处理 SSR 和 CSR 样式同步问题？
+## 如何优雅处理 SSR 和 CSR 样式同步问题？
 
 问题的根源在于：**服务端渲染时，样式是同步加载的，而客户端渲染时，样式是异步加载的**。
 
@@ -139,7 +139,7 @@ export default function ThemeSwitch() {
 1. 将用户对应配置放在服务端，这样会增加服务端的压力和复杂度；
 2. 对图标/样式添加过渡效果，比如旋转、渐变等，减少用户对“闪烁”的感知；
 
-### 如何在服务端渲染时预取数据？
+## 如何在服务端渲染时预取数据？
 
 在服务端渲染时，可以设置 `async` 函数，在函数内获取数据，后将其作为 props 传递给客户端组件。
 
@@ -158,7 +158,7 @@ export default async function HomePage() {
 
 `ClientPage` 可以看作客户端组件的入口，通过 `use client` 指令开启客户端渲染。
 
-#### 改变请求参数后，如何避免客户端组件重复渲染？
+### 改变请求参数后，如何避免客户端组件重复渲染？
 
 假设存在如下组件，它能接收初始化数据和请求参数，分别执行不同的渲染逻辑：
 
@@ -190,3 +190,23 @@ export default function SomePage({ params, initialData }) {
 ```
 
 这里，我们不能直接赋值，而是通过 `useEffect` 触发更新。因为如果直接赋值的话，会在每次 `params` 变化时，多执行一次 `setRenderData` 操作，导致重复渲染。
+
+## 在 Next.js 中，如何部署到自有服务器？
+
+### Dynamic server usage: Route /home couldn't be rendered statically because it used `cookies`.
+
+在打包过程中，出现该问题是因为在静态页面中，使用了 `cookies` 等动态数据。参考[DynamicServerError - Dynamic Server Usage | Next.js](https://nextjs.org/docs/messages/dynamic-server-error)
+
+解决办法：
+
+1. 改变写法，添加 `try-catch` 包裹，捕获错误，并返回静态页面；
+2. 通过 `unstable_noStore` 来禁止服务端自动缓存新生成页面。**在实时数据展示和用户特定数据展示时，推荐使用该方法。**
+
+```tsx title="pages.tsx"
+import { unstable_noStore as noStore } from 'next/cache'
+
+export default async function HomePage() {
+  noStore()
+  return <div>Home Page</div>
+}
+```

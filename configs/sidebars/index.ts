@@ -67,7 +67,6 @@ const sidebarConfig: SidebarsConfig = {
   ...infrastructureConfig,
   ...programmingLanguageConfig,
   ...projectSiderbarsConfig,
-  ...foundationConfig,
   ...appliedPracticeConfig,
 }
 

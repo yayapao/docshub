@@ -1,0 +1,37 @@
+---
+id: overview
+title: Overview
+sidebar_label: Overview
+---
+
+import { DocsHeader } from '/src/components/Layout/DocsHeader'
+
+<DocsHeader
+  title="Overview"
+  description="本章节汇总基础设置的基本概念"
+  tags={['docker']}
+  links={[
+    {
+      label: 'Docker 基础概念',
+      link: 'https://docs.docker.com/get-started/overview/',
+    },
+  ]}
+/>
+
+## Docker
+
+:::note what's docker?
+Docker 是一个可以用来开发、部署以及发布应用的开放平台
+:::
+
+Docker 的出现能够极大地提升开发效率：
+
+1. 标准化：通过 docker，我们可以共同制定同一套容器标准，基于此标准，开发、测试协同合作，减少了开发环境部署和管理成本；
+2. 轻量化：Docker 足够轻量化，启动时间短，能够缩短我们开发、交付和运行应用程序的时间；
+3. 可移植：Docker 可以运行在大多数环境下，可以很方便地在不同平台间进行迁移；
+
+### damon
+
+Docker daemon 是服务器组件，以 Linux 后台服务的方式运行，是 Docker 最核心的后台进程，我们也把它称为<b>守护进程</b>
+
+它负责响应来自 Docker Client 的请求，然后将这些请求翻译成系统调用，完成容器管理操作

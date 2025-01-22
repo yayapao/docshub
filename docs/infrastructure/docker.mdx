@@ -4,37 +4,21 @@ title: Docker
 sidebar_label: Docker
 ---
 
-:::note what's docker?
-Docker 是一个可以用来开发、部署以及发布应用的开放平台
-:::
+## 如何安装 Docker?
 
-Docker 的出现能够极大地提升开发效率：
-
-1. 标准化：通过 docker，我们可以共同制定同一套容器标准，基于此标准，开发、测试协同合作，减少了开发环境部署和管理成本；
-2. 轻量化：Docker 足够轻量化，启动时间短，能够缩短我们开发、交付和运行应用程序的时间；
-3. 可移植：Docker 可以运行在大多数环境下，可以很方便地在不同平台间进行迁移；
-
-相关概念：
-
-- [docker 基础概念](https://docs.docker.com/get-started/overview/)
-
-## Composition
-
-### damon
-
-Docker daemon 是服务器组件，以 Linux 后台服务的方式运行，是 Docker 最核心的后台进程，我们也把它称为<b>守护进程</b>
-
-它负责响应来自 Docker Client 的请求，然后将这些请求翻译成系统调用，完成容器管理操作
-
-## Install
-
-在 centOS7 上安装 docker
+在 Linux 上安装 docker
 
 1. ran `curl -sSL https://get.daocloud.io/docker | sh` 一键安装
 2. ran `service restart docker` 重启 docker 服务
 3. ran `docker run hello-world` 验证安装是否成功
 
-## 配置镜像加速
+## 如何配置配置镜像加速？
+
+:::info
+
+核心点在于配置 `daemon.json` 文件，添加镜像加速地址
+
+:::
 
 在 Linux 上，配置镜像加速，执行 `vim /etc/docker/daemon.json` 添加如下内容：
 
@@ -48,6 +32,8 @@ Docker daemon 是服务器组件，以 Linux 后台服务的方式运行，是 D
 }
 ```
 
+**不同云服务厂商，有自己的镜像加速地址，可以参考其文档进行配置！**
+
 :::info
 在 MacOS 上，需要打开 `Docker Desktop -> Settings -> Docker Engine`，添加镜像加速。
 :::
@@ -60,16 +46,26 @@ $ sudo systemctl restart docker
 
 ### 发布至 DockerHub
 
-参考 [Docker Hub Quickstart](https://docs.docker.com/docker-hub/) 快速入门
+参考 [Docker Hub Quickstart](https://docs.docker.com/docker-hub/) 快速入门，**不同云厂商之间，大致操作类型。**
 
-1. 注册一个 DockerHub 账号，登陆之后创建 registry
-2. 在本地创建 Dockerfile，执行 `docker build -t <your_username>/my-private-repo .` 打包镜像
-3. ran `docker run -itd --name [name] -p 8000:8000 <your_username>/my-private-repo` 在本地测试容器实例
-4. ran `docker push <your_username>/my-private-repo` 推送到指定 registry
-5. ran `docker login` 在命令行内登陆
-6. ran `docker pull <your_username>/my-private-repo` 拉取镜像
+注册一个 DockerHub 账号，登陆之后创建 registry，且在项目内编写好 Dockerfile
 
-## Commands
+```bash
+# 第一步，登录
+docker login --username=[username] [registry]
+
+# 第二步，本地构建镜像
+docker build -t [image-name]/[tag] .
+
+# 第二步，本地运行镜像，测试实例
+docker run -p [host-port]:[container-port] [image-name]/[tag]
+
+# 第三步，打标签
+docker tag [imageId] [registry]/[image-name]/[tag]
+
+# 第四步，推送到指定 registry
+docker push [registry]/[image-name]/[tag]
+```
 
 ### 常用命令说明
 

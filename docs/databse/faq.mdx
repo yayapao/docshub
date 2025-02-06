@@ -1,0 +1,100 @@
+---
+id: faq
+title: ''
+sidebar_label: FAQ
+---
+
+import { DocsHeader } from '/src/components/Layout/DocsHeader'
+
+<DocsHeader
+  title="Database base"
+  description="Basic konwledge of database."
+  tags={['sql']}
+  links={[
+    {
+      label: 'MySQL 菜鸟教程',
+      link: 'https://www.runoob.com/mysql/mysql-tutorial.html',
+    },
+    {
+      label: 'Redis 运维实战',
+      link: 'https://www.w3cschool.cn/redis_all_about/redis_all_about-pf4826ua.html',
+    },
+    {
+      label: 'Redis 发布版本下载',
+      link: 'http://download.redis.io/releases/',
+    },
+    {
+      label: 'ClickHouse tutorial',
+      link: 'https://clickhouse.com/docs/zh/getting-started/tutorial',
+    },
+    {
+      label: 'Nestjs kafka',
+      link: 'https://docs.nestjs.com/microservices/kafka',
+    },
+    {
+      label: 'Kafka分区与消费者的关系kafka分区和消费者线程的关系',
+      link: 'https://cloud.tencent.com/developer/article/1953243',
+    },
+    {
+      label: 'Kafka in a Nutshell',
+      link: 'https://sookocheff.com/post/kafka/kafka-in-a-nutshell/',
+    },
+    {
+      label: 'Kafka入门介绍',
+      link: 'https://lotabout.me/2018/kafka-introduction/',
+    },
+  ]}
+/>
+
+## 术语解释
+
+| 简称 | 全称                         | 名称         | 用途                                                 |
+| ---- | ---------------------------- | ------------ | ---------------------------------------------------- |
+| DQL  | Data Query Language          | 数据查询语言 | 从表中获取数据                                       |
+| DML  | Data Manipulate Language     | 数据操作语言 | 添加、修改、删除表中的行                             |
+| DDL  | Data Define Language         | 数据定义语言 | 创建、删除数据库和表                                 |
+| TPL  | Transaction Process Language | 事务处理语言 | 同时执行多条 SQL 的情况                              |
+| DCL  | Data Control Language        | 数据控制语言 | 获得许可，确定单个用户和用户组对数据库对象访问的限制 |
+| CCL  | Cursor Control Language      | 指针控制语言 | 用于对一个表或者多个表进行单独额操作                 |
+
+## 常用语句
+
+### RAND 随机取数
+
+```sql
+-- 从 sentence 表中随机取 3 条数据
+SELECT s1.sentence
+FROM sentence s1
+ORDER BY RAND()
+LIMIT 3;
+```
+
+### 清除表数据
+
+```sql
+-- 清除表数据
+TRUNCATE TABLE table_name;
+```
+
+## faq
+
+### The driver has not received any packets from the server
+
+在服务器上配置完成之后，我们通过 DataGrip 连接 MySQL 服务后发现报错：
+
+```
+DBMS:
+Case sensitivity: plain=mixed, delimited=exact
+Driver:  (ver. , JDBC)
+Effective version: MySQL (ver. 0.0)
+Communications link failure
+
+The last packet sent successfully to the server was 0 milliseconds ago. The driver has not received any packets from the server.
+```
+
+导致连接不上的原因通常为：
+
+- 服务器 MySQL 未开启远程连接
+- 配置错误，比如端口不对
+- 服务器防火墙设置
+- `wait_timeout` 超时

@@ -1,0 +1,181 @@
+---
+id: clickhouse
+title: ''
+sidebar_label: ClickHouse
+---
+
+:::info
+
+ClickHouse® is a free analytics DBMS for big data.
+
+:::
+
+## 常用运维脚本
+
+**查看数据库内表、数据使用量**
+
+```sql
+
+SELECT
+    table,
+    sum(rows) AS total_rows,
+    formatReadableSize(sum(data_uncompressed_bytes)) AS uncompressed_bytes,
+    formatReadableSize(sum(data_compressed_bytes)) AS compressed_bytes,
+    round((sum(data_compressed_bytes) / sum(data_uncompressed_bytes)) * 100, 0) AS compressed_rate
+FROM system.parts
+WHERE active AND datebase='[database name]'
+GROUP BY table
+ORDER BY total_rows DESC
+
+```
+
+**查看数据库、表结构、数据**
+
+```sql
+
+-- 查看数据表字段
+
+DESC TABLE [database name].[table.name]
+
+-- 查看建表语句
+SHOW CREATE TABLE [database name].[table.name]
+
+-- 选择一条数据进行查看
+SELECT * FROM [database name].[table.name] LIMIT 1
+
+```
+
+**查看指定数据库的资源用量、rows、日均数据**
+
+```sql
+
+select
+    database,
+    formatReadableSize(size) as size,
+    formatReadableSize(bytes_on_disk) as bytes_on_disk,
+    formatReadableSize(data_uncompressed_bytes) as data_uncompressed_bytes,
+    formatReadableSize(data_compressed_bytes) as data_compressed_bytes,
+    compress_rate,
+    rows,
+    days,
+    formatReadableSize(avgDaySize) as avgDaySize
+from
+(
+    select
+        database,
+        sum(bytes) as size,
+        sum(rows) as rows,
+        min(min_date) as min_date,
+        max(max_date) as max_date,
+        sum(bytes_on_disk) as bytes_on_disk,
+        sum(data_uncompressed_bytes) as data_uncompressed_bytes,
+        sum(data_compressed_bytes) as data_compressed_bytes,
+        (data_compressed_bytes / data_uncompressed_bytes) * 100 as compress_rate,
+        max_date - min_date as days,
+        size / (max_date - min_date) as avgDaySize
+    from system.parts
+    where active
+     and database = '[database name]'
+    group by
+        database
+)
+
+```
+
+## Sentry 运维脚本
+
+**查看表内字段，注意不能直接使用 \***
+
+```sql
+SELECT project_id, timestamp, event_id, platform, environment, http_method, http_referer, tags.key, tags.value, _tags_hash_map, contexts.key, contexts.value, transaction_name, transaction_hash, span_id, trace_id, partition, offset, message_timestamp, retention_days, deleted, group_id, primary_hash, hierarchical_hashes, received, message, title, culprit, level, location, version, type, modules.name, modules.version
+FROM errors_local
+WHERE timestamp >= now() - 3600
+ORDER BY timestamp DESC
+LIMIT 1 FROMAT JSON;
+```
+
+**创建物化视图**，我们需要在每个节点创建本地表、物化视图（实际上也是个表）、以及分布式表。下面举例说明：
+
+1. **创建本地表** `errors_analysis_local`，使用 `ReplicatedReplacingMergeTree` 引擎，将数据写入到 `shard3` 的 `hdd_in_order` 策略（即按序存放到硬盘）
+
+:::warning
+
+- 副本需要与集群对应，即 `replica[index]` 需要与当前集群 shard num 对应
+- 使用 Nullable 来确保能够处理 null 数据
+
+:::
+
+```sql
+CREATE TABLE sentry.errors_analysis_local
+(
+    `project_id` UInt64,
+    `timestamp` DateTime,
+    `url` Nullable(String)
+) ENGINE = ReplicatedReplacingMergeTree('/clickhouse/tables/errors/shard3/sentry/errors_analysis_local', 'replica3')
+PARTITION BY toMonday(timestamp)
+ORDER BY (project_id, timestamp)
+TTL timestamp + toIntervalDay(30)
+SETTINGS index_granularity = 256, storage_policy = 'hdd_in_order';
+```
+
+查看当前集群信息 `SELECT * FROM system.clusters;`
+
+2. **创建分布式表，注意字段要和 local 一致**，引擎为 `Distributed`，将数据分发到 `errors_analysis_local` 表内
+
+```sql
+CREATE TABLE sentry.errors_analysis_dist
+(
+    `project_id` UInt64,
+    `timestamp` DateTime,
+    `url` Nullable(String)
+)
+ENGINE = Distributed('logs', 'sentry', 'errors_analysis_local');
+```
+
+3. **创建物化视图**，注意设置源 table 和目标 table。`arrayElement(tags.value, indexOf(tags.key, 'url'))` 用来从 `tags.key` 数组内找到 `url` 对应的值
+
+```sql
+CREATE MATERIALIZED VIEW sentry.mv_errors_analysis_local TO sentry.errors_analysis_local
+(
+    `project_id` UInt64,
+    `timestamp` DateTime,
+    `url` Nullable(String)
+) AS
+SELECT
+    project_id,
+    timestamp,
+    event_id,
+    arrayElement(tags.value, indexOf(tags.key, 'url')) AS url
+FROM sentry.errors_local;
+```
+
+如果在操作过程中发现错误，可以执行 `DROP TABLE IF EXISTS sentry.mv_errors_analysis_local;` 删除物化视图，不然可能影响到数据写入。
+
+### 在 Linux 升级 clickhouse-client
+
+clickhouse-client 帮助我们连接 clickhouse 服务，执行语句。但是在使用过程中发现版本过低，无法支持新特性。**比如 TTL 是 ck v19.1 版本的新特性，如果 clickhouse-client 小于该版本，那么无法执行 TTL 相关语句。**为了解决该问题，我们需要手动升级 clickhouse-client。
+
+```bash
+# 配置源和证书
+sudo apt-get install -y apt-transport-https ca-certificates dirmngr
+GNUPGHOME=$(mktemp -d)
+sudo GNUPGHOME="$GNUPGHOME" gpg --no-default-keyring --keyring /usr/share/keyrings/clickhouse-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 8919F6BD2B48D754
+sudo rm -r "$GNUPGHOME"
+sudo chmod +r /usr/share/keyrings/clickhouse-keyring.gpg
+
+echo "deb [signed-by=/usr/share/keyrings/clickhouse-keyring.gpg] https://packages.clickhouse.com/deb stable main" | sudo tee \
+    /etc/apt/sources.list.d/clickhouse.list
+```
+
+查看支持的 clickhouse-client 版本
+
+```bash
+apt-cache policy clickhouse-client
+```
+
+指定版本进行安装，不然会使用版本较低的默认源（如果同时配置了 aliyun 和 ck 源）
+
+```bash
+sudo apt-get update
+sudo apt-get install -y clickhouse-client=x.x.x.x
+```

@@ -1,6 +1,5 @@
 import type { SidebarsConfig } from '@docusaurus/plugin-content-docs'
 import programmingLanguageConfig from './programming-language'
-import foundationConfig from './foundation'
 import projectSiderbarsConfig from './projects'
 import { genSiderItem } from './utils'
 import appliedPracticeConfig from './applied-practice'
@@ -56,12 +55,6 @@ const sidebarConfig: SidebarsConfig = {
       label: 'Cloud Infrastructure',
       collapsed: true,
       items: genSiderItem('before-dev/cloud-infrastructure', ['vercel/entry']),
-    },
-    {
-      type: 'category',
-      label: 'Data Services',
-      collapsed: true,
-      items: genSiderItem('before-dev/data-services', ['entry']),
     },
   ],
   ...infrastructureConfig,

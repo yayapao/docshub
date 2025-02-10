@@ -57,7 +57,7 @@ import { DocsHeader } from '/src/components/Layout/DocsHeader'
 | DCL  | Data Control Language        | 数据控制语言 | 获得许可，确定单个用户和用户组对数据库对象访问的限制 |
 | CCL  | Cursor Control Language      | 指针控制语言 | 用于对一个表或者多个表进行单独额操作                 |
 
-## 常用语句
+## MySQL 常用语句
 
 ### RAND 随机取数
 
@@ -76,9 +76,56 @@ LIMIT 3;
 TRUNCATE TABLE table_name;
 ```
 
+## PostgreSQL 常用语句
+
+### 查看数据状态
+
+查看表大小，并对所有库内所有表按照大小进行排序
+
+![tabel_size](https://i.stack.imgur.com/9zfeC.png)
+
+```sql
+
+-- 查看表大小：table size
+select pg_size_pretty(pg_table_size('table_name'));
+
+-- 查看表大小：table size + index size
+select pg_size_pretty(pg_total_relation_size('table_name'));
+
+-- 按照 tabel size 对全部表进行排序
+-- pg_stat_user_tables 表示由用户创建的表，区别于系统表
+select relname, pg_size_pretty(pg_table_size(relid))
+from pg_stat_user_tables where schemaname='public' order by pg_table_size(relid) desc;
+
+```
+
+统计每张表的 row 数量
+
+```sql
+
+select relname as name, reltuples as cnt from pg_class where relkind = 'r' and
+relnamespace = (
+    select oid from pg_namespace where nspname = 'public'
+    ) order by cnt desc ;
+
+```
+
+### 业务相关
+
+查看每月新增用户/项目
+
+- 注意 `date_trunc` 的使用
+
+```sql
+select date_trunc('month', date_joined) as dt, count(date_joined) as total
+from [table name]
+group by date_trunc('month', date_joined)
+order by date_trunc('month', date_joined)
+```
+
 ## faq
 
-### The driver has not received any packets from the server
+### [mysql]The driver has not received any packets from the server
 
 在服务器上配置完成之后，我们通过 DataGrip 连接 MySQL 服务后发现报错：
 
@@ -98,3 +145,19 @@ The last packet sent successfully to the server was 0 milliseconds ago. The driv
 - 配置错误，比如端口不对
 - 服务器防火墙设置
 - `wait_timeout` 超时
+
+### [postgresql] duplicate key value violates unique constraint "xxx"
+
+在使用 `INSERT INTO` 语句时，如果出现 `duplicate key value violates unique constraint "xxx"` 错误，一种情况是手动对该表进行插入，导致 PG 内部维护的 OID 认为数据已经存在。
+
+查看表结构发现，其 ID 字段默认值为 `nextval('xxx_id_seq'::regclass)`，表示递增序列并返回新值。如果手动插入数据，会导致序列值不一致，从而出现上述错误。
+
+:::warning
+
+这里的手动插入，特指 `INSERT INTO table_name (xxx) VALUES (xxx)` 这种直接修改字段的方式
+
+:::
+
+解决方案：
+
+- 通过 `select setval('xxx_id_seq', 1000, true);` 将序列值重置为 1000（拿最新的值即可，这里 1000 为示例）

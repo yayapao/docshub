@@ -62,6 +62,12 @@ const navbarConfig: Config['themeConfig'] = {
           // 设置高亮
           activeBaseRegex: '/docs/infrastructure',
         },
+        {
+          label: 'Database',
+          to: '/docs/database/mysql',
+          // 设置高亮
+          activeBaseRegex: '/docs/database',
+        },
       ],
     },
     {

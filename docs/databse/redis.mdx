@@ -1,0 +1,130 @@
+---
+id: redis
+title: ''
+sidebar_label: Redis
+---
+
+:::info
+
+The open source, in-memory data store used by millions of developers as a database, cache, streaming engine, and message broker.
+
+:::
+
+## Redis 安装
+
+不同环境下安装 redis
+
+```sh
+# MacOS
+$ brew install redis
+
+# Linux （仅支持 v5.0.7 版本）
+apt update && apt install redis
+
+# CentOS
+yum install redis
+```
+
+:::warning
+
+在 Linux 下，apt 仅支持 v5.0.7 版本，如果需要安装更高版本 Redis，需要手动下载、编辑、安装。
+
+:::
+
+[查看 redis 版本](http://download.redis.io/releases/)
+
+```sh
+# 编译需要用到 gcc，查看系统内是否已经安装
+apt list gcc
+
+# 下载指定版本源码
+wget http://download.redis.io/releases/redis-7.4.2.tar.gz
+
+# 解压下载产物，将其移动到 /usr/local
+tar -xvf redis-7.4.2.tar.gz && mv redis-7.4.2 /usr/local
+
+# 进入文件目录，编译
+cd /usr/local/redis-7.4.2 && make && make install
+
+```
+
+安装完成之后，通过 `redis-cli --version` 查看 cli 版本，`redis-server --version` 查看 redis 服务版本，验证安装是否成功。
+
+通过 `ps -ef | grep redis` 或者 `systemctl status redis` 来查看服务运行情况，v5 以上默认自动运行。
+
+- 在 `/usr/local/redis-7.4.2/src` 目录存放命令行工具，比如 redis-server、redis-cli 等
+- 默认会以 `/usr/local/redis-7.4.2/redis.conf` 配置启动，通过 `./redis-server /etc/redis/redis.conf` 来指定配置文件路径
+- 通常执行 `mv /usr/local/redis-7.4.2/redis.conf /etc/redis/redis.conf` 来将配置文件移动到指定目录
+
+## 启动 redis 服务
+
+### 配置 redis.service
+
+在 Linux 上，推荐通过 systemd 来管理服务，因此我们需要配置 `redis.service` 文件。
+
+```bash
+
+cd /etc/systemd/system
+touch redis.service
+vim redis.service
+
+```
+
+修改文件内容：
+
+```vim
+[Unit]
+Description=Redis In-Memory Data Store
+After=network.target
+[Service]
+Type=forking
+ExecStart=/usr/local/redis-7.4.2/src/redis-server /etc/redis/redis.conf
+ExecReload=/usr/local/redis-7.4.2/src/redis-server -s reload
+ExecStop=/usr/local/redis-7.4.2/src/redis-cli shutdown
+[Install]
+WantedBy=multi-user.target
+```
+
+### 启动配置
+
+设置 `redis.conf` 文件，添加如下配置：
+
+```vim title=/etc/redis/redis.conf
+# 设置后台启动
+daemonize yes
+
+# 修改 bind 地址，支持远程连接
+bind 127.0.0.1 [inet]
+
+# 设置访问密码
+requirepass [password]
+```
+
+设置完成之后，执行 `systemctl restart redis` 重启服务
+
+### 设置开机启动
+
+MacOS
+
+- 执行 `ln -f /usr/local/Cellar/redis/6.0.10/homebrew.mxcl.redis.plist ~/Library/LaunchAgents` 建立软连接，加入到 launchd 进程，当用户登录系统后会自动执行
+- 执行 `launchctl load ~/Library/LaunchAgents/homebrew.mxcl.redis.plist` 加载任务
+
+## 运维排障技巧
+
+### 基于 `redis-cli` 排障
+
+通过 redis-cli 来查看服务运行情况
+
+- 连接 redis: `redis-cli -h [hots] -p [port] -a [auth/password]`
+- 查看内存占用: `redis-cli [connnection params] info memory`
+- 查看不同数据库内最大 key 等统计信息: `redis-cli [connection params] -n [db index] --bigkeys`
+
+### 批量删除 redis key
+
+在 terminal 内执行 `redis-cli -h 127.0.0.1 -p 6379 keys "bull:q_perf:*" | xargs -r -t redis-cli -h 127.0.0.1 -p 6379 del`
+
+注意：
+
+- `|` 是管道符，需要在 shell 内执行
+- `xargs -r` 当 xargs 的输入为空的时候则停止 xargs，不用再去执行了
+- `xargs -t` 表示先打印命令，然后再执行

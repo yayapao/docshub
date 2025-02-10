@@ -1,0 +1,147 @@
+---
+id: kafka
+title: ''
+sidebar_label: Kafka
+---
+
+:::info
+
+Kafka is a distributed messaging system providing fast, highly scalable and redundant messaging through a pub-sub model.
+
+:::
+
+## 基础概念
+
+让我们先从[kafka-go](https://github.com/segmentio/kafka-go#connection-)的示例中一探究竟。
+
+```go
+conn, err := kafka.DialLeader(context.Background(), "tcp", "localhost:9092", topic, partition)
+```
+
+不难看出，新建一个基本的 kafka client 实例需要**协议、地址、topic name 以及 partition 数量**，并确定当前的 Leader。**Leader 用于收发数据，并且作为其他 broker 冗余（replication）的母本。**
+
+因此我们有必要掌握 Kafka 内的核心概念：
+
+- topic：作为 Kafka 内的顶级概念，无论是生产还是消费都需要指定 topic，一个 topic 代表一个消息队列
+- partition：**为了保证扩展性，Kafka 会从逻辑上将一个 topic 分成多个 partition。**每次写入 topic 内的 message 会按照策略被分配到指定 partition。**每个 partition 内维护 message 的唯一 ID，即 offset**
+- broker：无论是 topic 还是 partition 都是逻辑概念，最终都需要将数据存储到物理磁盘。Kafka 作为一个分布式集群服务，broker 是每个集群的的节点（物理机/集群），也是 message 最终写入磁盘的位置。**为了保证高可用，需要将多个 partition 写到不同的 broker 上**
+
+![kafka-base](/img/database/kafka_base.svg)
+
+1. Kafka 对生产者不做限制，只需指定 topic 等基础信息即可；
+2. message 写入 topic 后，会将其分配到各个 partition，每个 partition 会管理自己的 offset（横向拓展），即通过 topic、partition 以及 offset 能够唯一确定指定 message；
+3. Broker 是集群内的节点，用来存储 message，每个 broker 内均匀分布以 parition 为维度的数据（高可用）；由 Zookeeper 推选出 Broker Leader，它会管理 message 的读写，同时其他 broker （replication）向其进行同步，保证数据一致性；
+4. 在 kafka 内支持两种消费模式：
+
+- 队列模式：即每个 message 被均匀分配到不同的 consumer，这样消费效率很高
+- pub/sub 模式：即订阅模式，每个 message 会被分配给所有已订阅该 topic 的 consumer，一条消息能被消费多次
+
+5. kafka 内提出了 consumer group 的概念，用来综合使用以上两种消费模式，即一条 message 会被均匀分配到 consumer group 内（pub/sub），在其内部会以队列模式快速对消息进行消费，我们需要在初始化 kafka client 时，指定 group name;
+6. kafka 会保证每个 partition 内的消息顺序，但是并不能保证全局的消息顺序；
+7. consumer 实例与 partition 数量的关系：
+
+- consumers == partitions，则一个消费者对应一个 partition
+- consumers > partitions，则会存在 consumer 空跑
+- consumers < partitions，则一个 consumer 节点消费多个 partition 的情况
+
+**在 Kafka 内，什么时候清除 message ?**
+
+从某种程度上，我们可以将 kafka 队列服务看作一个日志服务，partition 不会在指定时间之前删除消息。比如，你设置消息 7 天有效期，那么在这段时间内任意时刻，都可以通过 consumer 对消息进行消费，7 天后会自动删除。并且 partition 会记录每个 consumer group 的最新 offset。
+
+## 监测 Kafka 运行情况
+
+通过 Docker 进入控制台后，查看 Topic 相关信息
+
+```bash
+cd usr/bin
+
+# 查看 topics
+kafka-topics --zookeeper sentry_zookeeper:2181 --list
+
+# 查看 topic 详细信息
+kafka-topics --zookeeper sentry_zookeeper:2181 --describe --topic ingest-events
+
+# 查看 kafka topic 的堆积情况。-time -1 表示最新的时间，--offset 1 表示最新的 offset, awk 用于计算总和
+kafka-run-class kafka.tools.GetOffsetShell --broker-list sentry_kafka:9092 --topic ingest-events --time -1 --offsets 1 | awk -F ":" '{sum += $3} END {print sum}'
+
+# 查看 topic 内容
+kafka-console-consumer --bootstrap-server sentry_kafka:9092 --topic ingest-events --from-beginning
+
+# 创建一个 partition 为 1 且名为 mytopic 的 topic
+kafka-topics --zookeeper sentry_zookeeper:2181 --create --replication-factor 1 --partitions 1 --topic mytopic
+```
+
+查看 consumer-groups 相关信息
+
+```bash
+# 查看 groups
+kafka-consumer-groups --bootstrap-server sentry_kafka:9092 --list
+
+# 查看 group 详情
+kafka-consumer-groups --bootstrap-server sentry_kafka:9092 --describe --group ingest-consumer
+```
+
+### 手动提交 offsets vs 自动提交 offsets
+
+以下选自 sentry 关于 kafka consumer 的实现 `class BatchingKafkaConsumer`，它是手动提交 offset。
+
+- Messages are processed locally (e.g. not written to an external datastore!) as they are read from Kafka, then added to an in-memory batch
+- Batches are flushed based on the batch size or time sent since the first message in the batch was received (e.g. "500 items or 1000ms")
+- Kafka offsets are not automatically committed! If they were, offsets might be committed for messages that are still sitting in an in-memory batch, or they might _not_ be committed when messages are sent to an external datastore right before the consumer process dies
+- Instead, when a batch of items is flushed they are written to the external datastore and then Kafka offsets are immediately committed (in the same thread/loop)
+- Users need only provide an implementation of what it means to process a raw message and flush a batch of events
+- Supports an optional "dead letter topic" where messages that raise an exception during `process_message` are sent so as not to block the pipeline.
+
+### Consumer Group
+
+消费组(Consumer Group)是消费者的集合，它的出现可以解决：
+
+- 相比单节点消费的压力，可以扩容机器，因为现在消息交付以 group 为概念
+- 同一份 topic 可以被不同 consumer group 分别消费，维持各自的 offset
+
+![consumer-group](/img/database/consumer-group.png)
+
+:::warning
+
+- 一条消息只能被消费组内一个消费者实例消费
+- 一个 partition 只能被组内一个消费者实例负责(一对一)
+- 一个消费者实例能够负责多个 partition(一对多)
+
+:::
+
+消费者组是一种**广播模式**。一个消费者组内对 topic 的消费不会影响其他消费者组。
+
+**kafka 如何维护不同 group 提交的 offset？**
+
+如果一个 topic 被多个 consumer group 同时消费，直接将各个分组的 offset commit 到 Broker 服务器会产生很大的负载。因此 kafka 将 \_consumer_offsets 设定拥有 50 个分区，从而将其均匀分布到不同机器上，通过负载均衡来将不同的 commit offsets 请求交给不同的机器处理。
+
+### 分配策略
+
+分配策略要解决两个问题：
+
+1. partition 和 consumer 的关系？
+2. 当 topic 内一条数据到达时，应该交付给哪个 partition？
+
+分配策略：
+
+- range 默认策略，基于 topic。将 partition 排序后，依次指定。
+- roundrobin 策略，会将消费组内所有消费者以及消费者所订阅的所有 topic 的 partition 按照字典序排序，然后通过轮询算法逐个将分区以此分配给每个消费者。
+
+### partition
+
+**为什么一个 partition 只能被一个消费者实例消费？**
+
+因为必须保证 partition 下消息消费的顺序。如果多个消费者读取同一个 partition 消息，那么肯定会存在不同的 offset，这样会造成消息被重复处理，与主动推送无异了。
+
+因此，当出现消息积压时，当扩容超过 partition 个数时，多余的机器在空跑，并不会被分配到 partition。
+
+**Kafka 如何保证 topic 内的一条消息仅被一个消费者实例消费？**
+
+得益于 kafka 的 **partition 分配策略** 和 **offset 管理**
+
+**partition reblancing 的场景**
+
+- 有消费者退出/加入
+- 订阅 topic 的 partition 发生变化
+
+Rebalance 给消费者群组带来了高可用性与伸缩性，但是在 Rebalance 期间，消费者无法读取消息，整个群组一小段时间不可用，而且当分区被重新分配给另一个消费者时，消费者当前的读取状态会丢失

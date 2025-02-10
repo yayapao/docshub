@@ -84,7 +84,7 @@ deploy() {
 main() {
     echo -e "Welcome to kk-cron basher! Version is $VERSION\n"
     echo "COMMANDS:
-    1. Build - build a Go app.
+    1. Build - build a Docusaurus app.
     2. Send - send the build result to server.
     3. Deploy - deploy the app on server.
     4. Update bash/rls.sh - update bash/rls.sh and upload to server.

@@ -113,8 +113,9 @@ export const themeConfigs: Config['themeConfig'] = {
       nodes: [
         {
           host: 'docs.joyjoy.cc',
-          port: 8108,
-          protocol: 'http',
+          port: 443,
+          protocol: 'https',
+          path: '/typesense',
         },
       ],
       apiKey: 'joyjoy',

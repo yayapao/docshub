@@ -4,6 +4,7 @@ import projectSiderbarsConfig from './projects'
 import { genSiderItem } from './utils'
 import appliedPracticeConfig from './applied-practice'
 import infrastructureConfig from './infrastructure'
+import databaseConfig from './database'
 
 const sidebarConfig: SidebarsConfig = {
   interviewSiderbar: [
@@ -61,6 +62,7 @@ const sidebarConfig: SidebarsConfig = {
   ...programmingLanguageConfig,
   ...projectSiderbarsConfig,
   ...appliedPracticeConfig,
+  ...databaseConfig,
 }
 
 export default sidebarConfig

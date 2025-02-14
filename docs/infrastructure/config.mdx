@@ -118,13 +118,45 @@ IdentityFile ~/.ssh/id_rsa
 
 选择左侧 `函数 -> 创建函数 -> Web 函数`，运行环境选择 `自定义镜像 -> 使用 ACR 中的镜像`，选择刚刚创建的镜像仓库，选择镜像版本，即可完成部署。
 
+## [阿里云]如何部署 Next.js？
+
+**Next.js 在 build 的时候，需要大量的 CPU 和内存，2c2g 的实例无法满足其计算资源。**
+
+因为，我们选择使用[函数计算-CAP](https://help.aliyun.com/zh/cap/getting-started/quickly-deploy-web-projects-to-function-compute-through-templates?spm=5176.fcnext.console-base_help.dexternal.20d578c8dnOTSP) 来部署 Next.js。
+
+1. 创建一个项目，在该项目下，可以创建多种服务，每个服务对应一个函数实例；
+2. 进入项目后，选择“新建服务 -> Web 服务”，之后根据项目来填写对应的表单；
+
+这里我们记录部署 Next.js 应用的关键点：
+
+- 运行环境选择 `Debian 10`
+- 启动命令填写 `node ./server.js`
+
+代码构建步骤如下：
+
+```bash
+# 在项目根目录下执行
+npm ci
+
+# 在项目根目录下执行
+npm run build
+
+# 将 public 文件夹拷贝至 .next/standalone/public
+cp -r public .next/standalone/public
+
+# 将 static 文件夹拷贝至 .next/standalone/.next/static，当前路径应为 .next
+cp -r static standalone/.next/static
+```
+
+- 代码包路径填写 `./.next/standalone`
+
 ## 基于 `scp` 进行文件拷贝
 
 scp 是 secure copy 的缩写，是 lunix 系统下基于 SSH 协议进行安全数据拷贝的命令，常用命令形式：
 
 ```bash
 # 将本地文件拷贝至服务器
-scp [file path] root@host:[server dir path]
+scp (file path) root@host:(server dir path)
 ```
 
 但是直接使用 `scp` 会需要命令行交互来输入密码，在编写脚本时没有优势，社区通过 `sshpass` 来解决（brew 出于对 SSH 的尊重并没有 public 版本），参考 [Installing SSHPASS](https://gist.github.com/arunoda/7790979) 来安装 sshpass 之后，我们可以通过如下来执行命令：

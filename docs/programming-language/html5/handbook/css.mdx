@@ -8,13 +8,14 @@ slug: css
 import { DocsHeader } from '/src/components/Layout/DocsHeader'
 import StickyPositionCase from '/src/docase/css/sticky'
 import FlexLayoutCase from '/src/docase/css/flex'
+import AnchorCase from '/src/docase/css/anchor'
 
 <DocsHeader
   title="CSS3"
-  description="如何为你的应用化化妆？"
+  description="CSS 现在真的很强？"
   tags={['HTML5']}
   links={[]}
-/>{' '}
+/>
 
 ## BFC
 
@@ -100,8 +101,6 @@ BFC 有点类似对象的封装特性，具有 BFC 特性的元素可以看作�
 
 <StickyPositionCase />
 
-<!-- -->
-
 ### CSS 弹性盒子布局
 
 通过设置父元素 `display: flex`，将容器声明为弹性盒子，其子元素成为**弹性子项（flex items）**
@@ -162,8 +161,6 @@ BFC 有点类似对象的封装特性，具有 BFC 特性的元素可以看作�
 **剩余空间 = 父容器空间 - 子元素占据空间之和**，通过父元素的 `flex-direction` 来指示是以 `width` 还是 `height` 作为基准。
 
 <FlexLayoutCase />
-
-<!-- -->
 
 #### grid 布局
 
@@ -483,36 +480,4 @@ div {
   </div>
   <div class="second"></div>
 </body>
-```
-
-## 文字样式相关
-
-`text-overflow` 属性确定如何向用户发出未显示的溢出内容信号，包含三个属性值，这个属性只对那些在块级元素溢出的内容有效，但是必须要与块级元素内联(inline)方向一致
-
-```css
-p {
-  /**
-   * 确定如何向用户展示溢出样式
-   * ellipsis: 用 ... 省略号来代替被截断的文本
-   * <string>: 通过自定义字段来代替被截断的文本。如果空间太小到连省略号都容纳不下，那么这个字符串也会被截断
-   * clip: 默认值，在内容区域的极限初裁剪文本
-   */
-  text-overflow: clip;
-}
-```
-
-`white-space` 属性用于确定如何处理元素内的空白（Tab，Space，Enter）
-
-```css
-p {
-  /**
-   * 用于确定如何处理元素内的空白（Tab，Space，Enter）
-   * pre-line: 所有空格、制表符合并成一个空格，回车不变，文本换行
-   * pre-wrap: 所有空白保留且生效，文本换行
-   * pre: 所有空白保留且生效，文本不换行
-   * nowrap: 所有的空白都合成一个空格，不换行
-   * normal: 默认值，所有的空白都合成一个空格，自动换行，这意味着回车等会失效
-   */
-  white-space: normal;
-}
 ```

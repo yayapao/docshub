@@ -132,6 +132,59 @@ export default function ThemeSwitch() {
 }
 ```
 
+## 如何理解 Next.js 内的缓存机制？
+
+本回答基于 [Building Your Application: Caching | Next.js](https://nextjs.org/docs/app/building-your-application/caching)
+
+### 缓存请求
+
+在 Next.js 内，通过重写 `fetch` 方法，**来默认支持缓存**。
+
+```tsx title="app/page.tsx"
+export default async function HomePage() {
+  const data = await fetch('https://.../data')
+  return <div>{data}</div>
+}
+```
+
+:::warning
+
+- 默认支持 GET 请求的缓存；也推荐仅针对 GET 请求进行缓存；
+
+:::
+
+### 缓存数据
+
+同样，Next.js 通过重写 `fetch` 方法，来默认支持数据缓存。我们可以通过 `cache` 和 `next.revalidate` 来控制缓存策略。
+
+```tsx
+fetch('https://api.example.com/data', {
+  cache: 'force-cache', // 默认启用缓存
+  next: { revalidate: 3600 }, // 每1小时重新验证
+})
+```
+
+cache 支持的值：
+
+- `force-cache`：强制缓存，每次请求都会从缓存中获取数据；
+- `no-store`：不缓存，每次请求都会重新获取数据；
+
+next.revalidate 支持的值：
+
+- revalidate 的值，表示缓存过期时间，单位为秒；
+- revalidatePath 的值，表示缓存路径；
+- revalidateTag 的值，表示缓存标签；
+
+### 使用 `cache` 方法手动缓存
+
+Next.js 仅针对 `fetch` 方法支持缓存，如果需要缓存其他方法，比如 `axios` 或者一些数据操作，可以通过 `cache()` 方法手动实现。
+
+```tsx
+const data = await cache(async () => {
+  // 执行数据操作
+})
+```
+
 ## 如何优雅处理 SSR 和 CSR 样式同步问题？
 
 问题的根源在于：**服务端渲染时，样式是同步加载的，而客户端渲染时，样式是异步加载的**。

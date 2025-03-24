@@ -1,0 +1,60 @@
+---
+id: shadcn
+title: ''
+sidebar_label: Shadcn UI
+---
+
+import { DocsHeader } from '/src/components/Layout/DocsHeader'
+
+<DocsHeader
+  title="Shadcn UI"
+  description="The React UI Library for the React Application."
+  tags={['react']}
+  links={[
+    {
+      label: 'Shadcn UI',
+      link: 'https://ui.shadcn.com/',
+    },
+  ]}
+/>
+
+Shadcn UI 是一个基于 Tailwind CSS 的 React UI 库，提供了丰富的组件，可以快速构建现代化的 Web 应用。
+
+安装参考 [Next.js - shadcn/ui](https://ui.shadcn.com/docs/installation/next) 这里我们将以 Next.js 为例，对组件的使用和封装进行说明。
+
+## Dropdown
+
+Popover 是一个用于显示弹窗的组件，通常用于显示更多的信息或选项。Dropdown 是 Popover 的一种特殊形式，通常用于显示下拉菜单。我们后面将以 Dropdown 为例，对组件的使用和封装进行说明。
+
+### 如何解决 Dropdown 和 Dialog 的使用冲突？
+
+冲突是指，当我们在 `DropdownMenuItem` 直接放置 `Dialog` ，并利用 `DialogTrigger` 触发 `Dialog` 时，会导致 `Dialog` 无法正常展示，会在屏幕上一闪而过。
+
+❌ 错误用法，形如：
+
+```tsx
+<DropdownMenuItem asChild>
+  <DialogTrigger asChild>
+    <Button variant="ghost">Open Dialog</Button>
+  </DialogTrigger>
+</DropdownMenuItem>
+```
+
+:::warning
+此时，在下拉菜单内点击按钮，会展示 Dialog ，但由于事件冒泡到 `DropdownMenuItem` ，会导致 Dialog 和下拉菜单同时关闭，导致 Dialog 无法正常展示。
+:::
+
+我尝试用 `useState` 或者 `DropdownMenuContent` 属性来控制其展示/隐藏，但是无法解决其根本问题。
+
+✅ 正确用法，形如：
+
+```tsx
+<DropdownMenuItem onClick={() => setDialogOpen(true)}>
+  Open Dialog
+</DropdownMenuItem>
+<Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+```
+
+我们不再在 Dialog 内设置触发器，而是利用 `DropdownMenuItem` 的 `onClick` 事件来触发 Dialog 的展示。
+
+**Dialog 类组件向我们展示了其灵活性，我们既可以将触发器设置在组件内部，也可以设置在组件外部。设置在内部时，我们提升了封装性；设置在外部则获取灵活性。需要根据场景来灵活使用！**

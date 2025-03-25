@@ -58,3 +58,62 @@ Popover 是一个用于显示弹窗的组件，通常用于显示更多的信息
 我们不再在 Dialog 内设置触发器，而是利用 `DropdownMenuItem` 的 `onClick` 事件来触发 Dialog 的展示。
 
 **Dialog 类组件向我们展示了其灵活性，我们既可以将触发器设置在组件内部，也可以设置在组件外部。设置在内部时，我们提升了封装性；设置在外部则获取灵活性。需要根据场景来灵活使用！**
+
+## Form
+
+### 如何打印 Form 处理过程中的错误？
+
+在使用 Form 组件时，经常会有一些隐晦的错误，Form 进行静默失败处理，我们很难定位到问题。
+
+参考下面这个例子，当我们定义了 `id` 字段，但是并没有设置其默认值，也没有声明 `id` 为可选，那么当我们在表单提交时，实际由于 ID 验证失败，表单会提交失败，但是由于 FormField 组件的静默处理，我们很难发现这个问题。
+
+```tsx
+const formSchema = z.object({
+  id: z.number(),
+  cluster_id: z.number(),
+})
+
+export const FormExample = () => {
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    // 注意，我们在这里并没有设置 ID 的值
+    defaultValues: {
+      cluster_id: '',
+    },
+  })
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)}>
+        {/* 表单项目，没有ID的输入框 */}
+      </form>
+    </Form>
+  )
+}
+```
+
+解决方案，一方面，我们要规避未定义的表单项，为其设置默认值，或者声明其为可选。另一方面，我们可以在表单提交时，打印出表单的错误信息，以便于我们进行调试。
+
+```tsx
+const formSchema = z.object({
+  id: z.number().optional(),
+  //...
+})
+
+export const FormExample = () => {
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      id: '', // 设置默认值
+      cluster_id: '',
+    },
+  })
+
+  return (
+    <Form {...form}>
+      {/* 打印表单错误 */}
+      <form onSubmit={form.handleSubmit(onSubmit, console.log)}></form>
+    </Form>
+  )
+}
+```

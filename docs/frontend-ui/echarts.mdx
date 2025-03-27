@@ -94,3 +94,61 @@ const YaPolyline: React.FC<YaPolylineEchartsProps> = (props) => {
 ```
 
 如上，在 `onChartReady` 内，我们通过 `instance` 获取到的配置，时初始化的配置，即空数据。此时真实数据还没有加载，因此我们需要在 `useEffect` 内，根据真实数据来动态设置 `group` 属性。
+
+## 如何实现自定义的图例效果？
+
+ECharts 的图例效果是默认的，如果需要自定义图例效果，需要一个 series 列表，当点击列表项目时，调用 `chartInstance.setOption` 来实现图例的切换。
+
+当数据准备就绪后，生成图例数据，图例数据以 `{[name]: boolean}` 的格式存储
+
+```tsx
+const [legendShow, setLegendShow] = useState<Record<string, boolean>>({})
+
+useEffect(() => {
+  if (data) {
+    const temp: any = {}
+    data.forEach((item: any) => {
+      temp[item.name] = true
+    })
+    setLegendShow(temp)
+  }
+}, [data])
+```
+
+根据需求，自定义渲染图例组件。通过 `chartRef.current.setOption({ legend: { selected: temp } })` 来控制线的显示/隐藏。实际上是调用了原 echart 的图例组件的 `select` 方法。
+
+```tsx
+function ExampleLegend() {
+  // 控制线的显示/隐藏
+  const handleLegendChange = (name: string, checked: boolean) => {
+    const temp = {
+      ...legendShow,
+      [name]: checked,
+    }
+    setLegendShow(temp)
+    if (chartRef.current) {
+      chartRef.current.setOption({ legend: { selected: temp } })
+    }
+  }
+
+  return (
+    <div className="flex flex-row flex-wrap justify-between gap-2 overflow-y-auto max-h-[200px]">
+      {data.map((item: any) => (
+        <div
+          key={item.name}
+          className="flex items-center gap-1 text-sm min-w-[49%]"
+          onClick={() => handleLegendChange(item.name, !legendShow[item.name])}
+        >
+          <div
+            className="w-4 h-4 rounded-sm border border-gray-200 cursor-pointer hover:scale-110 transition-all duration-200"
+            style={{
+              backgroundColor: legendShow[item.name] ? item.color : '#fff',
+            }}
+          />
+          <div className="cursor-pointer hover:underline">{item.name}</div>
+        </div>
+      ))}
+    </div>
+  )
+}
+```

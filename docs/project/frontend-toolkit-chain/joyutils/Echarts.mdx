@@ -6,88 +6,73 @@ sidebar_label: ECharts
 
 ## genPieMockData
 
-`genPieMockData(names: string[])` 生成 ECharts 的饼图 series
+安装参考 [获取 ECharts - 入门篇 - 使用手册 - Apache ECharts](https://echarts.apache.org/handbook/zh/basics/download)，这里我们主要介绍 React 中使用 ECharts 的方案。
 
-**Arguments**
+## 如何实现多个 chart 联动？
 
-- `names string[]`: the Array maps series name
+:::warning
+联动是指，当一个图表展示 tooltips 时，其他图表也展示相同位置的 tooltips。
+:::
 
-**Returns**
+直接通过设置 `chartInstance.group` 属性，即可实现多个 chart 联动。
 
-- `Array`: [series-pie.data](https://echarts.apache.org/zh/option.html#series-pie.data)
-
-**Example**
-
-```js
-import { genPieMockData } from 'joyutils'
-const series = genPieMockData(['a', 'b', 'c'])
-// => [{ a: 100, b: 299, c: 500 }]
+```tsx
+const chartInstance = echarts.init(dom)
+chartInstance.group = 'group' // 设置为 null 则不参与联动
 ```
 
-## genLineMockData
+### 如何根据 Line 数量来动态设置/取消联动？
 
-`genLineMockData(names: string[], count: number)` 生成 ECharts 的折线图（柱状图）series
+联动意味着更大的内存开销，在极端情况下，会导致页面崩溃。因此我们通常需要根据 Line 数量来动态设置/取消联动。
 
-**Arguments**
+这个问题的难点在于，在什么时机来设置 `group` 属性。我们需要在真实数据加载完成后，再设置 `group` 属性。以避免在初始化时，chart 实例已经创建，而 group 属性无法更改的问题。
 
-- `names string[]`: the Array maps series name
-- `count: number`: the length of data
+```tsx
+const YaPolyline: React.FC<YaPolylineEchartsProps> = (props) => {
+  const { series = {} } = props
+  const chartRef = useRef<any>(null)
+  const valueRef = useRef<Record<string, any>>()
+  // Set initial value avoid xAxis[0] is undefined bug
+  const [chartOptions, setChartOptions] = useState<any>({
+    xAxis: { data: [] },
+    yAxis: { data: [] },
+    series: [],
+  })
+  let ins: any
 
-**Returns**
+  useEffect(() => {
+    if (typeof series === 'object') {
+      setChartOptions(initOptions)
+      valueRef.current = crtOptions
+    }
+  }, [series, opts])
 
-- `Array`: [series-line.data](https://echarts.apache.org/zh/option.html#series-line.data)
+  useEffect(() => {
+    if (typeof maxConnect === 'number') {
+      if (series && Array.isArray(series) && series.length > 10) {
+        ins.group = null
+      } else {
+        ins.group = 'monitor'
+      }
+    }
+  }, [series])
 
-**Example**
-
-```js
-import { genLineMockData } from 'joyutils'
-const series = genLineMockData(['a', 'b'], 2)
-// => [{ name: 'a', data: [100, 200] }, { name: 'b', data: [200, 300] }]
+  return (
+    <ReactEChartsCore
+      ref={chartRef}
+      echarts={echarts}
+      option={chartOptions}
+      notMerge={true}
+      lazyUpdate={true}
+      onChartReady={(instance) => {
+        ins = instance
+        if (onChartReady) {
+          onChartReady(instance, chartOptions)
+        }
+      }}
+    />
+  )
+}
 ```
 
-## genCategory
-
-`genCategory(count: number, step: number = 86400)` 生成横坐标的 category
-
-**Arguments**
-
-- `count: number`: the length of data
-- `step: number(Default 86400)`: step of time series
-
-**Returns**
-
-- `Array`: [xAxis.data](https://echarts.apache.org/zh/option.html#xAxis.data)
-
-**Example**
-
-```js
-import { genCategory } from 'joyutils'
-const category = genCategory(2)
-// => [1664519723735, 1664519810135]
-```
-
-## calcObjectPercent
-
-`calcObjectPercent(data, key, value, decimals)` 计算每项的值占比，常用于渲染饼图的 legend
-
-**Arguments**
-
-- `data: Record<string, any>[]`: pie series
-- `key: string`: alias of key name
-- `value: string`: alias of value name
-- `decimals: number`: preserved decimals
-
-**Returns**
-
-- `Array`: series data with `percent`, also see [series-pie.tooltip.formatter](https://echarts.apache.org/zh/option.html#series-pie.tooltip.formatter)
-
-**Example**
-
-```js
-import { calcObjectPercent } from 'joyutils'
-const series = [
-  { name: 'a', count: 100 },
-  { name: 'b', count: 200 },
-]
-const res = calcObjectPercent(series, 'name', 'count', 2)
-```
+如上，在 `onChartReady` 内，我们通过 `instance` 获取到的配置，时初始化的配置，即空数据。此时真实数据还没有加载，因此我们需要在 `useEffect` 内，根据真实数据来动态设置 `group` 属性。

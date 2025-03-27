@@ -134,3 +134,31 @@ function ExampleLegend() {
   )
 }
 ```
+
+## 如何解决 `inview` 和 `echarts` 的冲突？
+
+`inview` 是一个用于检测元素是否在视图中的库，当元素在视图时，会触发 `inview` 事件。
+
+现在存在一个场景，我们将多个 chart 放到同一个 `div` 中，当 `div` 在视图时，会触发 `inview` 事件，此时我们会去加载数据，当数据加载完成后，我们会去更新 `chart` 的配置，最终渲染出来。
+
+代码如下，在 Chart 内会根据 params 变化来动态请求数据，当数据加载完成后，会更新 chart 的配置。
+
+```tsx
+<InView threshold={0.1} triggerOnce>
+  {({ ref, inView }) => (
+    <div ref={ref} className="h-[220px]">
+      <Chart
+        params={{
+          ...p1,
+          ...p2,
+        }}
+        inView={inView}
+      />
+    </div>
+  )}
+</InView>
+```
+
+至此，一切运行完美。**但是当我们在 `ReactEChartsCore` 内使用 `onEvents` 时，会发现，只要鼠标滚动，都会触发 chart 的重新渲染，注意不会重新请求数据，只是重新渲染。**
+
+因此，在 `InView` 组件内不要使用 `onEvents` 事件。

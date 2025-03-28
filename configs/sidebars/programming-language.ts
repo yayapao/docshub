@@ -15,7 +15,6 @@ const htmlBrowserPrefix = 'programming-language/html5/browser'
 const jsHandbookPrefix = 'programming-language/js/handbook'
 const tsPrefix = 'programming-language/js/typescript'
 // react
-const reactSourcePrefix = 'programming-language/react/source'
 const reactPrefix = 'programming-language/react/react'
 const rnPrefix = 'programming-language/react/react-native'
 // python
@@ -112,21 +111,9 @@ const programmingLanguageConfig: SidebarsConfig = {
     },
     {
       type: 'category',
-      label: 'Source',
-      collapsed: true,
-      items: genSiderItem(reactSourcePrefix, ['guide', 'jsx', 'fiber']),
-    },
-    {
-      type: 'category',
       label: 'React',
       collapsed: true,
-      items: genSiderItem(reactPrefix, [
-        'concept',
-        'handbook',
-        'solution',
-        'libs',
-        'qa',
-      ]),
+      items: genSiderItem(reactPrefix, ['concept', 'handbook', 'libs', 'qa']),
     },
     {
       type: 'category',

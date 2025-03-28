@@ -113,7 +113,7 @@ const programmingLanguageConfig: SidebarsConfig = {
       type: 'category',
       label: 'React',
       collapsed: true,
-      items: genSiderItem(reactPrefix, ['concept', 'handbook', 'libs', 'qa']),
+      items: genSiderItem(reactPrefix, ['concept', 'handbook', 'qa']),
     },
     {
       type: 'category',

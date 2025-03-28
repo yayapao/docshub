@@ -177,6 +177,6 @@ function ExampleLegend() {
 </InView>
 ```
 
-至此，一切运行完美。**但是当我们在 `ReactEChartsCore` 内使用 `onEvents` 时，会发现，只要鼠标滚动，都会触发 chart 的重新渲染，注意不会重新请求数据，只是重新渲染。**
+至此，一切运行完美。**但是当我们在 `ReactEChartsCore` 内使用 `onEvents` 时，会发现只要鼠标滚动，都会触发 chart 的重新渲染，注意：不会重新请求数据，只是重新渲染！**
 
 因此，在 `InView` 组件内不要使用 `onEvents` 事件。

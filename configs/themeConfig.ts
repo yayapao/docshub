@@ -71,6 +71,18 @@ const navbarConfig: Config['themeConfig'] = {
       ],
     },
     {
+      label: 'Framework',
+      position: 'left',
+      items: [
+        {
+          label: 'UI Library',
+          to: '/docs/ui-library/shadcn',
+          // 设置高亮
+          activeBaseRegex: '/docs/ui-library',
+        },
+      ],
+    },
+    {
       className: 'header-showcase-link',
       position: 'right',
       to: 'showcase',

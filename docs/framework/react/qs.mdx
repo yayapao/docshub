@@ -12,24 +12,16 @@ import { DocsHeader } from '/src/components/Layout/DocsHeader'
   tags={['React']}
   links={[
     {
+      label: 'React 官网',
+      link: 'https://zh-hans.react.dev/learn',
+    },
+    {
       label: 'Why does useRef solve the problem of stale state?',
       link: 'https://stackoverflow.com/questions/66622967/why-does-useref-solve-the-problem-of-stale-state',
     },
     {
       label: 'Rename A File With JavaScript In The Browser',
       link: 'https://pqina.nl/blog/rename-a-file-with-javascript/',
-    },
-    {
-      label: 'React 官网',
-      link: 'https://react.dev/',
-    },
-    {
-      label: 'React Docs',
-      link: 'https://react.docschina.org/',
-    },
-    {
-      label: 'How to learn React',
-      link: 'https://www.robinwieruch.de/learning-react/',
     },
     {
       label: 'react-fiber-architecture',
@@ -101,3 +93,15 @@ reader.onload = function (e) {
 }
 reader.readAsDataURL(file)
 ```
+
+## 为什么不建议向列表组件的头部插入数据？
+
+在 React 内，向列表组件的头部和尾部插入数据，会产生比较明显的性能差异。原因在于 React 是依据 diff 算法来处理 DOM 更新。
+
+React 会维护一份虚拟 DOM 树，当数据发生变化时，React 会根据新数据生成新的虚拟 DOM 树，并将其与旧的虚拟 DOM 树进行比较，找出需要更新的节点，然后更新 DOM。这个过程叫做 **协调（Reconciliation）**。
+
+向尾部插入元素，React 会判定已存在的元素没有变化，只需要将新元素插入到尾部即可。
+
+向头部插入元素，整个列表元素向后移动，如果此时 key 为 index 或者其他非唯一性的值，那么会导致整个列表重新渲染。
+
+**因为，对于列表组件，如果我们考虑排序，或者表单的增删改，那么 key 必须唯一，且不建议向头部插入数据。**

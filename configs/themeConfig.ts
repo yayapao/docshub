@@ -80,6 +80,18 @@ const navbarConfig: Config['themeConfig'] = {
           // 设置高亮
           activeBaseRegex: '/docs/ui-library',
         },
+        {
+          label: 'React',
+          to: '/docs/framework/react/qs',
+          // 设置高亮
+          activeBaseRegex: '/docs/framework/react',
+        },
+        {
+          label: 'Next.js',
+          to: '/docs/framework/nextjs/qs',
+          // 设置高亮
+          activeBaseRegex: '/docs/framework/nextjs',
+        },
       ],
     },
     {

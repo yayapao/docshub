@@ -106,16 +106,6 @@ const programmingLanguageConfig: SidebarsConfig = {
   ],
   reactProgrammingSidbar: [
     {
-      type: 'doc',
-      id: 'programming-language/react/entry',
-    },
-    {
-      type: 'category',
-      label: 'React',
-      collapsed: true,
-      items: genSiderItem(reactPrefix, ['concept', 'handbook', 'qa']),
-    },
-    {
       type: 'category',
       label: 'ReactNative',
       collapsed: true,

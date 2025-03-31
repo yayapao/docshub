@@ -9,7 +9,7 @@ const uiLibrarySiderbarsConfig: SidebarsConfig = {
       type: 'category',
       label: 'UI Library',
       collapsed: false,
-      items: genSiderItem(uiLibraryPrefix, ['shadcn', 'echarts']),
+      items: genSiderItem(uiLibraryPrefix, ['shadcn', 'echarts', 'storybook']),
     },
   ],
 }

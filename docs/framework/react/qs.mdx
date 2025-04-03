@@ -105,3 +105,49 @@ React 会维护一份虚拟 DOM 树，当数据发生变化时，React 会根据
 向头部插入元素，整个列表元素向后移动，如果此时 key 为 index 或者其他非唯一性的值，那么会导致整个列表重新渲染。
 
 **因为，对于列表组件，如果我们考虑排序，或者表单的增删改，那么 key 必须唯一，且不建议向头部插入数据。**
+
+## 为什么不推荐在 useEffect 内使用 fetch 请求数据？
+
+React 内，在 useEffect 内使用 fetch 手动请求数据，会存在以下问题：
+
+- [竞态条件](#如何理解竞态条件)：当存在多个 useEffect 请求同一个资源时，或者同一个依赖项被多次改变，可能会引起竞态条件，导致最终数据不一致；
+
+:::warning
+上诉问题，我们在 React 内都可以通过 `@tanstack/react-query` 来解决。因此不必自己深究其对应的解决方案！
+:::
+
+### 如何理解竞态条件？
+
+**竞态条件（Race Condition）**通常出现在多个异步操作同时进行，这些操作的完成顺序不可预测，从而导致结果不可确定。
+
+在 React 内，竞态条件通常出现 useEffect + fetch 的场景，我们应该尽量避免。举个例子：
+
+```tsx
+export default function App() {
+  const [id, setId] = useState(1)
+  const [data, setData] = useState(null)
+
+  useEffect(() => {
+    fetch(`https://api.example.com/data?id=${id}`)
+      .then((res) => res.json())
+      .then((data) => setData(data))
+  }, [id])
+
+  return (
+    <div>
+      <Select onChange={setId} />
+      {data}
+    </div>
+  )
+}
+```
+
+当我们在 Select 内 ID 时，会触发 useEffect 内的 fetch 请求，从而导致数据发生变化。假设我们从 A 切换到 B，依次发起 requestA 和 requestB 请求。一个可能的现象：
+
+- 如果 requestB 先于 requestA 返回（可能由于网络原因等等）
+- requestB 完成，页面展示 B 数据
+- requestA 完成，页面数据被替换为 A 数据
+
+此时，页面会展示 A 数据，而不是我们期望的 B 数据。这是一个明显的竞态条件。
+
+**通常处理竞态条件的解决方案：使用取消令牌（Cancel Token）来取消上一次的请求。**

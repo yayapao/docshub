@@ -7,7 +7,7 @@ const reactConfig: SidebarsConfig = {
       type: 'category',
       label: 'React',
       collapsed: false,
-      items: genSiderItem('framework/react', ['qs', 'source-code']),
+      items: genSiderItem('framework/react', ['qs', 'fiber', 'source-code']),
     },
   ],
 }

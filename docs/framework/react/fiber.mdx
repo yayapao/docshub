@@ -130,7 +130,11 @@ fiber 实例是一个 JavaScript 对象，它包含组件的所有信息、输�
 
 - `type`，用来描述其对应的组件，对于宿主组件（比如 div、span、button 等），它是一个字符串，对于 React 组件（即复合组件），它是一个对象
 - `key`，用来标识 fiber 实例，它是一个字符串，用于在组件更新时，React 能够快速定位到需要更新的组件
-- `child` 和 `sibling`，用来指向其他 fiber 实例，描述 fiber 的递归树结构。
+- `child` 和 `sibling`，用来指向其他 fiber 实例，描述 fiber 的递归树结构
+- `pendingProps`，表示组件的输入，即组件的 props，在执行前。如果和 `memoizedProps` 相同，则表示组件没有更新
+- `memoizedProps`，表示组件的输出，即组件的 props，在执行后
+- `pendingWorkPriority`，表示组件的优先级，数值越大优先级越低
+- `alternate`，用来保存 fiber 的指针，在 fiber 架构中，存在两个 fiber 树实例：`current` 树和 `workInProgress` 树。`current` 树是当前正在执行的树，`workInProgress` 树是正在构建的树。在 `workInProgress` 树中，`alternate` 指针指向 `current` 树的 fiber 实例，在 `current` 树中，`alternate` 指针指向 `workInProgress` 树的 fiber 实例。
 
 ## 为什么 React 不使用 generator 实现代数效应？
 

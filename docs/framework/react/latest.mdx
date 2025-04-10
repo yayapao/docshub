@@ -1,0 +1,20 @@
+---
+id: latest
+title: ''
+sidebar_label: 'React Latest'
+---
+
+import { DocsHeader } from '/src/components/Layout/DocsHeader'
+
+<DocsHeader
+  title="React Latest"
+  description="React 最前沿的特性。"
+  tags={['React']}
+  links={[]}
+/>
+
+### React19 不再需要手动 useMemo/useCallback
+
+在 React 19 之前，我们使用 `useMemo` 和 `useCallback` 来优化组件的性能。以减少 re-render 的次数和函数创建的次数。
+
+**在 React 19 中，这些事情将由 React 编译器来完成。**

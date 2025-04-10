@@ -117,3 +117,30 @@ export const FormExample = () => {
   )
 }
 ```
+
+### 在 Form 内如何使用类 Switch 组件？
+
+在 Form 内使用 Switch 组件时，我们需要手动设置 `checked` 属性和 `onCheckedChange` 事件。
+
+```tsx
+<FormField
+  control={form.control}
+  name="cacheClean"
+  render={({ field }) => (
+    <FormItem>
+      <FormControl>
+        <div className="flex flex-row items-center gap-x-2">
+          <FormLabel>clean cache</FormLabel>
+          <Switch
+            {...field}
+            checked={field.value}
+            onCheckedChange={(value) => {
+              field.onChange(value)
+            }}
+          />
+        </div>
+      </FormControl>
+    </FormItem>
+  )}
+/>
+```

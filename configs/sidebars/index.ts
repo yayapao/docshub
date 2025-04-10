@@ -6,6 +6,7 @@ import appliedPracticeConfig from './applied-practice'
 import databaseConfig from './database'
 import uiLibrarySiderbarsConfig from './ui-library'
 import { reactConfig as reactFrameworkConfig } from './framework'
+import { developmentSiderbarsConfig } from './development'
 
 const sidebarConfig: SidebarsConfig = {
   interviewSiderbar: [
@@ -47,6 +48,7 @@ const sidebarConfig: SidebarsConfig = {
   ...databaseConfig,
   ...uiLibrarySiderbarsConfig,
   ...reactFrameworkConfig,
+  ...developmentSiderbarsConfig,
 }
 
 export default sidebarConfig

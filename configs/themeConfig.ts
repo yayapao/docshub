@@ -16,9 +16,9 @@ const navbarConfig: Config['themeConfig'] = {
       position: 'left',
       items: [
         {
-          label: 'Before development',
-          to: '/docs/before-dev/frontend-handbook/entry',
-          activeBaseRegex: '/docs/before-dev',
+          label: 'Brefore...',
+          to: '/docs/development/faq',
+          activeBaseRegex: '/docs/development',
         },
         {
           label: 'JavaScript',
@@ -56,12 +56,6 @@ const navbarConfig: Config['themeConfig'] = {
       label: 'CAPACITY',
       position: 'left',
       items: [
-        {
-          label: 'Infrastructure',
-          to: '/docs/infrastructure/config',
-          // 设置高亮
-          activeBaseRegex: '/docs/infrastructure',
-        },
         {
           label: 'Database',
           to: '/docs/database/mysql',

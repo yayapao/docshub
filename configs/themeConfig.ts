@@ -12,7 +12,7 @@ const navbarConfig: Config['themeConfig'] = {
   items: [
     { to: '/blog', label: 'BLOG', position: 'left' },
     {
-      label: 'PROGRAMMING',
+      label: 'Development',
       position: 'left',
       items: [
         {

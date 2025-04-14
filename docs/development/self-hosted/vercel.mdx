@@ -57,4 +57,16 @@ Vercel 是一个前端开发者的平台，能够快速部署 Severless 函数�
 
 如果需要阻止 vercel 的默认行为，可以在项目根目录下新建 `vercel.json` 配置文件，并为其配置 [Git Configuration | Vercel Docs](https://vercel.com/docs/concepts/projects/project-configuration/git-configuration)
 
+比如，忽略分支名以 dev 开头的自动部署，可以配置如下：
+
+```json
+{
+  "git": {
+    "deploymentEnabled": {
+      "dev-*": false
+    }
+  }
+}
+```
+
 除此之外，还可以配置 [github.slient](https://vercel.com/docs/concepts/projects/project-configuration/git-configuration#github.silent) 来阻止 Vercel 在 Github 上的评论。

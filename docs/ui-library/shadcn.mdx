@@ -92,7 +92,7 @@ export const FormExample = () => {
 }
 ```
 
-解决方案，一方面，我们要规避未定义的表单项，为其设置默认值，或者声明其为可选。另一方面，我们可以在表单提交时，打印出表单的错误信息，以便于我们进行调试。
+解决方案，**一方面，我们要规避未定义的表单项，为其设置默认值，或者声明其为可选**。另一方面，我们可以在表单提交时，打印出表单的错误信息，以便于我们进行调试。
 
 ```tsx
 const formSchema = z.object({
@@ -133,9 +133,9 @@ export const FormExample = () => {
           <FormLabel>clean cache</FormLabel>
           <Switch
             {...field}
-            checked={field.value}
+            checked={field.value === 'Y'}
             onCheckedChange={(value) => {
-              field.onChange(value)
+              field.onChange(value === 'Y' ? 'N' : 'Y')
             }}
           />
         </div>

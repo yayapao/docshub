@@ -59,6 +59,39 @@ Popover 是一个用于显示弹窗的组件，通常用于显示更多的信息
 
 **Dialog 类组件向我们展示了其灵活性，我们既可以将触发器设置在组件内部，也可以设置在组件外部。设置在内部时，我们提升了封装性；设置在外部则获取灵活性。需要根据场景来灵活使用！**
 
+### 为什么不建议组合使用 CommandItem 和 Checkbox？
+
+CommandItem 组件是用于显示命令的组件，通常用于显示下拉菜单。Checkbox 组件是用于显示复选框的组件，通常用于显示多选选项。
+
+CommandItem 组件的样式会覆盖 Checkbox 组件的样式，导致 Checkbox 组件的样式无法正常显示。具体来说是 Icon 的位置不对。**而 Checkbox 组件没有提供直接更改 Icon 样式/className 的属性。**
+
+我们在开发第三方组件时，如果不希望直接修改 shadcn/ui 的 Checkbox 源码，则更推荐自己实现一个类似的组件。
+
+```tsx
+function Example() {
+  const isSelected = selectedValues.includes(option.value)
+  return (
+    <CommandItem
+      key={option.value}
+      onSelect={() => toggleOption(option.value)}
+      className="cursor-pointer"
+    >
+      <div
+        className={cn(
+          'mr-1 size-4 flex items-center justify-center rounded-[4px] border border-primary shadow-xs transition-shadow outline-none',
+          isSelected
+            ? 'bg-primary text-primary-foreground border-primary'
+            : 'opacity-50 [&_svg]:invisible'
+        )}
+      >
+        <CheckIcon className="size-3.5 text-white dark:text-black" />
+      </div>
+      <span>{option.label}</span>
+    </CommandItem>
+  )
+}
+```
+
 ## Form
 
 ### 如何打印 Form 处理过程中的错误？

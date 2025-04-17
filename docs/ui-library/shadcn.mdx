@@ -177,3 +177,58 @@ export const FormExample = () => {
   )}
 />
 ```
+
+### 如何使用表单验证功能？
+
+在 Form 内使用表单验证功能时，我们需要使用 `zod` 库来**定义表单的验证规则。**
+
+```tsx
+import { z } from 'zod'
+
+const formSchema = z.object({
+  type: z.string().min(1, { message: 'type is required' }),
+  name: z.string().min(1, { message: 'name should not be empty' }),
+  enabled: z.string().optional().default('N'),
+})
+```
+
+:::warning
+定义 formSchema 时，字段默认不能为空，即 `required` 为 `true`。可以通过 `optional` 来设置字段为可选。
+:::
+
+在开发 `FormField` 时，需要使用 `FormMessage` 来展示错误信息。
+
+```tsx
+<FormField
+  control={form.control}
+  name="type"
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel>
+        type
+        <span className="text-red-500">*</span>
+      </FormLabel>
+      <FormControl>
+        <Input autoFocus {...field} value={field.value || ''} />
+      </FormControl>
+      <FormMessage />
+    </FormItem>
+  )}
+/>
+```
+
+最后，还需要在 `submit` 方法内，主动调用 `form.trigger()` 方法，来触发表单的验证。
+
+:::warning
+`form.trigger()` 方法是一个异步方法，需要等待其返回结果！
+:::
+
+```tsx
+const onSubmit = async (data: z.infer<typeof formSchema>) => {
+  const isValid = await form.trigger()
+  if (!isValid) {
+    return
+  }
+  console.log(data)
+}
+```

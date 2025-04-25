@@ -10,8 +10,12 @@ import { CommonTable } from '/src/components/material/Table'
 <DocsHeader
   title="Storybook"
   description="Build UIs without the grunt work."
-  tags={['React', 'Storybook']}
+  tags={['React', 'Next.js']}
   links={[
+    {
+      label: 'Storybook + Next.js',
+      link: 'https://storybook.js.org/docs/get-started/frameworks/nextjs?renderer=react#run-the-setup-wizard',
+    },
     {
       label: 'How to write stories',
       link: 'https://storybook.js.org/docs/react/writing-stories/introduction',
@@ -27,11 +31,15 @@ import { CommonTable } from '/src/components/material/Table'
   ]}
 />
 
-## StoryBook
+:::info
+Build UIs without the grunt work。
+:::
 
-> Build UIs without the grunt work。
+StoryBook 是一个用于前端构建 UI 组件/页面的工作空间，能够帮助我们开发、测试、文档化开发内容，它适用于任意流行前端框架，我们将用其来组织 React 组件的开发/文档工作。
 
-StoryBook 是一个用于前端构建 UI 组件/页面的工作空间，能够帮助我们开发、测试、文档化开发内容，它适用于任意流行前端框架，这里我们基于 Storybook + React + pnpm(monorepo) + vite 进行介绍。
+:::warning
+[kkui-storybook](https://github.com/yayapao/kkui-storybook) 是基于 shadcn/ui 实现的组件库，服务于 Next.js 项目，本文档就忠实记录其 StoryBook 的配置和使用。
+:::
 
 在 StoryBook 内，将产物分为 stories 和 docs 两大类：
 

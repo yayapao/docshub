@@ -22,6 +22,134 @@ Shadcn UI 是一个基于 Tailwind CSS 的 React UI 库，提供了丰富的组�
 
 安装参考 [Next.js - shadcn/ui](https://ui.shadcn.com/docs/installation/next) 这里我们将以 Next.js 为例，对组件的使用和封装进行说明。
 
+## Dialog
+
+### 如何解决 Dialog 和 Dropdown 类组件 Input 的聚焦冲突？
+
+:::warning
+Dropdown 类组件，如 `DropdownMenu` 、`Popover` 以及 `Select` 等，点击下拉展示组件。现在我们讨论的是在 Dropdown 类组件内置 Input 组件时，Dialog 展示时无法聚焦到 Input 框的问题。
+:::
+
+参考代码结构如下：
+
+```tsx
+<Dialog open={isOpen} onOpenChange={onOpenChange}>
+  <DialogContent>
+    <div className={cn('w-[620px]', className)}>
+      <Select
+        onValueChange={field.onChange}
+        value={defaultValue?.toString() || field.value.toString()}
+      >
+        <SelectTrigger>
+          <SelectValue placeholder="Select a fruit" />
+        </SelectTrigger>
+        <SelectContent>
+          <Input placeholder="Search..." />
+          <SelectItem value="apple">Apple</SelectItem>
+          <SelectItem value="banana">Banana</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+  </DialogContent>
+</Dialog>
+```
+
+我们在 `SelectContent` 内放置了 `Input` 组件，来实现搜索功能。但是当我们打开 Dialog 时，会发现无法聚焦到 `Input` 组件，导致无法正常输入。
+
+原因在于: **Dialog 的焦点陷阱和 Select 的 Portal 渲染机制 的冲突。**
+
+#### 什么是 Dialog 的焦点陷阱（Focus Trap）？
+
+当 Dialog 打开时，会自动聚焦到 Dialog 内部，当用户按下 `Tab` 键时，会循环聚焦到 Dialog 内部的元素，直到 `Escape` 键被按下。
+
+为什么需要这种设计？
+
+- 无障碍设计：当 Dialog 打开时，屏幕阅读器和键盘用户应该只能操作 Dialog 内的内容，不能意外触发背景元素
+- 用户体验：防止用户点击或 Tab 到背景内容（比如误关闭弹窗或误触底层按钮）
+
+Dialog 内部通过 `focus-trap-react` 库来实现焦点陷阱。同时，Dialog 会阻止事件冒泡到背景层。
+
+#### Select 的 Portal 渲染机制？
+
+Portal 是 React 的一个概念，用于将组件渲染到 DOM 的另一个位置。在 Select 组件内，会默认渲染到 `body` 元素下。
+
+为什么需要 Portal 渲染机制？
+
+- 避免布局溢出：SelectContent（下拉菜单）默认通过 Portal 渲染到 document.body，可以避免被父容器的 `overflow: hidden` 裁剪
+- 层级控制：确保下拉菜单始终显示在最顶层（不受父组件 z-index 影响）
+
+```tsx
+<!-- Dialog 内部 -->
+<div class="dialog">
+  <SelectTrigger /> <!-- 触发按钮留在 Dialog 内 -->
+</div>
+
+<!-- Portal 渲染到 body 末尾 -->
+<body>
+  <div class="select-content-portal"> <!-- 实际下拉菜单在这里 -->
+    <input type="text" /> <!-- 你的 input -->
+    <SelectItem>...</SelectItem>
+  </div>
+</body>
+```
+
+#### 解决方案
+
+冲突的核心原因在于，Select 的 Portal 渲染机制，会将 Input 内容渲染到 `body` 元素下，而 Dialog 只管理 Dialog 内部的 DOM 树。当用户点击 Input 时，Dialog 的焦点陷阱会认为**当前焦点离开了 Dialog**，从而强制将焦点拉回到 Dialog 内部。最终导致 Input 无法正常聚焦。
+
+我们对 `SelectContent` 进行改造，通过 `portal` 属性，来动态控制是否需要将 `SelectContent` 渲染到 `body` 元素下。修改后代码如下：
+
+```tsx
+const SelectContent = React.forwardRef<
+  React.ElementRef<typeof SelectPrimitive.Content>,
+  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Content> & {
+    portal?: boolean
+  }
+>(
+  (
+    {
+      className,
+      children,
+      position = 'popper',
+      searcher,
+      portal = true,
+      ...props
+    },
+    ref
+  ) => {
+    const Temp = portal ? SelectPrimitive.Portal : React.Fragment
+    return (
+      <Temp>
+        <SelectPrimitive.Content
+          ref={ref}
+          className={cn(
+            'relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-md border border-zinc-200 bg-white text-zinc-950 shadow-md data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50',
+            position === 'popper' &&
+              'data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1',
+            className
+          )}
+          position={position}
+          {...props}
+        >
+          <SelectScrollUpButton />
+          <SelectPrimitive.Viewport
+            className={cn(
+              'p-1',
+              position === 'popper' &&
+                'h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)]'
+            )}
+          >
+            {children}
+          </SelectPrimitive.Viewport>
+          <SelectScrollDownButton />
+        </SelectPrimitive.Content>
+      </Temp>
+    )
+  }
+)
+SelectContent.displayName = SelectPrimitive.Content.displayName
+```
+
 ## Dropdown
 
 Popover 是一个用于显示弹窗的组件，通常用于显示更多的信息或选项。Dropdown 是 Popover 的一种特殊形式，通常用于显示下拉菜单。我们后面将以 Dropdown 为例，对组件的使用和封装进行说明。

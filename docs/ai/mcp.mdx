@@ -17,3 +17,23 @@ import { DocsHeader } from '/src/components/Layout/DocsHeader'
     },
   ]}
 />
+
+MCP 是模型上下文协议，是 Anthropic 提出的一个标准协议，用于在 AI 模型和工具/数据源之间传递上下文。
+
+## 为什么需要 MCP?
+
+在 MCP 之前，通过 function call(calling tools) 来定义工具类使用。不同的模型厂商需要开发不同的配套 server 来支持 function call。
+
+为此，MCP 提出一种协议约定，包含 host / client / server。用户在 server 内开发 tools, 并且一次开发后可以在不同的客户端使用，并且使用不同的模型。“车同轨，书同文”
+
+MCP 内，host 可以运行多个 client, 一个 client 对应一个 server。
+
+## 如何理解 MCP？
+
+- mcp 是一种协议，用来标准化工具类和大模型接口之间的通信规范
+- 大模型接口指大模型提供的 API 接口，如 OpenAI 的 API，Anthropic 的 API 等
+- 工具类指大模型之外的工具，如数据库、文件系统、API 等
+- MCP host 是 MCP 的实现者，提供 MCP 的实现
+- MCP client 是 MCP 的使用者，使用 MCP 的实现者提供的 MCP 实现
+
+MCP host 告诉大模型，我们有哪些工具，每种工具能干什么。当用户通过 chat 对话时，大模型在返回结果内按照协议规范说明需要使用什么工具，由 MCP host/client 进行调用。返回结果给到用户。

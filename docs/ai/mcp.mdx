@@ -37,3 +37,11 @@ MCP 内，host 可以运行多个 client, 一个 client 对应一个 server。
 - MCP client 是 MCP 的使用者，使用 MCP 的实现者提供的 MCP 实现
 
 MCP host 告诉大模型，我们有哪些工具，每种工具能干什么。当用户通过 chat 对话时，大模型在返回结果内按照协议规范说明需要使用什么工具，由 MCP host/client 进行调用。返回结果给到用户。
+
+## 创建一个 MCP Server?
+
+我们基于 node.js 实现一个 MCP Server。
+
+```bash
+npm install @anthropic-ai/mcp-server
+```

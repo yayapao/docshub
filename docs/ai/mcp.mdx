@@ -42,6 +42,45 @@ MCP host 告诉大模型，我们有哪些工具，每种工具能干什么。�
 
 我们基于 node.js 实现一个 MCP Server。
 
-```bash
-npm install @anthropic-ai/mcp-server
+```json title="package.json"
+{
+  "name": "mcp-server-example",
+  "version": "1.0.0",
+  "description": "MCP server for Example",
+  "main": "src/server.js",
+  "scripts": {
+    "build": "tsc && shx chmod +x dist/*.js",
+    "prepare": "npm run build",
+    "watch": "tsc --watch"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.10.1",
+    "@types/node": "^22",
+    "zod": "^3.24.3"
+  },
+  "devDependencies": {
+    "shx": "^0.4.0",
+    "typescript": "^5.6.2"
+  }
+}
 ```
+
+- shx 是一个用于文件操作的工具，如 chmod
+
+### 文件目录
+
+我们在 `src` 目录下实现逻辑。目录结构如下：
+
+```bash
+./src
+├── common
+│   ├── types.ts
+│   └── utils.ts
+├── index.ts
+└── operations
+    └── index.ts
+```
+
+- `common` 目录下定义一些公共的类型和工具函数
+- `index.ts` 是入口文件
+- `operations` 目录下定义一些操作，比如文件复制等

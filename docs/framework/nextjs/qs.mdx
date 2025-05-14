@@ -133,6 +133,14 @@ export default function ThemeSwitch() {
 }
 ```
 
+## 如何实现共享状态管理？
+
+通常在 React 内，我们使用 `useContext` 或者 [zustand](https://zustand.docs.pmnd.rs/) 来实现公共状态共享。在 Next.js 内，我们同样可以使用这两种方式，但是需要考虑 SSR 的问题。
+
+### useContext vs zustand
+
+两种方式都能够实现共享状态管理，但是存在优劣。
+
 ## 如何理解 Next.js 内的缓存机制？
 
 本回答基于 [Building Your Application: Caching | Next.js](https://nextjs.org/docs/app/building-your-application/caching)

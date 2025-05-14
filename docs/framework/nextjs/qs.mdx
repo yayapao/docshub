@@ -141,6 +141,10 @@ export default function ThemeSwitch() {
 
 两种方式都能够实现共享状态管理，但是存在优劣。
 
+`useContext`：在使用上，需要先创建 Context，然后通过 `Provider` 包裹组件，再通过 `useContext` 获取状态，相对比较繁琐。并且，**provider 嵌套过多时，会导致性能问题**。
+
+`zustand`：使用上，需要先创建 store，然后通过 `useStore` 获取状态。相对比较简单，并且使用 useMemo 来 diff，提升性能。但是**zustand 是单例模式**，在 ssr 的场景下会导致 **状态污染**、**竞态**等问题。并且 Next.js 不支持在服务端使用 zustand，需要在客户端设置初始化状态。
+
 ## 如何理解 Next.js 内的缓存机制？
 
 本回答基于 [Building Your Application: Caching | Next.js](https://nextjs.org/docs/app/building-your-application/caching)

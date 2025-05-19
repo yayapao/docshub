@@ -38,7 +38,7 @@ import { DocsHeader } from '/src/components/Layout/DocsHeader'
 - 预取功能
 - 天然国际化支持
 
-[使用阿里云 FC 部署 Next.js](/docs/infrastructure/config.mdx)
+[使用阿里云 FC 部署 Next.js](/docs/development/self-hosted/config.mdx)
 [如何使用 shadcn/ui](/docs/ui-library/shadcn.mdx)
 
 ## 对比 SPA 方案，Next.js 有什么优势？
@@ -144,6 +144,90 @@ export default function ThemeSwitch() {
 `useContext`：在使用上，需要先创建 Context，然后通过 `Provider` 包裹组件，再通过 `useContext` 获取状态，相对比较繁琐。并且，**provider 嵌套过多时，会导致性能问题**。
 
 `zustand`：使用上，需要先创建 store，然后通过 `useStore` 获取状态。相对比较简单，并且使用 useMemo 来 diff，提升性能。但是**zustand 是单例模式**，在 ssr 的场景下会导致 **状态污染**、**竞态**等问题。并且 Next.js 不支持在服务端使用 zustand，需要在客户端设置初始化状态。
+
+因此，我们使用 `useContext` + `zustand` 的组合方式，来实现 Next.js 内的共享状态管理。
+
+### 实施步骤？
+
+**文件结构如下**
+
+```
+src/
+  ├── providers/
+  │ ├── UserProvider.tsx
+  ├── stores/
+  │ ├── user.ts
+  └── app/
+      ├── layout.tsx
+      └── page.tsx
+```
+
+1. 创建 zustand store，并使用 `create` 方法创建 store； 实现参考 [Setup with Next.js](https://zustand.docs.pmnd.rs/guides/nextjs#creating-a-store-per-request)。在这里我们设置 store 内的 state 数据和更新接口；
+2. 创建 context，并使用 `Provider` 包裹组件，将 store 传递给组件；
+
+```tsx title="app/providers/UserProvider.tsx"
+export default function UserProvider({
+  children,
+  value,
+}: {
+  children: React.ReactNode
+  value: ServerStoreState
+}) {
+  const storeRef = useRef<ServerStoreApi>(null)
+  if (storeRef.current === null) {
+    storeRef.current = useServerStore(value)
+  }
+
+  return (
+    <UserConfigContext.Provider value={storeRef.current}>
+      {children}
+    </UserConfigContext.Provider>
+  )
+}
+```
+
+3. 在 `UserProvider` 内提供 use 钩子，用户组件内获取 store。**一般和 provider 在同一个文件内，便于获取 `Context` 对象；**
+
+```tsx title="app/providers/UserProvider.tsx"
+/**
+ * useUserConfig 是一个自定义的 React 钩子函数，用于获取 zustand 的 store
+ * @returns
+ */
+export function useUserConfig() {
+  const store = useContext(UserConfigContext)
+  if (!store) {
+    throw new Error('useUserConfig must be used within a UserProvider')
+  }
+  return useStore(store)
+}
+```
+
+4. 在 `page.tsx` 或者 `layout.tsx` 内，使用 `UserProvider` 包裹组件，并传递 store；
+
+```tsx title="app/layout.tsx"
+import { getUserInfo } from '@/service/user'
+import UserProvider from '@/providers/user'
+
+export default async function ExampleLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  const userInfo = await getUserInfo()
+  return <UserProvider value={userInfo}>{children}</UserProvider>
+}
+```
+
+5. 在组件内，使用 `useUserConfig` 获取 store，并使用 store 内的状态。
+
+```tsx title="app/page.tsx"
+import { useUserConfig } from '@/providers/user'
+
+export default function HomePage() {
+  const { userInfo } = useUserConfig()
+  return <div>{userInfo.name}</div>
+}
+```
 
 ## 如何理解 Next.js 内的缓存机制？
 

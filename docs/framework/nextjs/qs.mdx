@@ -229,6 +229,18 @@ export default function HomePage() {
 }
 ```
 
+## layout.tsx 和 page.tsx 的区别？
+
+layout.tsx 的核心作用：
+
+- **共享结构**：为同一路由层级的所有页面（包括嵌套页面）提供公共的 UI 框架，比如导航栏、页脚等；
+- **状态持久化**：在客户端导航时，共享布局不会重新渲染，因此适合存储全局状态或缓存数据；
+- **元数据定义**：通过导出 metadata 对象设置页面 SEO 信息（如标题、描述），仅支持服务端逻辑；
+
+page.tsx 的核心作用：
+
+- **路由专属内容渲染**：负责渲染页面内容，支持服务端和客户端渲染；
+
 ## 如何理解 Next.js 内的缓存机制？
 
 本回答基于 [Building Your Application: Caching | Next.js](https://nextjs.org/docs/app/building-your-application/caching)
